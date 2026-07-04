@@ -1,0 +1,14 @@
+# Area owners — GitHub auto-requests reviewers on PRs touching these paths.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+/apps/api/              @buwaneka-halpage
+/infra/db/              @buwaneka-halpage
+/infra/docker/          @buwaneka-halpage
+
+/apps/web/              @SMS123456789
+
+/apps/mobile/           @sathurshna
+
+/packages/ml/           @buwaneka-halpage @SMS123456789
+
+/.github/workflows/     @buwaneka-halpage

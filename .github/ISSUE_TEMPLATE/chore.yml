@@ -1,0 +1,31 @@
+name: Chore / Docs
+description: Tooling, CI, documentation, spikes
+title: "[chore] "
+labels: ["type: chore"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - chore
+        - docs
+        - spike
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] 
+    validations:
+      required: true

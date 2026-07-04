@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  repo-check:
+    name: Repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify monorepo layout
+        run: |
+          test -d apps/api
+          test -d apps/web
+          test -d apps/mobile
+          test -d packages/ml
+          test -d infra/db/migrations
+          test -f infra/docker/docker-compose.yml
+          test -f CONTRIBUTING.md
+          echo "Monorepo scaffold OK"
+
+  # ponytail: placeholder jobs — enable when apps exist
+  # api-lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: echo "Add ruff/pytest when apps/api is scaffolded"
+
+  # rls-isolation:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: echo "Add tenant isolation test when DB migrations land"
