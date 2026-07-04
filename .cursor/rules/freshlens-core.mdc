@@ -1,0 +1,48 @@
+---
+description: FreshLens project identity, stack, monorepo layout, and hard constraints
+alwaysApply: true
+---
+
+# FreshLens — Project Context
+
+**CS3203 · Group 21 · PID 5** · Repo: `FreshLens-AI/FreshLens-AI`
+
+Multi-tenant SaaS for small grocery vendors. Phone camera → CNN classifies produce (Fresh / Medium / Spoiled) → dashboards + alerts.
+
+**Roles:** Vendor (mobile) · Platform Admin (web)
+
+## Monorepo — put code in the right place
+
+| Path | Stack |
+|------|-------|
+| `apps/api/` | FastAPI (Python, async) |
+| `apps/web/` | Next.js App Router + TypeScript |
+| `apps/mobile/` | React Native (Expo) |
+| `packages/ml/` | PyTorch CNN + Celery inference worker |
+| `infra/db/migrations/` | Postgres schema + RLS |
+| `infra/docker/` | Docker Compose |
+| `docs/` | SRS, design, feasibility (course docs) |
+
+## Approved stack only
+
+FastAPI · PostgreSQL + RLS · Supabase Auth (prototype) · Next.js · Expo · Celery + Redis · Cloudflare R2 · Docker Compose · GitHub Actions
+
+## Never introduce
+
+- Node/NestJS backend (FastAPI only)
+- Second queue system alongside Celery + Redis
+- Un-namespaced Redis keys
+- Sync CNN inference in API handlers
+- DB table without `tenant_id` + RLS in the same migration
+- Secrets in git (`.env`, keys, tokens)
+
+## Ownership (PR reviews)
+
+| Path | Primary |
+|------|---------|
+| `apps/api/`, `infra/db/`, `infra/docker/` | @buwaneka-halpage |
+| `apps/web/` | @SMS123456789 |
+| `apps/mobile/` | @sathurshna |
+| `packages/ml/` | @buwaneka-halpage + @SMS123456789 |
+
+Full workflow: `CONTRIBUTING.md` · Detailed skill: `.cursor/skills/freshlens-workflow/SKILL.md`

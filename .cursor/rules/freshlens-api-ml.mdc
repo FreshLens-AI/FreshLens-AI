@@ -1,0 +1,38 @@
+---
+description: FreshLens FastAPI backend and ML worker conventions
+globs: apps/api/**/*,packages/ml/**/*
+alwaysApply: false
+---
+
+# FreshLens — API & ML
+
+Applies when editing `apps/api/` or `packages/ml/`.
+
+## API (FastAPI)
+
+- Async endpoints; shared Python ecosystem with ML worker
+- Protected routes: validate Supabase JWT, set `app.tenant_id` on DB session
+- Scan upload flow:
+
+```python
+# ✅ Correct — enqueue and return immediately
+@router.post("/scan", status_code=202)
+async def create_scan(...):
+    image_path = await store_image(file)
+    scan_id = await create_pending_scan(tenant_id, image_path)
+    process_scan.delay(scan_id)  # Celery
+    return {"scan_id": scan_id, "status": "processing"}
+
+# ❌ Wrong — never inline inference
+# result = model.predict(image)  # in request handler
+```
+
+## ML worker (Celery)
+
+- Lives in `packages/ml/`; consumes queue; writes to Postgres
+- Store `model_version` on each scan result
+- Training artifacts: MobileNetV3 or ResNet50 on Fruits-360 + Kaggle freshness data
+
+## Redis
+
+All keys prefixed: `tenant:{tenant_id}:queue:...`, `tenant:{tenant_id}:cache:...`
