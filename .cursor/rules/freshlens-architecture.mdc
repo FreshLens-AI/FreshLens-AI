@@ -16,21 +16,24 @@ USING (tenant_id = current_setting('app.tenant_id')::uuid)
 
 - API middleware sets `app.tenant_id` from auth JWT at request start
 - App-code tenant filters are defense-in-depth only — never the sole safeguard
-- Core tables: `tenants` → `users`, `products`, `scans`, `alerts`
+- Core tables: `tenants` → `users`, `products`, `scans`, `batches`, `alerts`
 
 ## 2. Async inference only
 
 ```
 POST /scan → upload image (R2) → enqueue Celery job → return 202 immediately
-Worker → CNN inference → write result to DB
+Worker → FL-2TC (Tier 1 identify, Tier 2 freshness) → write result to DB
 ```
 
 - **Never** run CNN inside a FastAPI request handler
 - Redis keys: `tenant:{tenant_id}:...` (queue, cache, results)
+- Version 1: one product per photo; quantity is vendor-confirmed at scan time
 
-## 3. Scan record shape
+## 3. Record shapes
 
-`scans`: `image_path`, `freshness_score`, `classification`, `model_version`, `tenant_id`
+`scans`: `image_path`, `freshness_score`, `classification`, `model_version`, `tenant_id`, linked `batch_id` (optional)
+
+`batches`: `tenant_id`, `product_id`, `intake_date`, `quantity_received`, `quantity_remaining`, `shelf_life_days` (admin-configured per category; used for V1 static aging alerts)
 
 ## 4. Out of scope — do not build unless explicitly requested
 
