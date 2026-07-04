@@ -1,0 +1,56 @@
+---
+description: FreshLens Git branching, PRs, issues, and GitHub Project workflow
+alwaysApply: true
+---
+
+# FreshLens — Git & GitHub Workflow
+
+## Branching (GitHub Flow)
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Feature | `feat/<area>-<desc>` | `feat/api-scan-endpoint` |
+| Fix | `fix/<area>-<desc>` | `fix/web-tenant-filter` |
+| Docs | `docs/<topic>` | `docs/srs-architecture` |
+| Chore | `chore/<topic>` | `chore/ci-lint` |
+
+**Rules:** Never commit to `main` directly · One issue per branch · PR references issue (`Closes #N`) · PRs &lt; 400 lines · Squash merge after CI + 1 approval
+
+## Commit format
+
+```
+feat(api): add POST /scan with 202 async response
+fix(web): correct tenant filter on dashboard
+chore(ci): add RLS isolation test
+```
+
+## When implementing a feature
+
+1. Find or create a GitHub Issue with acceptance criteria
+2. Branch from `main`: `feat/<area>-<desc>`
+3. Implement only in the correct monorepo path
+4. Open PR using `.github/pull_request_template.md`
+5. Request review from area owner (see CODEOWNERS)
+6. Merge when CI green + approved
+
+## Milestones (CS3203)
+
+| Milestone | Due | Focus |
+|-----------|-----|-------|
+| M1 | Jul 12 | Proposal, feasibility, schedule |
+| M2 | Aug 9 | SRS + architecture design |
+| M3 | Aug 30 | Auth, DB+RLS, UI skeleton, mid-eval (stub ML OK) |
+| M4 | Sep 20 | Real CNN, Celery pipeline, alerts |
+| M5 | Oct 3 | Testing doc, demo video, final report |
+
+## Issue labels
+
+`type: feature|bug|chore|docs|spike` · `area: api|web|mobile|ml|infra|db` · `priority: P0|P1|P2`
+
+## Agent behaviour in this repo
+
+- Match existing conventions before adding abstractions
+- Minimize scope — smallest correct diff
+- Do not commit unless the user asks
+- Do not push to `main` — use feature branch + PR
+- Link work to GitHub issues when creating tasks or PRs

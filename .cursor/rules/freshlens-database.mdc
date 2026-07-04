@@ -1,0 +1,41 @@
+---
+description: FreshLens Postgres migrations and Row-Level Security policies
+globs: infra/db/**/*
+alwaysApply: false
+---
+
+# FreshLens — Database & RLS
+
+Applies when editing `infra/db/`.
+
+## Every migration that adds a business table must include
+
+1. `tenant_id UUID NOT NULL REFERENCES tenants(id)`
+2. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
+3. Policy using `current_setting('app.tenant_id')::uuid`
+4. Index on `tenant_id` for tenant-scoped queries
+
+## Example pattern
+
+```sql
+CREATE TABLE scans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  image_path TEXT NOT NULL,
+  classification TEXT,
+  freshness_score REAL,
+  model_version TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE scans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON scans
+  USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+```
+
+## Rules
+
+- Serialize DB migrations — one PR at a time for schema changes
+- @buwaneka-halpage must approve all `infra/db/` PRs
+- Add or extend RLS isolation test in CI when migrations land

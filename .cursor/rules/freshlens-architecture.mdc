@@ -1,0 +1,44 @@
+---
+description: FreshLens non-negotiable architecture — RLS multi-tenancy and async ML pipeline
+alwaysApply: true
+---
+
+# FreshLens — Architecture Rules
+
+## 1. Multi-tenancy via Postgres RLS
+
+Every business table: `tenant_id` column + RLS policy in the **same migration**.
+
+```sql
+-- Policy pattern
+USING (tenant_id = current_setting('app.tenant_id')::uuid)
+```
+
+- API middleware sets `app.tenant_id` from auth JWT at request start
+- App-code tenant filters are defense-in-depth only — never the sole safeguard
+- Core tables: `tenants` → `users`, `products`, `scans`, `alerts`
+
+## 2. Async inference only
+
+```
+POST /scan → upload image (R2) → enqueue Celery job → return 202 immediately
+Worker → CNN inference → write result to DB
+```
+
+- **Never** run CNN inside a FastAPI request handler
+- Redis keys: `tenant:{tenant_id}:...` (queue, cache, results)
+
+## 3. Scan record shape
+
+`scans`: `image_path`, `freshness_score`, `classification`, `model_version`, `tenant_id`
+
+## 4. Out of scope — do not build unless explicitly requested
+
+IoT/smart scales · automated procurement/supply-chain · accounting/tax modules
+
+## 5. Before merging DB or API scan changes, verify
+
+- [ ] Migration includes RLS for every new tenant-scoped table
+- [ ] No inline model inference in route handlers
+- [ ] Redis keys are tenant-namespaced
+- [ ] `.env.example` updated if new env vars added

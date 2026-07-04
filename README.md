@@ -31,6 +31,7 @@ docker compose -f infra/docker/docker-compose.yml up --build
 - **Branching:** GitHub Flow — `feat/*`, `fix/*`, `chore/*` off `main`
 - **Tasks:** GitHub Issues linked to the org Project board
 - **Reviews:** See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Cursor AI rules:** `.cursor/rules/` (always-on) and `.cursor/skills/freshlens-workflow/` (project skill)
 
 ## Architecture rules (non-negotiable)
 
