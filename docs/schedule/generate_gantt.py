@@ -159,12 +159,16 @@ def generate_pdf(schedule: dict, out_path: Path) -> None:
         label.set_rotation(0)
         label.set_ha("center")
 
-    # Stronger Monday grid + light daily grid
+    # Stronger Monday grid + light daily grid; horizontal row lines
     ax.xaxis.set_minor_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels([""] * n)
+    ax.tick_params(axis="y", length=0, labelleft=False)
     ax.grid(axis="x", which="major", linestyle="-", linewidth=0.25, color="#cccccc", alpha=0.7)
     ax.grid(axis="x", which="minor", linestyle="-", linewidth=0.55, color="#999999", alpha=0.55)
+    ax.grid(axis="y", which="major", linestyle="-", linewidth=0.35, color="#bbbbbb", alpha=0.65)
+    ax.set_axisbelow(True)
 
-    ax.set_yticks([])
     ax.set_ylabel("")
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -204,7 +208,7 @@ def generate_pdf(schedule: dict, out_path: Path) -> None:
     fig.text(
         0.99,
         0.01,
-        f"{index}GanttChart  ·  Traditional SDLC  ·  Jul–Oct 2026",
+        f"{index}GanttChart  ·  Traditional SDLC  ·  Jul–Oct 2026 (batch-23 deadlines)",
         ha="right",
         va="bottom",
         fontsize=6,

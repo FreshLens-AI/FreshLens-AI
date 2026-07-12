@@ -1,8 +1,8 @@
 # FreshLens project schedule
 
-CS3203 Group 21 · PID 5. Traditional SDLC Gantt covering **2026-07-01 → 2026-10-03**, aligned with Moodle / GitHub milestones M1–M5.
+CS3203 Group 21 · PID 5. Traditional SDLC Gantt covering **2026-07-01 → 2026-10-11**, aligned to the CS3203 batch-23 deadlines sheet.
 
-The chart axis pads to full weeks and shows **every calendar day** (day-of-month on the bottom axis, week-start `YYYY-MM-DD` on the top axis).
+The chart axis pads to full weeks and shows **every calendar day** (day-of-month on the bottom axis, week-start `YYYY-MM-DD` on the top axis), plus horizontal row grid lines.
 
 ## Files
 
@@ -27,17 +27,22 @@ Optional:
 python docs/schedule/generate_gantt.py --output docs/schedule/230600VGanttChart.pdf
 ```
 
-## Milestone mapping
+## Deadline mapping (batch-23)
 
-| Milestone | Due | Deliverable focus |
-|-----------|-----|-------------------|
-| M1 | 2026-07-12 | Proposal, feasibility, schedule |
-| M2 | 2026-08-09 | SRS + architecture design |
-| M3 | 2026-08-30 | Iteration 1 mid-eval (stub ML OK) |
-| M4 | 2026-09-20 | FL-2TC + Celery + alerts |
-| M5 | 2026-10-03 | Testing doc, demo video, final report |
+| Due | Deliverable |
+|-----|-------------|
+| 2026-07-05 | Project proposal |
+| 2026-07-12 | Feasibility document + Gantt chart |
+| 2026-08-09 | SRS + System Architecture and Design |
+| 2026-08-10 – 08-14 | Progress Review 1 (Iteration 1) |
+| 2026-08-15 – 08-30 | Mid evaluation (Iteration 1 demo) |
+| 2026-09-27 | Testing document |
+| 2026-09-28 – 10-02 | Progress Review 2 (Iteration 2) |
+| 2026-10-02 | Demo video (YouTube) |
+| 2026-10-03 | Final report + source zip |
+| 2026-10-03 – 10-11 | Final evaluation |
 
-Development / implementation intentionally spans **~Jul 13 – Sep 28** and overlaps requirements and design (parallel tracks).
+Development / implementation intentionally overlaps requirements and design (parallel tracks).
 
 ## Issue
 
