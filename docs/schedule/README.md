@@ -2,6 +2,8 @@
 
 CS3203 Group 21 · PID 5. Traditional SDLC Gantt covering **2026-07-01 → 2026-10-03**, aligned with Moodle / GitHub milestones M1–M5.
 
+The chart axis pads to full weeks and shows **every calendar day** (day-of-month on the bottom axis, week-start `YYYY-MM-DD` on the top axis).
+
 ## Files
 
 | File | Role |

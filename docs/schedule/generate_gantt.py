@@ -60,20 +60,31 @@ def build_rows(schedule: dict) -> list[dict]:
     return rows
 
 
+def monday_on_or_before(day: datetime) -> datetime:
+    return day - timedelta(days=day.weekday())
+
+
+def sunday_on_or_after(day: datetime) -> datetime:
+    return day + timedelta(days=(6 - day.weekday()) % 7)
+
+
 def generate_pdf(schedule: dict, out_path: Path) -> None:
     rows = build_rows(schedule)
     project_start = parse_date(schedule["project_start"])
-    project_end = parse_date(schedule["project_end"]) + timedelta(days=1)
+    project_end = parse_date(schedule["project_end"])
+    # Pad axis to full weeks so every weekday column is labeled
+    axis_start = monday_on_or_before(project_start)
+    axis_end = sunday_on_or_after(project_end) + timedelta(days=1)
     milestones = schedule["milestones"]
 
     n = len(rows)
-    # A4 landscape inches; height scales with rows but capped to ~2 pages worth
+    # A4 landscape; slightly taller to leave room for dual date header
     row_h = 0.22
-    fig_h = max(8.27, min(16.5, 1.4 + n * row_h))
-    fig_w = 11.69  # A4 landscape width
+    fig_h = max(8.27, min(16.5, 1.8 + n * row_h))
+    fig_w = 11.69
 
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
-    fig.subplots_adjust(left=0.32, right=0.98, top=0.92, bottom=0.08)
+    fig.subplots_adjust(left=0.30, right=0.99, top=0.86, bottom=0.10)
 
     y_positions = list(range(n - 1, -1, -1))
 
@@ -127,30 +138,54 @@ def generate_pdf(schedule: dict, out_path: Path) -> None:
         ax.plot(x, n - 0.2, marker="D", markersize=5, color="#111111", zorder=3)
         ax.text(
             x,
-            n + 0.15,
+            n + 0.35,
             ms["label"],
             ha="center",
             va="bottom",
-            fontsize=5.5,
+            fontsize=5.2,
             rotation=40,
             color="#111111",
         )
 
-    ax.set_ylim(-0.8, n + 1.2)
-    ax.set_xlim(mdates.date2num(project_start), mdates.date2num(project_end))
+    ax.set_ylim(-0.8, n + 1.6)
+    ax.set_xlim(mdates.date2num(axis_start), mdates.date2num(axis_end))
     ax.xaxis_date()
-    ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO, interval=2))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+
+    # Bottom axis: every calendar day (day-of-month)
+    ax.xaxis.set_major_locator(mdates.DayLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%-d" if sys.platform != "win32" else "%#d"))
+    ax.tick_params(axis="x", which="major", labelsize=3.6, pad=2, length=2)
+    for label in ax.get_xticklabels():
+        label.set_rotation(0)
+        label.set_ha("center")
+
+    # Stronger Monday grid + light daily grid
     ax.xaxis.set_minor_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
-    ax.tick_params(axis="x", labelsize=6.5, rotation=45)
+    ax.grid(axis="x", which="major", linestyle="-", linewidth=0.25, color="#cccccc", alpha=0.7)
+    ax.grid(axis="x", which="minor", linestyle="-", linewidth=0.55, color="#999999", alpha=0.55)
+
     ax.set_yticks([])
     ax.set_ylabel("")
-    ax.grid(axis="x", which="major", linestyle=":", linewidth=0.5, alpha=0.5)
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
 
-    ax.set_title(schedule["title"], fontsize=11, fontweight="bold", pad=18)
+    # Top axis: week-start dates (YYYY-MM-DD) spanning each Monday column
+    ax_top = ax.twiny()
+    ax_top.set_xlim(ax.get_xlim())
+    ax_top.xaxis_date()
+    ax_top.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
+    ax_top.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    ax_top.tick_params(axis="x", labelsize=5.5, pad=2, length=3)
+    for label in ax_top.get_xticklabels():
+        label.set_rotation(0)
+        label.set_ha("left")
+    ax_top.spines["top"].set_visible(True)
+    ax_top.spines["bottom"].set_visible(False)
+    ax_top.spines["left"].set_visible(False)
+    ax_top.spines["right"].set_visible(False)
+
+    ax.set_title(schedule["title"], fontsize=11, fontweight="bold", pad=28)
 
     legend_handles = [
         Patch(facecolor=p["color"], edgecolor="none", label=p["name"])
@@ -159,7 +194,7 @@ def generate_pdf(schedule: dict, out_path: Path) -> None:
     ax.legend(
         handles=legend_handles,
         loc="lower center",
-        bbox_to_anchor=(0.5, -0.06),
+        bbox_to_anchor=(0.5, -0.08),
         ncol=3,
         fontsize=5.5,
         frameon=False,
