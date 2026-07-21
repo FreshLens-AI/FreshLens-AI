@@ -28,11 +28,11 @@ foreach ($l in $labels) {
 
 Write-Host "Creating milestones..."
 $milestones = @(
-  @{ title = 'M1 - Proposal and planning'; due = '2026-07-12T23:59:59Z'; desc = 'Proposal, feasibility study, schedule/Gantt' },
-  @{ title = 'M2 - SRS and design'; due = '2026-08-09T23:59:59Z'; desc = 'SRS and system architecture and design' },
-  @{ title = 'M3 - Iteration 1 (mid-eval)'; due = '2026-08-30T23:59:59Z'; desc = 'Auth, DB+RLS, skeleton UIs, API wired, mid-eval demo' },
-  @{ title = 'M4 - Iteration 2 (ML + integration)'; due = '2026-09-20T23:59:59Z'; desc = 'CNN, Celery pipeline, alerts, analytics' },
-  @{ title = 'M5 - Testing and final'; due = '2026-10-03T23:59:59Z'; desc = 'Testing doc, demo video, final report, zip' }
+  @{ title = 'M1 - Proposal and planning'; due = '2026-07-12T23:59:59Z'; desc = 'Proposal (5 Jul), feasibility + Gantt (12 Jul). Maps to gantt M1–M2.' },
+  @{ title = 'M2 - SRS and design'; due = '2026-08-09T23:59:59Z'; desc = 'SRS + architecture/design due. Maps to gantt M3 (9 Aug).' },
+  @{ title = 'M3 - Iteration 1 (mid-eval)'; due = '2026-08-30T23:59:59Z'; desc = 'Iteration 1: auth, DB+RLS, UI skeleton, stub ML, Progress Review 1 + mid-eval. Maps to gantt M4 (30 Aug).' },
+  @{ title = 'M4 - Iteration 2 (ML + integration)'; due = '2026-10-02T23:59:59Z'; desc = 'Iteration 2: real FL-2TC CNN, Celery, R2, alerts, analytics through Progress Review 2. Maps to gantt through M5/PR2 (~2 Oct).' },
+  @{ title = 'M5 - Testing and final'; due = '2026-10-03T23:59:59Z'; desc = 'Testing doc (27 Sep), demo video, final report + zip (3 Oct). Maps to gantt M5–M6.' }
 )
 
 $milestoneIds = @{}
@@ -298,6 +298,26 @@ Technology comparison and feasibility analysis referenced by the proposal.
 - [ ] Lint jobs for api/web when scaffolded
 - [ ] RLS tenant isolation integration test
 - [ ] Docker build on every PR
+"@
+  },
+  @{
+    title = "Implement stub Celery classifier for mid-evaluation"
+    milestone = 'M3 - Iteration 1 (mid-eval)'
+    labels = "type: feature,area: ml,priority: P0"
+    assignee = "buwaneka-halpage"
+    body = @"
+## Context
+Mid-evaluation allows stubbed classification. Real FL-2TC stays on the M4 Celery/CNN issues.
+
+## Acceptance criteria
+- [ ] Celery worker runs in Docker Compose alongside API + Redis
+- [ ] Job accepts scan id / image path and writes a deterministic stub result (Fresh / Medium / Spoiled)
+- [ ] Redis keys are tenant-namespaced: ``tenant:{tenant_id}:...``
+- [ ] No CNN loaded in the API process; inference only in the worker
+- [ ] Compatible with ``POST /scan`` → 202 flow
+
+## Out of scope
+Real Tier-1 / Tier-2 models — replace stub in M4.
 "@
   },
   @{

@@ -40,7 +40,7 @@ chore(ci): add RLS isolation test
 | M1 | Jul 12 | Proposal, feasibility, schedule |
 | M2 | Aug 9 | SRS + architecture design |
 | M3 | Aug 30 | Auth, DB+RLS, UI skeleton, mid-eval (stub ML OK) |
-| M4 | Sep 20 | Real CNN, Celery pipeline, alerts |
+| M4 | Oct 2 | Real CNN, Celery, alerts (through Progress Review 2) |
 | M5 | Oct 3 | Testing doc, demo video, final report |
 
 ## Issue labels
