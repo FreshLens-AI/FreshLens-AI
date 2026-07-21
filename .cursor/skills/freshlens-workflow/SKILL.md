@@ -65,7 +65,7 @@ After writing code:
 - **M1** (Jul 12) — Proposal, feasibility, schedule
 - **M2** (Aug 9) — SRS + design
 - **M3** (Aug 30) — Iteration 1, mid-eval (stub ML acceptable)
-- **M4** (Sep 20) — CNN + Celery + alerts
+- **M4** (Oct 2) — CNN + Celery + alerts (through Progress Review 2)
 - **M5** (Oct 3) — Testing, demo video, final report
 
 ## Mid-eval note
