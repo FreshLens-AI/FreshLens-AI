@@ -1,0 +1,461 @@
+openapi: 3.1.0
+info:
+  title: FreshLens API
+  version: 1.0.0
+  description: |
+    Mid-eval V1 contract for FreshLens (CS3203 · Group 21 · PID 5).
+
+    - Base path for versioned resources: `/api/v1`
+    - Auth: Supabase JWT Bearer on all routes except `GET /health`
+    - Tenant isolation: API middleware sets Postgres `app.tenant_id` from the JWT;
+      never trust a client-supplied `tenant_id` in the request body
+    - Async scan only: `POST /api/v1/scans` returns **202**; CNN runs in Celery, never
+      in the request handler (stub classifier acceptable for mid-eval)
+
+    See `docs/api/README.md` for human overview and out-of-scope notes.
+servers:
+  - url: http://localhost:8000
+    description: Local Docker Compose / FastAPI (prototype)
+tags:
+  - name: Health
+  - name: Scans
+  - name: Alerts
+  - name: Admin
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      security: []
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v1/scans:
+    post:
+      tags: [Scans]
+      summary: Submit a produce scan (async)
+      description: |
+        Accepts one product photo plus vendor-confirmed quantity.
+        Uploads image (e.g. R2), inserts a `pending` scan row, enqueues a Celery job,
+        and returns **202** immediately. Clients poll `GET /api/v1/scans/{scan_id}`.
+      operationId: createScan
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/CreateScanMultipart"
+      responses:
+        "202":
+          description: Scan accepted; inference queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    get:
+      tags: [Scans]
+      summary: List recent scans for the current tenant
+      operationId: listScans
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Tenant-scoped scan page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/scans/{scan_id}:
+    get:
+      tags: [Scans]
+      summary: Get a scan by id
+      description: |
+        Returns the full scan resource. While status is `pending` or `processing`,
+        classification fields may be null. When `completed`, classification and
+        freshness_score are populated (stub values OK for mid-eval).
+      operationId: getScan
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      parameters:
+        - $ref: "#/components/parameters/ScanId"
+      responses:
+        "200":
+          description: Scan resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/alerts:
+    get:
+      tags: [Alerts]
+      summary: List alerts for the current tenant
+      description: |
+        Minimal list for mobile/admin shells. May return an empty array until
+        aging/low-stock alert rules (#19) land.
+      operationId: listAlerts
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Tenant-scoped alerts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/tenants:
+    get:
+      tags: [Admin]
+      summary: List tenants (platform admin placeholder)
+      description: Placeholder for the Next.js admin scaffold (#10).
+      operationId: listTenants
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth access token (JWT).
+
+  parameters:
+    ScanId:
+      name: scan_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/Uuid"
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Authenticated but wrong role or tenant
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found in this tenant
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+
+    Role:
+      type: string
+      enum: [vendor, platform_admin]
+
+    Classification:
+      type: string
+      enum: [fresh, medium, spoiled]
+      description: FL-2TC Tier-2 freshness label (stub OK for mid-eval).
+
+    ScanStatus:
+      type: string
+      enum: [pending, processing, completed, failed]
+
+    AlertSeverity:
+      type: string
+      enum: [info, warning, critical]
+
+    AlertType:
+      type: string
+      enum: [spoilage, low_stock, aging, other]
+
+    HealthResponse:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    Error:
+      type: object
+      required: [detail]
+      additionalProperties: false
+      properties:
+        detail:
+          description: FastAPI-compatible error payload (string or structured object).
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties: true
+
+    CreateScanMultipart:
+      type: object
+      required: [image, quantity]
+      additionalProperties: false
+      properties:
+        image:
+          type: string
+          format: binary
+          description: Single produce photo (V1 = one product per photo).
+        quantity:
+          type: integer
+          minimum: 1
+          description: Vendor-confirmed quantity at scan time.
+        product_id:
+          $ref: "#/components/schemas/Uuid"
+        batch_id:
+          $ref: "#/components/schemas/Uuid"
+
+    ScanAccepted:
+      type: object
+      required: [id, status, created_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        status:
+          $ref: "#/components/schemas/ScanStatus"
+          description: Typically `pending` at acceptance time.
+        created_at:
+          type: string
+          format: date-time
+
+    Scan:
+      type: object
+      required:
+        - id
+        - tenant_id
+        - status
+        - image_path
+        - quantity
+        - created_at
+        - updated_at
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_id:
+          $ref: "#/components/schemas/Uuid"
+          description: Echo of tenant from JWT / RLS context (not client-authored).
+        status:
+          $ref: "#/components/schemas/ScanStatus"
+        image_path:
+          type: string
+          description: Object storage key or URL path for the uploaded image.
+        quantity:
+          type: integer
+          minimum: 1
+        classification:
+          oneOf:
+            - $ref: "#/components/schemas/Classification"
+            - type: "null"
+        freshness_score:
+          oneOf:
+            - type: number
+              format: float
+              minimum: 0
+              maximum: 1
+            - type: "null"
+          description: Model confidence or score; null until completed.
+        model_version:
+          oneOf:
+            - type: string
+            - type: "null"
+          description: e.g. `stub-v0` for mid-eval; real FL-2TC version later.
+        product_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        batch_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ScanList:
+      type: object
+      required: [items, total, limit, offset]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scan"
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+
+    Alert:
+      type: object
+      required: [id, type, message, severity, created_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        type:
+          $ref: "#/components/schemas/AlertType"
+        message:
+          type: string
+        severity:
+          $ref: "#/components/schemas/AlertSeverity"
+        created_at:
+          type: string
+          format: date-time
+        batch_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        product_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+
+    AlertList:
+      type: object
+      required: [items, total, limit, offset]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+
+    Tenant:
+      type: object
+      required: [id, name, created_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    TenantList:
+      type: object
+      required: [items, total, limit, offset]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tenant"
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
