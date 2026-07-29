@@ -15,7 +15,7 @@ The mobile application shall allow a vendor to sign in using Supabase Auth and r
 | | |
 |--|--|
 | Inputs | Vendor email/username and password (or other Supabase-supported credential method); device/session metadata for persistence |
-| Processing | Submit credentials to Supabase Auth over HTTPS; on success store JWT securely on-device and attach as Bearer token on all API calls; on invalid credentials show inline error without establishing a session; on session expiry prompt re-authentication before further scanning or dashboard access |
+| Processing | Submit credentials to Supabase Auth over HTTPS; on success store JWT securely on-device and attach as Bearer token on all API calls; register or refresh a push device token with the backend for scan-completion notifications (FR-V-006); on invalid credentials show inline error without establishing a session; on session expiry prompt re-authentication before further scanning or dashboard access |
 | Outputs | Authenticated session scoped to one vendor tenant; navigation to home/dashboard on success; non-technical error on failure (e.g. "Incorrect email or password") without revealing which field failed |
 
 Tenant isolation is enforced at the database layer (RLS), not only by hiding UI elements.
@@ -66,19 +66,21 @@ The mobile application shall submit the image and quantity to `POST /api/v1/scan
 |--|--|
 | Inputs | Validated (image, quantity) from FR-V-003 and FR-V-004; vendor session from FR-V-001; optional product/batch ids if UI supports linking |
 | Processing | Upload image (e.g. to R2 via API); create scan record with confirmed quantity and tenant context; backend enqueues Celery job and returns immediately without waiting for classification; handle 401/403/422 with user-visible messages |
-| Outputs | Accepted scan `id` and initial `status` (typically `pending`); navigate to result/waiting UI |
+| Outputs | Accepted scan `id` and initial `status` (typically `pending`); optional waiting UI; vendor may leave the app without waiting for classification |
 
 ---
 
-### FR-V-006 View scan result status (Must)
+### FR-V-006 View scan result status via push (Must)
 
-After acceptance, the mobile application shall let the vendor view scan status and, when `completed`, show classification and freshness score (polling `GET /api/v1/scans/{id}` or equivalent).
+After acceptance, the system shall notify the vendor when the scan reaches a terminal status (`completed` or `failed`) using a mobile push notification (Expo Push / FCM / APNs as configured for the app). The vendor shall not be required to keep the app open or poll continuously while the worker is queued.
 
 | | |
 |--|--|
-| Inputs | Scan id |
-| Processing | Poll or refresh until terminal status; show `pending`, `processing`, `failed`, or `completed`; on failure show vendor-facing reason and allow retake/resubmit |
-| Outputs | Status UI with thumbnail, quantity, timestamp; on completed: produce type (when available), classification (`fresh` / `medium` / `spoiled`), and `freshness_score` |
+| Inputs | Scan id; vendor device push token registered after sign-in (FR-V-001); push permission state |
+| Processing | On classification complete or fail, backend sends a push to the vendor's registered device(s) for that tenant; on notification receive or tap, the app fetches authoritative state via `GET /api/v1/scans/{id}` and shows the result; while the result screen is open, the app may use short limited polling as a fallback; if push permission is denied, the app shall still show status when the vendor reopens the app or opens the scan list (FR-V-007) |
+| Outputs | Push notification for terminal scan status; status UI with thumbnail, quantity, timestamp; on completed: produce type (when available), classification (`fresh` / `medium` / `spoiled`), and `freshness_score`; on failure: vendor-facing reason and path to retake/resubmit |
+
+Push delivers the wake-up signal. The HTTP scan resource remains the source of truth for classification fields.
 
 ---
 
