@@ -35,24 +35,34 @@ Physical deployment, container topology, and detailed sequence diagrams belong i
 7. Raise and list low-stock and static aging alerts.
 8. Let platform admins manage tenants, vendor profiles, and product catalogues, and view aggregated analytics (V1 graded scope as implemented for demos).
 
+
+
 ## 2.3 User characteristics
 
-| User class | Characteristics | Implications |
-|------------|-----------------|--------------|
-| Vendor | Small-shop owner; smartphone user; limited time; may not be technical | Mobile UX must be simple; camera, quantity confirm, and clear status; no on-device CNN required for V1 |
-| Platform Admin | Course/demo operator or platform operator; uses desktop browser | Web console for catalogues, tenants, and analytics |
+
+| User class     | Characteristics                                                       | Implications                                                                                           |
+| -------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Vendor         | Small-shop owner; smartphone user; limited time; may not be technical | Mobile UX must be simple; camera, quantity confirm, and clear status; no on-device CNN required for V1 |
+| Platform Admin | Platform operator; uses desktop browser                               | Web console for catalogues, tenants, and analytics                                                     |
+
+
+
 
 ## 2.4 Constraints
 
-| Constraint | Implication |
-|------------|-------------|
-| Approved stack | FastAPI, PostgreSQL + RLS, Supabase Auth, Next.js, Expo, Celery + Redis, Cloudflare R2, Docker Compose |
-| Async inference only | No CNN inside API request handlers |
-| Tenant isolation | Every business table has `tenant_id` + RLS in the same migration |
-| Redis namespacing | Keys use `tenant:{tenant_id}:...` |
-| V1 scan model | One product type per photo; quantity is vendor-confirmed |
-| Course calendar | Mid-eval may use stub ML; real FL-2TC by Progress Review 2 / final |
-| No NestJS / second queue | Stack is locked for the semester |
+
+| Constraint               | Implication                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Approved stack           | FastAPI, PostgreSQL + RLS, Supabase Auth, Next.js, Expo, Celery + Redis, Cloudflare R2, Docker Compose |
+| Async inference only     | No CNN inside API request handlers                                                                     |
+| Tenant isolation         | Every business table has `tenant_id` + RLS in the same migration                                       |
+| Redis namespacing        | Keys use `tenant:{tenant_id}:...`                                                                      |
+| V1 scan model            | One product type per photo; quantity is vendor-confirmed                                               |
+| Course calendar          | Mid-eval may use stub ML; real FL-2TC by Progress Review 2 / final                                     |
+| No NestJS / second queue | Stack is locked for V1                                                                                 |
+
+
+
 
 ## 2.5 Assumptions and dependencies
 
@@ -64,13 +74,17 @@ Physical deployment, container topology, and detailed sequence diagrams belong i
 6. Vendors enter quantities honestly; V1 does not independently verify counts from the image.
 7. Platform admin accounts are provisioned out-of-band for the prototype (not self-serve signup).
 
+
+
 ## 2.6 Apportioning of requirements (V1 vs V2)
 
-| Scope | Examples |
-|-------|----------|
-| Must (V1) | Auth, async scan 202, stub or FL-2TC classification, RLS, low-stock and static aging alerts, vendor mobile core flows, admin catalogue/tenant basics |
-| Should (V1 if time) | Richer admin analytics, alert CRUD beyond list, product/batch full CRUD APIs |
-| Could (V2) | Multi-item detection, age estimation, predicted rot-date, ML aging alerts, voice sale deduction |
-| Out of scope | IoT sensors, procurement integrations, accounting/tax |
+
+| Scope               | Examples                                                                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Must (V1)           | Auth, async scan 202, stub or FL-2TC classification, RLS, low-stock and static aging alerts, vendor mobile core flows, admin catalogue/tenant basics |
+| Should (V1 if time) | Richer admin analytics, alert CRUD beyond list, product/batch full CRUD APIs                                                                         |
+| Could (V2)          | Multi-item detection, age estimation, predicted rot-date, ML aging alerts, voice sale deduction                                                      |
+| Out of scope        | IoT sensors, procurement integrations, accounting/tax                                                                                                |
+
 
 Specific requirements in Section 3 are Must unless marked otherwise.
