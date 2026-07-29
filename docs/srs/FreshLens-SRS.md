@@ -197,21 +197,23 @@ This section states detailed, testable requirements for FreshLens Version 1. Fun
 
 Issue: [#36](https://github.com/FreshLens-AI/FreshLens-AI/issues/36). Priority: Must.
 
-Client: Expo / React Native mobile app. Role: `vendor`.
+Client: Expo / React Native (SDK 57). Role: `vendor`.
 
-V1 does not require on-device CNN inference. Classification runs on the backend worker.
+The mobile app is the vendor's only interface into the platform: capture shelf images, confirm stock quantities, submit scans, and monitor inventory and freshness status. All vendor-facing data is scoped to the authenticated tenant. V1 does not require on-device CNN inference; classification runs asynchronously on the backend (Proposal Section 2, Section 5.2).
 
 ---
 
 ### FR-V-001 Vendor authentication (Must)
 
-The mobile application shall allow a vendor to sign in using the project's Supabase Auth flow and retain a session token for API calls.
+The mobile application shall allow a vendor to sign in using Supabase Auth and retain a session token for API calls.
 
 | | |
 |--|--|
-| Inputs | Vendor credentials (as supported by Supabase Auth for the prototype) |
-| Processing | Obtain JWT; store securely on device per Expo/secure-store practices used by the app |
-| Outputs | Authenticated session; subsequent API calls send `Authorization: Bearer <JWT>` |
+| Inputs | Vendor email/username and password (or other Supabase-supported credential method); device/session metadata for persistence |
+| Processing | Submit credentials to Supabase Auth over HTTPS; on success store JWT securely on-device and attach as Bearer token on all API calls; on invalid credentials show inline error without establishing a session; on session expiry prompt re-authentication before further scanning or dashboard access |
+| Outputs | Authenticated session scoped to one vendor tenant; navigation to home/dashboard on success; non-technical error on failure (e.g. "Incorrect email or password") without revealing which field failed |
+
+Tenant isolation is enforced at the database layer (RLS), not only by hiding UI elements.
 
 ---
 
@@ -229,25 +231,25 @@ The mobile application shall allow the vendor to sign out, clearing the local se
 
 ### FR-V-003 Capture produce photo (Must)
 
-The mobile application shall provide a camera interface (or gallery-picker fallback for demos) to capture one product type per photo for a scan.
+The mobile application shall provide a camera interface (or gallery-picker fallback for demos) to capture one product type per photo for a scan. V1 supports exactly one product per photograph; multi-item shelf detection is out of scope.
 
 | | |
 |--|--|
-| Inputs | Camera/gallery image |
-| Processing | Preview image; allow retake before submit |
-| Outputs | Image ready for upload with the scan request |
+| Inputs | Live camera feed via Expo camera module (or gallery image); vendor shutter action; optional retake |
+| Processing | Request camera permission on first use; on capture store image locally and show preview (accept/retake); perform only lightweight client-side checks (non-empty image file); no on-device classification or quality scoring |
+| Outputs | Single locally held product image ready for quantity confirmation; preview UI allowing retake before proceeding |
 
 ---
 
 ### FR-V-004 Confirm quantity at scan time (Must)
 
-Before submit, the mobile application shall require the vendor to enter or confirm a quantity (integer >= 1) associated with the scan.
+Before submit, the mobile application shall require the vendor to enter or confirm a quantity (integer >= 1) associated with the scan. V1 relies on vendor-entered quantities; automatic count verification from the image is not in scope.
 
 | | |
 |--|--|
-| Inputs | Vendor quantity entry |
-| Processing | Validate >= 1; include as `quantity` in multipart submit |
-| Outputs | Quantity bound to the pending submission |
+| Inputs | Vendor-entered numeric quantity (integer >= 1); captured image from FR-V-003 shown for context |
+| Processing | Present numeric input next to image; validate positive integer before proceed; attach quantity to pending scan payload with image and tenant context |
+| Outputs | Validated (image, quantity) pair ready for submission; inline validation error if quantity missing, zero, or non-numeric |
 
 ---
 
@@ -257,21 +259,21 @@ The mobile application shall submit the image and quantity to `POST /api/v1/scan
 
 | | |
 |--|--|
-| Inputs | Image and quantity (optional product/batch ids if the UI supports linking) |
-| Processing | Multipart upload with Bearer token; handle 401/403/422 errors with user-visible messages |
-| Outputs | Accepted scan `id` and initial `status`; navigate to result/waiting UI |
+| Inputs | Validated (image, quantity) from FR-V-003 and FR-V-004; vendor session from FR-V-001; optional product/batch ids if UI supports linking |
+| Processing | Upload image (e.g. to R2 via API); create scan record with confirmed quantity and tenant context; backend enqueues Celery job and returns immediately without waiting for classification; handle 401/403/422 with user-visible messages |
+| Outputs | Accepted scan `id` and initial `status` (typically `pending`); navigate to result/waiting UI |
 
 ---
 
 ### FR-V-006 View scan result status (Must)
 
-After acceptance, the mobile application shall let the vendor view scan status and, when `completed`, show `classification` and `freshness_score` (polling `GET /api/v1/scans/{id}` or equivalent).
+After acceptance, the mobile application shall let the vendor view scan status and, when `completed`, show classification and freshness score (polling `GET /api/v1/scans/{id}` or equivalent).
 
 | | |
 |--|--|
 | Inputs | Scan id |
-| Processing | Poll or refresh until terminal status; show pending, processing, failed, or completed as appropriate |
-| Outputs | Status UI; on completed: freshness label and score |
+| Processing | Poll or refresh until terminal status; show `pending`, `processing`, `failed`, or `completed`; on failure show vendor-facing reason and allow retake/resubmit |
+| Outputs | Status UI with thumbnail, quantity, timestamp; on completed: produce type (when available), classification (`fresh` / `medium` / `spoiled`), and `freshness_score` |
 
 ---
 
@@ -287,15 +289,15 @@ The mobile application shall display a list of the vendor's recent scans for the
 
 ---
 
-### FR-V-008 View alerts (Must)
+### FR-V-008 View alerts and batch context (Must)
 
-The mobile application shall display tenant alerts (via `GET /api/v1/alerts`), including an empty state when none exist.
+The mobile application shall display tenant alerts (via `GET /api/v1/alerts`), including low-stock and static aging alerts with batch context, and an empty state when none exist.
 
 | | |
 |--|--|
-| Inputs | Authenticated session |
-| Processing | Fetch alerts; show type, severity, message |
-| Outputs | Alerts screen / section |
+| Inputs | Authenticated session; backend alert data (low-stock thresholds, shelf-life aging rules) |
+| Processing | Fetch tenant-scoped alerts; render type, severity, message; link each alert to batch context (intake date, quantity received, quantity remaining, category shelf-life) where applicable; alerts are read-only on mobile in V1 |
+| Outputs | Alerts list scoped to vendor tenant; batch context per alert sufficient to act (reorder, discount, remove aging stock) |
 
 ---
 
@@ -306,7 +308,7 @@ The mobile application shall provide a simple dashboard summarizing the vendor's
 | | |
 |--|--|
 | Inputs | Scan/alert/batch data from API |
-| Processing | Aggregate or list key metrics in UI |
+| Processing | Aggregate or list key metrics in UI; show in-progress and completed scans |
 | Outputs | Dashboard view |
 
 ---
