@@ -71,6 +71,6 @@ Clients and API shall communicate over HTTP(S) with JSON response bodies (multip
 
 Protected requests shall send `Authorization: Bearer <JWT>`.
 
-### IR-COM-003 No client webhook requirement (Must)
+### IR-COM-003 Push for scan completion; no client webhooks (Must)
 
-V1 clients are not required to expose webhooks. Scan completion is observed by polling (or future optional push, Could).
+V1 clients are not required to expose inbound webhooks. Scan completion shall be delivered to the vendor mobile app primarily via push notifications (Expo Push / FCM / APNs). The app then retrieves authoritative scan data with `GET /api/v1/scans/{id}`. Short limited polling is allowed only while a result screen is open, or as a fallback when push permission is denied.

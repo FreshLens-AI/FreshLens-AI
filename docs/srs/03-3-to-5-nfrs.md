@@ -28,7 +28,7 @@ For a valid authenticated scan request with image size <= 5 MB, the API shall re
 
 ### NFR-P-002 Inference decoupling (Must)
 
-End-to-end time from 202 acceptance to `completed` may vary with worker load. The system shall not require the client to hold an open HTTP request for inference. Clients shall poll `GET /api/v1/scans/{id}` (or an equivalent documented mechanism).
+End-to-end time from 202 acceptance to `completed` may vary with worker load. The system shall not require the client to hold an open HTTP request for inference, and shall not require the vendor to keep the app open for the duration of the queue. Primary delivery of terminal scan status shall be a mobile push notification; the client then fetches `GET /api/v1/scans/{id}` for authoritative fields. Continuous background polling is not the V1 delivery mechanism.
 
 ### NFR-P-003 Prototype concurrency (Should)
 
