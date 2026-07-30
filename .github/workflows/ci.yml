@@ -24,13 +24,23 @@ jobs:
           test -f CONTRIBUTING.md
           echo "Monorepo scaffold OK"
 
-  # ponytail: placeholder jobs — enable when apps exist
-  # api-lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - run: echo "Add ruff/pytest when apps/api is scaffolded"
+  api-test:
+    name: API tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/api/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: pytest
 
+  # ponytail: expand in #14 (ruff/lint, Docker build, RLS isolation)
   # rls-isolation:
   #   runs-on: ubuntu-latest
   #   steps:
