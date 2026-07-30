@@ -15,7 +15,7 @@ The mobile application shall allow a vendor to sign in using Supabase Auth and r
 | | |
 |--|--|
 | Inputs | Vendor email/username and password (or other Supabase-supported credential method); device/session metadata for persistence |
-| Processing | Submit credentials to Supabase Auth over HTTPS; on success store JWT securely on-device and attach as Bearer token on all API calls; register or refresh a push device token with the backend for scan-completion notifications (FR-V-006); on invalid credentials show inline error without establishing a session; on session expiry prompt re-authentication before further scanning or dashboard access |
+| Processing | Submit credentials to Supabase Auth over HTTPS; on success store JWT securely on-device and attach as Bearer token on all API calls; register or refresh a push device token with the backend for scan-completion (FR-V-006) and alert notifications (FR-V-008); on invalid credentials show inline error without establishing a session; on session expiry prompt re-authentication before further scanning or dashboard access |
 | Outputs | Authenticated session scoped to one vendor tenant; navigation to home/dashboard on success; non-technical error on failure (e.g. "Incorrect email or password") without revealing which field failed |
 
 Tenant isolation is enforced at the database layer (RLS), not only by hiding UI elements.
@@ -96,15 +96,17 @@ The mobile application shall display a list of the vendor's recent scans for the
 
 ---
 
-### FR-V-008 View alerts and batch context (Must)
+### FR-V-008 View alerts via push and batch context (Must)
 
-The mobile application shall display tenant alerts (via `GET /api/v1/alerts`), including low-stock and static aging alerts with batch context, and an empty state when none exist.
+The mobile application shall notify the vendor when a new or updated tenant alert is raised (low-stock, aging, spoilage) using a mobile push notification (Expo Push / FCM / APNs as configured for the app). The vendor shall also be able to view all tenant alerts in an in-app list with batch context.
 
 | | |
 |--|--|
-| Inputs | Authenticated session; backend alert data (low-stock thresholds, shelf-life aging rules) |
-| Processing | Fetch tenant-scoped alerts; render type, severity, message; link each alert to batch context (intake date, quantity received, quantity remaining, category shelf-life) where applicable; alerts are read-only on mobile in V1 |
-| Outputs | Alerts list scoped to vendor tenant; batch context per alert sufficient to act (reorder, discount, remove aging stock) |
+| Inputs | Authenticated session; vendor device push token (FR-V-001); push permission state; backend alert data (low-stock thresholds, shelf-life aging rules) |
+| Processing | On alert push receive or tap, fetch tenant-scoped alerts via `GET /api/v1/alerts` and navigate to or refresh the alerts view; render type, severity, message; link each alert to batch context (intake date, quantity received, quantity remaining, category shelf-life) where applicable; alerts are read-only on mobile in V1; if push permission is denied, alerts remain visible when the vendor opens the alerts screen or dashboard (FR-V-009) |
+| Outputs | Push notification for new or updated alerts; alerts list scoped to vendor tenant; batch context per alert sufficient to act (reorder, discount, remove aging stock); empty state when none exist |
+
+Push delivers the wake-up signal. The HTTP alert list remains the source of truth for alert fields.
 
 ---
 
