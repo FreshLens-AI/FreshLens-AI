@@ -89,7 +89,7 @@ The system shall represent Tier-2 freshness as exactly one of: `fresh`, `medium`
 | | |
 |--|--|
 | Inputs | Image bytes (via stored path) |
-| Processing | Tier 1 identifies produce type; Tier 2 assigns freshness label. Mid-evaluation may use a stub that writes a valid label and `model_version` such as `stub-v0`. Final graded ML demo shall use the trained FL-2TC (or documented successor) with a non-stub `model_version`. |
+| Processing | Tier 1 identifies produce type; Tier 2 assigns freshness label. Mid-evaluation may use a stub that writes a valid label and `model_version` such as `stub-v0`. Final ML demo shall use the trained FL-2TC (or documented successor) with a non-stub `model_version`. |
 | Outputs | `classification` enum; `freshness_score` in [0, 1] when completed |
 
 ---
@@ -114,7 +114,7 @@ The system shall raise a `low_stock` alert when a product's recorded remaining q
 |--|--|
 | Inputs | Product/batch quantity remaining; configured threshold |
 | Processing | Compare remaining quantity to threshold; create alert with type `low_stock` and appropriate severity |
-| Outputs | Alert visible via tenant-scoped alert list |
+| Outputs | Alert record created; push and list delivery per FR-S-013 |
 
 ---
 
@@ -126,7 +126,7 @@ The system shall raise an `aging` alert when a batch's time since intake exceeds
 |--|--|
 | Inputs | Batch `intake_date`, `quantity_received`, `quantity_remaining`; category/admin `shelf_life_days` |
 | Processing | Evaluate static rule; create alert with type `aging` |
-| Outputs | Alert linked to `batch_id` / `product_id` as applicable |
+| Outputs | Alert linked to `batch_id` / `product_id`; push and list delivery per FR-S-013 |
 
 ---
 
@@ -150,4 +150,18 @@ When a completed scan classification is `spoiled`, the system should create or u
 |--|--|
 | Inputs | Completed scan with `classification = spoiled` |
 | Processing | Create alert record |
-| Outputs | Alert in list API |
+| Outputs | Alert record created; push and list delivery per FR-S-013 |
+
+---
+
+### FR-S-013 Deliver alerts via push (Must)
+
+When the system creates or updates a tenant alert (FR-S-009, FR-S-010, FR-S-012), it shall send a mobile push notification to the vendor's registered device(s) for that tenant. The vendor shall not be required to poll continuously for new alerts.
+
+| | |
+|--|--|
+| Inputs | New or updated alert record; vendor device push token(s) registered at sign-in (FR-V-001) |
+| Processing | On alert creation or material update, send push via Expo Push / FCM / APNs (IR-COM-003); include enough context to open the alerts UI (e.g. alert id or type); do not treat the push payload as the sole source of truth for alert fields |
+| Outputs | Push notification delivered to vendor device(s); alert retrievable via `GET /api/v1/alerts` (FR-S-011) |
+
+Push delivers the wake-up signal. The HTTP alert list remains the source of truth for alert fields.
