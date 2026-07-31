@@ -26,6 +26,22 @@ cp .env.example .env
 docker compose -f infra/docker/docker-compose.yml up --build
 ```
 
+### Admin UI demo
+
+The platform-admin workflow is available as a frontend-only, browser-persisted
+demo. It does not require authentication or a running API:
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The routable workspace covers
+tenant profiles, catalogue and shelf-life management, alert administration,
+aggregate scan activity, and analytics. See [`apps/web/README.md`](apps/web/README.md)
+for the route map and privacy boundary.
+
 ## Team workflow
 
 - **Branching:** GitHub Flow — `feat/*`, `fix/*`, `chore/*` off `main`
