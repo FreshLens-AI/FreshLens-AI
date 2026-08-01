@@ -1,12 +1,21 @@
 import type { ReactNode } from "react";
 
 import { AdminShell } from "@/components/layout/admin-shell";
+import { requirePlatformAdmin } from "@/lib/auth/session";
 import { AdminDataProvider } from "@/store/admin-data-provider";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export const dynamic = "force-dynamic";
+
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const admin = await requirePlatformAdmin();
+
   return (
     <AdminDataProvider>
-      <AdminShell>{children}</AdminShell>
+      <AdminShell
+        admin={{ displayName: admin.displayName, email: admin.email }}
+      >
+        {children}
+      </AdminShell>
     </AdminDataProvider>
   );
 }

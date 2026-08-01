@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # Run for stacked pull requests as well as PRs targeting main.
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -54,13 +54,80 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      - run: npm test
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
 
-  # ponytail: expand in #14 (ruff/lint, Docker build, RLS isolation)
-  # rls-isolation:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - run: echo "Add tenant isolation test when DB migrations land"
+  mobile-check:
+    name: Mobile type check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+
+  rls-isolation:
+    name: PostgreSQL RLS isolation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: freshlens
+          POSTGRES_PASSWORD: freshlens
+          POSTGRES_DB: freshlens
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U freshlens -d freshlens"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply identity schema and verify two-tenant isolation
+        env:
+          PGPASSWORD: freshlens
+        run: |
+          for sql_file in \
+            infra/db/local/0000_supabase_compat.sql \
+            infra/db/migrations/0001_auth_tenancy.sql \
+            infra/db/local/0020_runtime_login.sql \
+            infra/db/tests/rls_isolation.sql
+          do
+            docker run --rm --network host \
+              -e PGPASSWORD \
+              -v "$GITHUB_WORKSPACE:/workspace:ro" \
+              postgres:16-alpine \
+              psql \
+                --host 127.0.0.1 \
+                --username freshlens \
+                --dbname freshlens \
+                --set ON_ERROR_STOP=1 \
+                --file "/workspace/$sql_file"
+          done
+
+      - name: Verify the restricted runtime login can connect
+        env:
+          PGPASSWORD: freshlens_api_local
+        run: |
+          docker run --rm --network host \
+            -e PGPASSWORD \
+            -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            postgres:16-alpine \
+            psql \
+              --host 127.0.0.1 \
+              --username freshlens_api_local \
+              --dbname freshlens \
+              --set ON_ERROR_STOP=1 \
+              --file /workspace/infra/db/tests/runtime_role.sql
