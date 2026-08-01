@@ -34,8 +34,8 @@ docs: add SRS architecture diagram
 
 1. Open PR against `main`.
 2. Fill in the PR template (what, issue link, how to test).
-3. Request review from the **area owner** (see CODEOWNERS).
-4. **Squash merge** after CI passes and at least one approval.
+3. Request review from the **area owner** (see CODEOWNERS). Branch protection on `main` requires a CODEOWNERS review when owned paths change.
+4. **Squash merge** after required CI checks pass and approvals (including code owners when applicable).
 
 ### Review SLA
 
