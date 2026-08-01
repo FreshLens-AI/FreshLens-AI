@@ -10,10 +10,15 @@ Applies when editing `infra/db/`.
 
 ## Every migration that adds a business table must include
 
-1. `tenant_id UUID NOT NULL REFERENCES tenants(id)`
+1. `tenant_id UUID NOT NULL REFERENCES tenants(id)` for vendor operational rows
 2. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
 3. Policy using `current_setting('app.tenant_id')::uuid`
 4. Index on `tenant_id` for tenant-scoped queries
+
+Identity roots are the explicit exception: `tenants` is the isolation root, and
+`users.tenant_id` is nullable only for `platform_admin` identities. A database
+constraint must require a tenant for every `vendor` user and reject a tenant on
+every `platform_admin` user.
 
 ## Example pattern
 

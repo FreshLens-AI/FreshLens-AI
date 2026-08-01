@@ -15,8 +15,8 @@ Architecture rules: [`.cursor/rules/freshlens-architecture.mdc`](../../.cursor/r
 | Topic | Rule |
 |-------|------|
 | Base path | Versioned resources under `/api/v1` |
-| Auth | `Authorization: Bearer <Supabase JWT>` on all routes except `GET /health` |
-| Tenant | Middleware sets Postgres `app.tenant_id` from the JWT (UUID). **Never** trust `tenant_id` in the request body |
+| Auth | `Authorization: Bearer <Supabase JWT>` on every `/api/v1/*` route; `GET /health` is public |
+| Tenant | Auth middleware derives trusted identity from the JWT; the tenant DB transaction sets Postgres `app.tenant_id` on its own connection. **Never** trust `tenant_id` in the request body |
 | Roles | `vendor` \| `platform_admin` |
 | Errors | FastAPI-shaped `{ "detail": string \| object }`: 401 / 403 / 404 / 409 / 422 |
 | IDs | UUID strings |
@@ -63,6 +63,7 @@ After a sale commits, clients use `GET /api/v1/products`, `GET /api/v1/batches`,
 | Method | Path | Role | Response |
 |--------|------|------|----------|
 | `GET` | `/health` | public | `200` `{ "status": "ok" }` |
+| `GET` | `/api/v1/auth/me` | vendor, platform_admin | Verified role and tenant context |
 | `POST` | `/api/v1/scans` | vendor | **`202`** `ScanAccepted` |
 | `GET` | `/api/v1/scans/{scan_id}` | vendor | `200` `Scan` |
 | `GET` | `/api/v1/scans` | vendor | `200` `ScanList` |
@@ -72,6 +73,13 @@ After a sale commits, clients use `GET /api/v1/products`, `GET /api/v1/batches`,
 | `POST` | `/api/v1/sales` | vendor | `201` `Sale` |
 | `POST` | `/api/v1/sales/voice-draft` | vendor | `200` `VoiceSaleDraft` |
 | `GET` | `/api/v1/admin/tenants` | platform_admin | `200` `TenantList` (web scaffold) |
+
+## Authentication claims
+
+Supabase's standard `role` claim remains `authenticated`. FreshLens uses the
+server-signed custom claims `app_role` (`vendor` or `platform_admin`) and
+`tenant_id` (required only for vendors). The API never accepts either value from
+request bodies or user-editable metadata. See [`../authentication.md`](../authentication.md).
 
 ## Out of scope (later)
 
