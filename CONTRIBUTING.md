@@ -16,9 +16,10 @@ Guidelines for Group 21 (CS3203, PID 5). Keep process light; follow the rules th
 
 1. Never commit directly to `main` — open a PR.
 2. One issue per branch; reference the issue in the PR (`Closes #N`).
-3. Keep PRs small (aim &lt; 400 lines). Split large work.
+3. Keep PRs small (aim &lt; 400 lines of reviewable diff). Exclude `package-lock.json` / `*-lock.json` from the soft limit, but still split **multi-area** work (web vs api vs mobile vs db) into separate PRs so CODEOWNERS can review.
 4. Rebase or merge `main` into your branch daily if the branch lives more than a day.
 5. Delete the branch after merge.
+6. Stacked feature PRs must target `main` (or a short-lived split base that itself targets `main`) — do not land unrelated area work by merging into another long-lived feature branch.
 
 ### Commit messages
 
