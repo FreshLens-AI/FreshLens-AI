@@ -19,12 +19,24 @@ infra/
 docs/       SRS, design, feasibility (course deliverables)
 ```
 
-## Quick start (after scaffold is complete)
+## Local services
 
 ```bash
 cp .env.example .env
 docker compose -f infra/docker/docker-compose.yml up --build
 ```
+
+Fill in `SUPABASE_URL` before testing protected API routes. On a new local
+PostgreSQL volume, Compose applies the identity migration and creates the
+development-only `freshlens_api_local` login used by the API container. The
+database owner is used only for initialization, never for application queries.
+
+`DATABASE_URL` is for an API process running on the host (`localhost`). Compose
+uses its own safe `postgres` hostname. Set `COMPOSE_DATABASE_URL` only when the
+containerized API should connect to a hosted Supabase database through its
+restricted session-pooler URI, and set `COMPOSE_DATABASE_SSL_MODE=require` to
+enforce TLS. Full Supabase and account setup is documented
+in [`docs/authentication.md`](docs/authentication.md).
 
 ## Team workflow
 
@@ -35,7 +47,7 @@ docker compose -f infra/docker/docker-compose.yml up --build
 
 ## Architecture rules (non-negotiable)
 
-1. **Multi-tenancy via Postgres RLS** — every business table has `tenant_id` + RLS policy
+1. **Multi-tenancy via Postgres RLS** — vendor operational tables have a non-null `tenant_id` + RLS policy; identity roots use the documented admin exception
 2. **Async inference only** — `POST /scan` returns `202`; CNN runs in Celery worker, never inline in API handlers
 
 ## Owners

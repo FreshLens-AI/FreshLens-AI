@@ -14,7 +14,8 @@ Every business table: `tenant_id` column + RLS policy in the **same migration**.
 USING (tenant_id = current_setting('app.tenant_id')::uuid)
 ```
 
-- API middleware sets `app.tenant_id` from auth JWT at request start
+- Auth middleware derives trusted tenant context from the JWT; the tenant DB
+  transaction sets `app.tenant_id` on the same connection used by its queries
 - App-code tenant filters are defense-in-depth only — never the sole safeguard
 - Core tables: `tenants` → `users`, `products`, `scans`, `batches`, `alerts`
 
