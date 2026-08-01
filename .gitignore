@@ -44,3 +44,7 @@ Thumbs.db
 # Secrets
 *.pem
 credentials.json
+
+# Design — commit PNG previews; keep GraphViz/draw.io sources local
+docs/design/diagrams/*.dot
+docs/design/diagrams/*.drawio
