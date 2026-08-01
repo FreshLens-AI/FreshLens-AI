@@ -10,6 +10,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../db/local/0000_supabase_compat.sql:/docker-entrypoint-initdb.d/0000_supabase_compat.sql:ro
+      - ../db/migrations/0001_auth_tenancy.sql:/docker-entrypoint-initdb.d/0010_auth_tenancy.sql:ro
+      - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U freshlens"]
       interval: 5s
@@ -31,11 +34,17 @@ services:
       context: ../../apps/api
     ports:
       - "8000:8000"
-    env_file:
-      - ../../.env.example
     environment:
-      APP_ENV: development
-      DATABASE_URL: postgresql://freshlens:freshlens@postgres:5432/freshlens
+      APP_ENV: ${APP_ENV:-development}
+      # COMPOSE_DATABASE_URL can point at a hosted restricted Supabase login.
+      # DATABASE_URL in the root .env remains suitable for running the API on
+      # the host, where the database hostname is localhost rather than postgres.
+      DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgresql://freshlens_api_local:freshlens_api_local@postgres:5432/freshlens}
+      DATABASE_SSL_MODE: ${COMPOSE_DATABASE_SSL_MODE:-disable}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_JWT_AUDIENCE: ${SUPABASE_JWT_AUDIENCE:-authenticated}
+      SUPABASE_JWT_CLOCK_SKEW_SECONDS: ${SUPABASE_JWT_CLOCK_SKEW_SECONDS:-30}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002}
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1

@@ -6,9 +6,11 @@ info:
     Mid-eval V1 contract for FreshLens (CS3203 · Group 21 · PID 5).
 
     - Base path for versioned resources: `/api/v1`
-    - Auth: Supabase JWT Bearer on all routes except `GET /health`
-    - Tenant isolation: API middleware sets Postgres `app.tenant_id` from the JWT;
-      never trust a client-supplied `tenant_id` in the request body
+    - Auth: Supabase JWT Bearer on every versioned `/api/v1/*` route;
+      `GET /health` is public
+    - Tenant isolation: auth middleware derives trusted identity from the JWT, and
+      the tenant DB transaction sets Postgres `app.tenant_id` on its own connection;
+      never trust a client-supplied `tenant_id`
     - Async scan only: `POST /api/v1/scans` returns **202**; CNN runs in Celery, never
       in the request handler (stub classifier acceptable for mid-eval)
 
@@ -18,6 +20,7 @@ servers:
     description: Local Docker Compose / FastAPI (prototype)
 tags:
   - name: Health
+  - name: Auth
   - name: Scans
   - name: Alerts
   - name: Admin
@@ -38,6 +41,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Return the verified FreshLens identity context
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor, platform_admin]
+      responses:
+        "200":
+          description: Trusted identity derived from the signed Supabase JWT
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /api/v1/scans:
     post:
@@ -263,6 +286,25 @@ components:
         status:
           type: string
           enum: [ok]
+
+    CurrentUser:
+      type: object
+      required: [user_id, role, tenant_id, email]
+      additionalProperties: false
+      properties:
+        user_id:
+          $ref: "#/components/schemas/Uuid"
+        role:
+          $ref: "#/components/schemas/Role"
+        tenant_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        email:
+          oneOf:
+            - type: string
+              format: email
+            - type: "null"
 
     Error:
       type: object

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Bell, Menu, RotateCcw, Sprout, X } from "lucide-react";
+import { Bell, LogOut, Menu, RotateCcw, Sprout, X } from "lucide-react";
 
+import { signOutAction } from "@/app/(auth)/actions";
 import { insightNavigation, primaryNavigation } from "@/lib/navigation";
 import { useAdminData } from "@/store/admin-data-provider";
 
@@ -48,7 +49,13 @@ function NavigationGroup({
   );
 }
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({
+  admin,
+  children,
+}: {
+  admin: { displayName: string; email: string | null };
+  children: ReactNode;
+}) {
   const pathname = usePathname();
   const { alerts, resetDemoData } = useAdminData();
   const [open, setOpen] = useState(false);
@@ -159,12 +166,24 @@ export function AdminShell({ children }: { children: ReactNode }) {
               {activeAlerts > 0 ? <span>{activeAlerts}</span> : null}
             </Link>
             <div className="profile-chip" aria-label="Platform admin profile">
-              <span className="profile-chip__avatar">PA</span>
+              <span className="profile-chip__avatar">
+                {admin.displayName.slice(0, 2).toUpperCase()}
+              </span>
               <span className="profile-chip__copy">
-                <strong>Platform Admin</strong>
-                <small>Demo operator</small>
+                <strong>{admin.displayName}</strong>
+                <small>{admin.email ?? "Platform administrator"}</small>
               </span>
             </div>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="icon-button sign-out-button"
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut size={19} />
+              </button>
+            </form>
           </div>
         </header>
 
