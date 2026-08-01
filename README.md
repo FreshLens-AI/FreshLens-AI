@@ -26,6 +26,25 @@ cp .env.example .env
 docker compose -f infra/docker/docker-compose.yml up --build
 ```
 
+### Authenticated admin UI
+
+The platform-admin workflow uses Supabase Auth and browser-persisted demo data.
+It does not require a running API yet, but it does require a provisioned
+`platform_admin` account:
+
+```bash
+cd apps/web
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The routable workspace covers
+tenant profiles, catalogue and shelf-life management, alert administration,
+aggregate scan activity, and analytics. See [`apps/web/README.md`](apps/web/README.md)
+for the route map and [`docs/authentication.md`](docs/authentication.md) for
+Supabase setup and account provisioning.
+
 ## Team workflow
 
 - **Branching:** GitHub Flow — `feat/*`, `fix/*`, `chore/*` off `main`
