@@ -25,7 +25,7 @@ Read this skill when implementing features, reviewing code, or planning work in 
 Before writing code:
 
 1. Confirm which `apps/` or `packages/` path owns the change
-2. Check open [GitHub Issues](https://github.com/FreshLens-AI/FreshLens-AI/issues) — work from an issue
+2. Check open [GitHub Issues](https://github.com/FreshLens-AI/FreshLens-AI/issues) and work from an issue
 3. Branch: `feat/<area>-<short-desc>` from `main`
 4. Verify change does not violate architecture rules below
 
@@ -38,9 +38,19 @@ After writing code:
 
 ## Architecture (non-negotiable)
 
-1. **RLS multi-tenancy** — `tenant_id` + policy on every business table, same migration
-2. **Async inference** — `POST /scan` → 202; CNN only in Celery worker
-3. **Stack locked** — FastAPI, Postgres, Supabase Auth, Next.js, Expo, Celery+Redis, R2
+1. **RLS multi-tenancy**: `tenant_id` + policy on every business table, same migration
+2. **Async inference**: `POST /scan` → 202; CNN only in Celery worker
+3. **Stack locked**: FastAPI, Postgres, Supabase Auth, Next.js, Expo, Celery+Redis, R2
+
+## Sales (non-negotiable)
+
+1. `POST /api/v1/sales` uses the shared sales service, the only component allowed to deduct stock
+2. `sales` and `sale_items` require `tenant_id` and RLS in the same migration
+3. Sale submission is atomic and idempotent; retries cannot deduct twice and batch stock cannot become negative
+4. Every item requires product resolution, vendor-selected batch, and explicit vendor confirmation
+5. Voice parsing returns an untrusted draft and cannot write inventory
+6. Raw audio and transcripts are not retained by default
+7. Device speech-to-text and one provider-neutral LLM transcript parser are allowed only for final V1 sale drafting
 
 ## Forbidden
 
@@ -50,6 +60,8 @@ After writing code:
 - Un-namespaced Redis keys
 - DB tables without RLS
 - Committing `.env` or secrets
+- Stock deduction outside the shared sales service
+- LLM inventory writes or sale submission without vendor confirmation
 
 ## Area ownership
 
@@ -62,11 +74,11 @@ After writing code:
 
 ## Milestones
 
-- **M1** (Jul 12) — Proposal, feasibility, schedule
-- **M2** (Aug 9) — SRS + design
-- **M3** (Aug 30) — Iteration 1, mid-eval (stub ML acceptable)
-- **M4** (Oct 2) — CNN + Celery + alerts (through Progress Review 2)
-- **M5** (Oct 3) — Testing, demo video, final report
+- **M1** (Jul 12): Proposal, feasibility, schedule
+- **M2** (Aug 9): SRS + design
+- **M3** (Aug 30): Iteration 1, mid-eval (stub ML acceptable)
+- **M4** (Oct 2): CNN + Celery + alerts (through Progress Review 2)
+- **M5** (Oct 3): Testing, demo video, final report
 
 ## Mid-eval note
 
@@ -74,6 +86,6 @@ Mid-evaluation (Aug 30) targets auth + DB + UI + async scan flow with **stubbed*
 
 ## Creating new GitHub tasks
 
-When seeding issues, use labels: `type:*`, `area:*`, `priority:*`, assign milestone M1–M5, set acceptance criteria as checkboxes.
+When seeding issues, use labels: `type:*`, `area:*`, `priority:*`, assign milestone M1-M5, set acceptance criteria as checkboxes.
 
 Scripts: `scripts/create-issues.cmd`, `scripts/seed-github.ps1`

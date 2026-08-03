@@ -33,3 +33,7 @@ The web admin UI shall expose primary destinations (tenants, catalogue, analytic
 ### NFR-U-008 Accessibility baseline (Should)
 
 Interactive controls shall have visible labels. Status must not be conveyed by color alone; pair color with text for freshness states.
+
+### NFR-U-009 Sale confirmation and voice fallback (Must)
+
+Before submitting a sale, the vendor UI shall show every product, batch, and quantity for explicit review and confirmation. When microphone permission is denied, speech recognition fails, parsing returns ambiguity, or product resolution fails, the app shall offer manual sale entry without blocking the vendor from recording the sale.

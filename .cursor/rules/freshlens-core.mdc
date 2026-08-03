@@ -3,7 +3,7 @@ description: FreshLens project identity, stack, monorepo layout, and hard constr
 alwaysApply: true
 ---
 
-# FreshLens — Project Context
+# FreshLens: Project Context
 
 **CS3203 · Group 21 · PID 5** · Repo: `FreshLens-AI/FreshLens-AI`
 
@@ -11,7 +11,7 @@ Multi-tenant SaaS for small grocery vendors. Phone camera → CNN classifies pro
 
 **Roles:** Vendor (mobile) · Platform Admin (web)
 
-## Monorepo — put code in the right place
+## Monorepo: put code in the right place
 
 | Path | Stack |
 |------|-------|
@@ -27,6 +27,8 @@ Multi-tenant SaaS for small grocery vendors. Phone camera → CNN classifies pro
 
 FastAPI · PostgreSQL + RLS · Supabase Auth (prototype) · Next.js · Expo · Celery + Redis · Cloudflare R2 · Docker Compose · GitHub Actions
 
+Final V1 sale drafting may use device speech-to-text and one provider-neutral LLM transcript parser. The parser returns an untrusted draft only and has no inventory persistence access.
+
 ## Never introduce
 
 - Node/NestJS backend (FastAPI only)
@@ -35,6 +37,9 @@ FastAPI · PostgreSQL + RLS · Supabase Auth (prototype) · Next.js · Expo · C
 - Sync CNN inference in API handlers
 - DB table without `tenant_id` + RLS in the same migration
 - Secrets in git (`.env`, keys, tokens)
+- Stock deduction outside the shared sales service
+- LLM output that writes inventory or bypasses vendor confirmation and batch selection
+- Default retention of raw sale audio or transcripts
 
 ## Ownership (PR reviews)
 
