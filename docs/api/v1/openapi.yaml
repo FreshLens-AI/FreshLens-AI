@@ -3,7 +3,7 @@ info:
   title: FreshLens API
   version: 1.0.0
   description: |
-    Mid-eval V1 contract for FreshLens (CS3203 · Group 21 · PID 5).
+    V1 contract for FreshLens (CS3203 · Group 21 · PID 5).
 
     - Base path for versioned resources: `/api/v1`
     - Auth: Supabase JWT Bearer on all routes except `GET /health`
@@ -20,6 +20,9 @@ tags:
   - name: Health
   - name: Scans
   - name: Alerts
+  - name: Products
+  - name: Batches
+  - name: Sales
   - name: Admin
 security:
   - bearerAuth: []
@@ -146,6 +149,138 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /api/v1/products:
+    get:
+      tags: [Products]
+      summary: List saleable products for the current tenant
+      operationId: listProducts
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      responses:
+        "200":
+          description: Tenant-scoped saleable products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/batches:
+    get:
+      tags: [Batches]
+      summary: List active inventory batches for the current tenant
+      operationId: listBatches
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      parameters:
+        - name: product_id
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Uuid"
+        - name: active_only
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Tenant-scoped inventory batches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/sales:
+    post:
+      tags: [Sales]
+      summary: Record a confirmed sale and deduct stock
+      description: |
+        Commits all confirmed line items atomically through the shared sales
+        service. The transaction fails if any deduction would make stock
+        negative. Tenant identity comes from the vendor JWT; `source` records
+        provenance only and never affects authorization. For the same tenant,
+        replaying the same idempotency key with the same payload returns the
+        original successful result without another deduction. Reusing the same
+        key with a different payload returns 409.
+      operationId: createSale
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleRequest"
+      responses:
+        "201":
+          description: Sale recorded and stock deducted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/sales/voice-draft:
+    post:
+      tags: [Sales]
+      summary: Parse a transcript into a non-mutating sale draft
+      description: |
+        Returns an untrusted draft and never changes inventory. The vendor must
+        resolve every product, select a batch for every item, and confirm the
+        final sale through `POST /api/v1/sales`.
+      operationId: createVoiceSaleDraft
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoiceSaleDraftRequest"
+      responses:
+        "200":
+          description: Untrusted non-mutating sale draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceSaleDraft"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   /api/v1/admin/tenants:
     get:
       tags: [Admin]
@@ -216,6 +351,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Sale conflicts with current stock or idempotency state
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     NotFound:
       description: Resource not found in this tenant
       content:
@@ -275,6 +416,176 @@ components:
             - type: string
             - type: object
               additionalProperties: true
+
+    ProductSummary:
+      type: object
+      required: [id, name, low_stock_threshold]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        name:
+          type: string
+          minLength: 1
+        low_stock_threshold:
+          type: integer
+          minimum: 0
+
+    ProductList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductSummary"
+
+    BatchSummary:
+      type: object
+      required: [id, product_id, intake_date, quantity_remaining]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        product_id:
+          $ref: "#/components/schemas/Uuid"
+        intake_date:
+          type: string
+          format: date-time
+        quantity_remaining:
+          type: integer
+          minimum: 0
+
+    BatchList:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchSummary"
+
+    SaleItemInput:
+      type: object
+      required: [product_id, batch_id, quantity_sold]
+      additionalProperties: false
+      properties:
+        product_id:
+          $ref: "#/components/schemas/Uuid"
+        batch_id:
+          $ref: "#/components/schemas/Uuid"
+        quantity_sold:
+          type: integer
+          minimum: 1
+
+    CreateSaleRequest:
+      type: object
+      required: [source, items]
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          enum: [manual, voice]
+          description: Provenance metadata only; never used for tenant authorization.
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/SaleItemInput"
+
+    SaleItem:
+      type: object
+      required:
+        - id
+        - product_id
+        - batch_id
+        - quantity_sold
+        - quantity_remaining
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        product_id:
+          $ref: "#/components/schemas/Uuid"
+        batch_id:
+          $ref: "#/components/schemas/Uuid"
+        quantity_sold:
+          type: integer
+          minimum: 1
+        quantity_remaining:
+          type: integer
+          minimum: 0
+
+    Sale:
+      type: object
+      required: [id, source, items, created_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        source:
+          type: string
+          enum: [manual, voice]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+        created_at:
+          type: string
+          format: date-time
+
+    VoiceSaleDraftRequest:
+      type: object
+      required: [transcript]
+      additionalProperties: false
+      properties:
+        transcript:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    VoiceSaleDraftItem:
+      type: object
+      required: [spoken_product, quantity_sold]
+      additionalProperties: false
+      properties:
+        spoken_product:
+          type: string
+          minLength: 1
+        quantity_sold:
+          type: integer
+          minimum: 1
+        matched_product_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        ambiguity:
+          oneOf:
+            - type: string
+            - type: "null"
+
+    VoiceSaleDraft:
+      type: object
+      required: [items, requires_confirmation, warnings]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoiceSaleDraftItem"
+        requires_confirmation:
+          type: boolean
+          const: true
+        warnings:
+          type: array
+          items:
+            type: string
 
     CreateScanMultipart:
       type: object
