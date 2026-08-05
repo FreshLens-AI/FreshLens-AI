@@ -51,5 +51,10 @@ docs/design/diagrams/*
 docs/design/generate_*.py
 docs/design/assemble_sad.py
 docs/design/verify_sad.py
+
+# SAD LaTeX build (local submission PDF / sources; not versioned)
+docs/design/FreshLens-SAD.pdf
+docs/design/latex/
+
 .superpowers/
 docs/superpowers/
