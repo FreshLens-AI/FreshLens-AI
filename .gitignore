@@ -44,3 +44,12 @@ Thumbs.db
 # Secrets
 *.pem
 credentials.json
+
+# Design — commit PNG exports only (authored in diagrams.net / Draw.io)
+docs/design/diagrams/*
+!docs/design/diagrams/*.png
+docs/design/generate_*.py
+docs/design/assemble_sad.py
+docs/design/verify_sad.py
+.superpowers/
+docs/superpowers/
