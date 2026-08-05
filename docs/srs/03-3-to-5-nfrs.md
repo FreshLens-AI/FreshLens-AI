@@ -20,6 +20,10 @@ For mid-evaluation, stub classification accuracy is not scored. For the final FL
 
 Scan metadata and classification results shall persist in PostgreSQL across API process restarts. Image bytes shall persist in object storage under the stored `image_path`.
 
+### NFR-R-005 Atomic and idempotent sale deduction (Must)
+
+The system shall commit all items in a confirmed sale or commit none of them. Repeating a request with the same tenant and idempotency key shall return the original result without another deduction. A sale shall never make any batch `quantity_remaining` negative.
+
 ## 3.4 Performance and security
 
 ### NFR-P-001 Scan acceptance latency (Must)
@@ -57,6 +61,10 @@ Secrets (database URLs, JWT secrets, R2 keys, and similar) shall not be committe
 ### NFR-SEC-006 Redis key namespace (Must)
 
 Any Redis keys used for queues, cache, or results shall be namespaced as `tenant:{tenant_id}:...` (plus global infra keys that are not tenant data, for example Celery broker internals as required by the library).
+
+### NFR-SEC-007 Voice draft confirmation and data minimization (Must)
+
+The system shall treat transcript text and LLM output as untrusted input, schema-validate LLM output, and require explicit vendor confirmation before a voice-assisted sale can call `POST /api/v1/sales`. Raw audio and transcripts shall not be retained by default. Clients shall not send `tenant_id`, and the system shall derive tenant context from the authenticated JWT rather than trust any client-supplied value.
 
 ## 3.5 Supportability
 

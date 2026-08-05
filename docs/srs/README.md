@@ -36,6 +36,8 @@ Working source for the course SRS. Parent issue: [#5](https://github.com/FreshLe
 | `DR-*` | Logical database requirements |
 | `IR-*` | Interface requirements |
 
+Sales-related IDs (mid-evaluation manual and final V1 voice-assisted): `FR-V-011`, `FR-V-012`, `FR-S-014`, `FR-S-015`, `FR-S-016`, `NFR-R-005`, `NFR-SEC-007`, `NFR-U-009`, `DR-010`, `DR-011`, `IR-HW-003`, `IR-SW-006`, `IR-SW-007`.
+
 Priority: Must = Version 1 graded deliverable; Should = desirable V1 if time; Could = Version 2 / future.
 
 ## Authoring rules
