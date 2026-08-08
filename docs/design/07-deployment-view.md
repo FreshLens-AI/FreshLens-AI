@@ -29,7 +29,7 @@ This deployment is for local development only. It is not a production or course-
 
 Configuration requirements: database URL, Redis URL, R2 keys, Supabase JWT secret or JWKS, Expo push credentials, and LLM API key via environment variables documented in `.env.example`. Secrets never enter git.
 
-Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenant rows; the LLM sits outside the persistence trust boundary.
+Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenant rows; the LLM sits outside the persistence trust boundary. V1 has no dedicated API-gateway node: FastAPI performs route dispatch and JWT validation on the `api` container; a reverse proxy, if present, is limited to TLS termination and forwarding.
 
 ![Figure 7.2. Target V1 deployment](diagrams/fig-7-2-target-deployment.png)
 

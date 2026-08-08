@@ -48,6 +48,7 @@ Unless a section marks a component as implemented on the current scaffold, the d
 
 Section 2 states which views this document uses and how they map to FreshLens. Section 3 records architectural goals and constraints. Section 4 covers architecturally significant use cases. Sections 5 through 9 give the Logical, Process, Deployment, Implementation, and Data views. Sections 10 and 11 relate size, performance, and quality attributes to architectural mechanisms. Section 12 lists references.
 
+
 # 2. Architectural representation
 
 FreshLens uses Kruchten's 4+1 view model plus an explicit Data View. Multiple views are required because the same system must answer different questions: what functions matter architecturally, how code is packaged, how processes run concurrently, where artifacts deploy, how source maps to images, and how tenant data is stored under RLS.
@@ -93,11 +94,16 @@ Baseline: `main` commit `a460540`.
 
 ## 2.4 High-level architecture figure
 
-Figure 2.1 shows the target V1 component topology: clients, API, async worker path, persistence, push delivery, and the draft-only LLM path used for final voice sales.
+Figure 2.1 shows the target V1 component topology: clients, IdP, API, async worker path, persistence, push delivery, and the draft-only LLM path used for final voice sales.
 
 ![Figure 2.1. FreshLens V1 high-level architecture (target)](diagrams/fig-2-1-high-level-architecture.png)
 
-*Figure 2.1. Target V1 high-level architecture. Solid edges are synchronous HTTPS or SQL. Dashed edges are asynchronous queue or push delivery. Dotted edges are auth or draft-only parser calls. The LLM has no database edge.*
+*Figure 2.1. Target V1 high-level architecture. Dotted IdP edges: (1) client sign-in to Supabase Auth, (2) JWT issued back to the client. Solid green: clients present `Authorization: Bearer` to FastAPI (IdP is not on the business request path). FastAPI owns route dispatch after JWT validation; no API gateway product in V1. Dashed edges are Celery/Redis queue or push delivery. The LLM is called only by the API adapter (voice-draft) and has no client or database edge.*
+
+## 2.5 Architectural styles (summary)
+
+Figure 2.1 realizes a **layered multi-tenant SaaS**: client–server HTTPS to a **modular monolith** (FastAPI), with a **brokered async worker** (Redis + Celery) for inference, and **externalized identity** (Supabase Auth as IdP). The synchronous path is Presentation → Application → Persistence; Inference is an async peer of Application, not a strict interlayer. Sales and reads stay request–response; classification and push are asynchronous. Section 5.4 evaluates layered-style constraints and lists patterns. V1 does not use a microservice mesh, a dedicated API-gateway product, event sourcing, or CQRS.
+
 
 # 3. Architectural goals and constraints
 
@@ -167,6 +173,7 @@ Consequence: The SAD must be reviewable for M2 without claiming unimplemented pa
 ## 3.4 Out of scope that shapes V1
 
 IoT scales, automated procurement, accounting modules, multi-item image detection, and learned rot-date prediction are out of scope for V1. Architecture therefore models one product per photo, static aging from admin-configured shelf life, and sale-driven stock changes rather than hardware-driven inventory sensors.
+
 
 # 4. Use-Case View
 
@@ -307,6 +314,7 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 
 Scan acceptance and sale confirmation are the two realizations that lock concurrency and isolation choices. Scan must return 202 and enqueue work. Sale must be the only deduction path, atomic and idempotent, whether the UI was a form or a confirmed voice draft.
 
+
 # 5. Logical View
 
 Issue: [#49](https://github.com/FreshLens-AI/FreshLens-AI/issues/49). Parent: [#6](https://github.com/FreshLens-AI/FreshLens-AI/issues/6). Template: CS3203 SAD Section 5.
@@ -321,14 +329,18 @@ Sources: SRS (`docs/srs/`), OpenAPI (`docs/api/v1/openapi.yaml`), architecture r
 
 ## 5.1 Overview
 
-FreshLens Version 1 is organized into four logical layers.
+FreshLens Version 1 uses a **layered** logical structure, but not a strict four-stack where every request descends Presentation → Application → Inference → Persistence.
+
+**Primary layers (strict client path):** Presentation → Application → Persistence / infrastructure.
+
+**Inference** is an asynchronous **peer of Application** on top of the same persistence/infrastructure layer: the API enqueues work via Redis; the Celery worker classifies and writes results. Application does **not** call Inference as a lower layer for sales or ordinary reads, and Inference does **not** go through Application to touch Postgres.
 
 
 | Layer | Responsibility | Monorepo / external |
 |---|---|---|
 | Presentation | Vendor and admin UIs; auth session; camera, mic, sale forms; call API with Bearer JWT | `apps/mobile`, `apps/web` |
 | Application | HTTP API; JWT validation; set `app.tenant_id`; accept scans with 202; sales and voice-draft; query tenant-scoped data | `apps/api` |
-| Inference | Background classification (stub or FL-2TC); write scan results; evaluate alert rules; push notify | `packages/ml` |
+| Inference (async peer) | Background classification (stub or FL-2TC); write scan results; evaluate alert rules; push notify | `packages/ml` |
 | Persistence / infrastructure | Tenant-isolated business data (RLS); scan images; Celery broker / tenant-namespaced Redis keys | `infra/db`, Cloudflare R2, Redis |
 
 
@@ -460,15 +472,56 @@ Presentation-layer classes mirror the SRS vendor (FR-V-) and admin (FR-A-) flows
 | Redis | Celery broker and tenant-namespaced keys | Network from API and worker only |
 | LLM sale parser | Draft JSON candidates | Transcript text from API; no DB credentials |
 
-## 5.4 Architectural patterns
+## 5.4 Architectural styles and patterns
+
+This subsection names the styles and patterns that Figure 2.1 and the logical packages realize. Styles describe the overall system shape; patterns are recurring solution structures inside that shape.
+
+### 5.4.1 Architectural styles
+
+| Style | How FreshLens V1 uses it |
+|---|---|
+| Client–server | Vendor mobile and admin web are clients; FastAPI is the sole business server over HTTPS |
+| Layered (relaxed / open) | Presentation → Application → Persistence for the synchronous path; Inference is an async peer that also uses Persistence (Section 5.1, 5.4.2) |
+| Multi-tenant SaaS | Shared application and database; tenant isolation via JWT claims and PostgreSQL RLS, not separate deployments per vendor |
+| Modular monolith + async worker | One FastAPI application process owns HTTP routes and sales; Celery is a separate *process* for inference, not a second product microservice |
+| Brokered messaging (partial) | Scan classification and push wake-up are asynchronous via Redis/Celery; sales and reads remain synchronous request–response |
+| Externalized identity | Supabase Auth is an IdP that issues JWTs; it is not on the business request path after sign-in |
+
+**Explicitly not V1 styles:** microservice mesh, dedicated API-gateway product (Kong/APIM), event sourcing, or CQRS. FastAPI performs application-level route dispatch and JWT validation; an optional reverse proxy may terminate TLS only (Deployment View).
+
+### 5.4.2 Does FreshLens fulfill layered-architecture constraints?
+
+Classical layered style constraints (Buschmann / common CS3203 presentation): ordered layers; downward (or open-to-lower) use only; no upward service calls; upper layers do not bypass encapsulation of lower layers.
+
+| Constraint | Fulfilled? | FreshLens evidence |
+|---|---|---|
+| Presentation does not access Persistence directly | **Yes** | Mobile/web call only FastAPI (+ IdP / device OS); never open Postgres or Redis |
+| Presentation does not call Inference / CNN | **Yes** | Classification only in `packages/ml` via Celery |
+| Application does not expose Persistence internals to clients | **Yes** | RLS and repositories stay server-side; clients see OpenAPI only |
+| No upward layer calls for business services | **Yes** (with note) | Worker may *notify* devices via Expo Push; that is a delivery side-effect, not Presentation providing services to Inference |
+| Strict consecutive descent Application → Inference → Persistence on every use case | **No** | Sales and reads go Application → Persistence and skip Inference; Inference writes Persistence without returning through Application |
+| Inference is a lower layer under Application | **No** | Inference is a peer activated through the Redis broker (infrastructure), not a synchronous callee of Application |
+
+**Verdict:** FreshLens **is** a layered architecture for the **Presentation / Application / Persistence** stack (relaxed/open layering onto shared infrastructure). It is **not** a strict closed four-layer stack with Inference sandwiched between Application and Persistence. Claiming “layered” is correct if the peer-worker relationship is stated; claiming strict N-layer purity for all four named packages would overstate the design.
+
+### 5.4.3 Architectural patterns
 
 | Pattern | Where applied |
 |---|---|
-| Layered architecture | Presentation -> Application -> Inference / Persistence |
-| MVC (or MVVM-style screens) | Mobile and web presentation packages |
-| Producer-consumer | API enqueues scan jobs; Celery consumes from Redis |
-| Adapter | `VoiceSaleParser` and `ObjectStorageClient` isolate external providers |
-| Shared service | `SalesService` is the single stock-deduction authority |
+| Layered packaging | Presentation → Application → Persistence; Inference as async peer mapped to monorepo paths |
+| MVC / MVVM-style screens | Mobile and web presentation packages (`CameraCapture`, sale screens, admin catalogue) |
+| External IdP + Bearer JWT | Clients sign in to Supabase Auth; attach `Authorization: Bearer` on API calls; `AuthMiddleware` validates |
+| Middleware pipeline | Auth then `TenantContextMiddleware` (`SET app.tenant_id`) before routers |
+| Defense in depth (tenancy) | JWT-derived tenant context plus PostgreSQL RLS as the authoritative data-plane control |
+| Application-level gateway | FastAPI owns route map, authz, and orchestration; no separate gateway service in V1 |
+| Asynchronous command acceptance | `POST /api/v1/scans` stores image, enqueues work, returns HTTP 202 without waiting for CNN |
+| Producer–consumer | API publishes classify jobs; Celery worker consumes from Redis (`tenant:{id}:...`) |
+| Adapter / anti-corruption | `VoiceSaleParser`, `ObjectStorageClient`, push notifier isolate R2, LLM, and Expo Push |
+| Strategy (classifier swap) | `FreshnessClassifier` shared by stub and FL-2TC so mid-eval can swap without rewriting routers |
+| Shared service (single writer) | `SalesService` is the only component allowed to deduct `batches.quantity_remaining` |
+| Idempotent command | Sale submission under `Idempotency-Key`; retries cannot double-deduct |
+| Draft–confirm | Voice LLM returns an untrusted draft; inventory changes only after vendor confirmation via `POST /api/v1/sales` |
+| Push then fetch | Expo Push wakes the device; authoritative scan/alert state is fetched over the API |
 
 ## 5.5 Traceability (requirements to logical packages)
 
@@ -491,6 +544,7 @@ Presentation-layer classes mirror the SRS vendor (FR-V-) and admin (FR-A-) flows
 - [x] Packages map to monorepo paths (`apps/api`, `apps/web`, `apps/mobile`, `packages/ml`, `infra/db`)
 - [x] Sales and voice-draft classes documented for target V1
 - [x] Stored under `docs/design/` (this file + `docs/design/diagrams/`)
+
 
 # 6. Process View
 
@@ -591,6 +645,7 @@ If parsing fails or the vendor abandons the draft, stock is unchanged. Manual sa
 
 Tenant identity for every transaction comes from the JWT-established `app.tenant_id`, never from request body fields.
 
+
 # 7. Deployment View
 
 This view shows where processes run. It separates the current local scaffold from the target V1 topology so reviewers do not confuse aspirational nodes with what Compose starts today.
@@ -622,7 +677,7 @@ This deployment is for local development only. It is not a production or course-
 
 Configuration requirements: database URL, Redis URL, R2 keys, Supabase JWT secret or JWKS, Expo push credentials, and LLM API key via environment variables documented in `.env.example`. Secrets never enter git.
 
-Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenant rows; the LLM sits outside the persistence trust boundary.
+Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenant rows; the LLM sits outside the persistence trust boundary. V1 has no dedicated API-gateway node: FastAPI performs route dispatch and JWT validation on the `api` container; a reverse proxy, if present, is limited to TLS termination and forwarding.
 
 ![Figure 7.2. Target V1 deployment](diagrams/fig-7-2-target-deployment.png)
 
@@ -631,6 +686,7 @@ Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenan
 ## 7.3 Mapping to Process and Logical views
 
 The FastAPI process in Section 6 deploys on the `api` node. The Celery process deploys on `worker`. Domain persistence from Section 5 lives in `postgres`. Presentation packages deploy to phone and browser, not into the API image.
+
 
 # 8. Implementation View
 
@@ -655,13 +711,16 @@ This view maps source organization to build and deployment artifacts and states 
 
 ## 8.2 Dependency rules
 
-1. Clients call only the FastAPI HTTPS API (plus Supabase Auth and device OS services). They never open PostgreSQL or Redis.
-2. The API never imports or invokes the CNN inline. It publishes jobs only.
-3. `packages/ml` may write scan results and alerts but must not expose HTTP.
+These rules enforce the relaxed layered style of Section 5.4: Presentation → Application → Persistence, with Inference as an async peer.
+
+1. Clients call only the FastAPI HTTPS API (plus Supabase Auth and device OS services). They never open PostgreSQL or Redis (no layer skip from Presentation to Persistence).
+2. The API never imports or invokes the CNN inline. It publishes jobs only (Application does not embed Inference).
+3. `packages/ml` may write scan results and alerts but must not expose HTTP (Inference is not above Application).
 4. `VoiceSaleParser` cannot call persistence services. Draft responses are ephemeral API responses.
 5. Only `SalesService` in `apps/api` deducts `quantity_remaining`.
 6. Redis keys are namespaced `tenant:{tenant_id}:...`.
 7. Migrations that add tenant-scoped tables include RLS in the same change.
+8. Application and Inference may both use Persistence/infrastructure (open layering). Inference must not call Presentation APIs for business logic; push is wake-up only.
 
 ![Figure 8.2. Source to deployment artifact mapping](diagrams/fig-8-2-artifact-mapping.png)
 
@@ -670,6 +729,7 @@ This view maps source organization to build and deployment artifacts and states 
 ## 8.3 Build and CI expectations
 
 GitHub Actions runs lint and tests per area before merge. Docker Compose builds API (and later worker) images from the monorepo. Mobile and web use their own package managers under `apps/mobile` and `apps/web`. Course demos may run the full Compose target with stub ML before FL-2TC weights are available.
+
 
 # 9. Data View
 
@@ -734,6 +794,7 @@ Application `WHERE tenant_id = ...` filters are defense in depth only.
 | non-negative batches / idempotent sales | NFR-R-005 |
 | no default transcript retention | NFR-SEC-007 |
 
+
 # 10. Size and Performance
 
 This section ties SRS size and performance targets to architectural mechanisms.
@@ -770,6 +831,7 @@ Separating draft latency from deduction latency keeps inventory locks short and 
 
 Celery concurrency is scaled by worker replicas and broker capacity, not by lengthening the API request. Tenant-namespaced keys avoid accidental cross-tenant cache collisions but do not replace RLS.
 
+
 # 11. Quality
 
 For each quality attribute class in the SRS, this section names the architectural mechanism that carries it.
@@ -798,7 +860,7 @@ Voice flows send transcript text to the parser and discard raw audio and transcr
 
 ## 11.4 Maintainability and portability
 
-Layered packages and OpenAPI keep client and server contracts explicit. Stub versus FL-2TC share `FreshnessClassifier`, so mid-evaluation demos can swap implementations without rewriting routers. Compose packages API, worker, Redis, and Postgres for local portability. Provider-neutral LLM adapter limits lock-in to one interface.
+Layered packages and OpenAPI keep client and server contracts explicit (Section 5.4 styles and patterns). Stub versus FL-2TC share `FreshnessClassifier` (strategy pattern), so mid-evaluation demos can swap implementations without rewriting routers. Compose packages API, worker, Redis, and Postgres for local portability. Provider-neutral LLM adapter limits lock-in to one interface.
 
 ## 11.5 Extensibility
 
@@ -815,6 +877,7 @@ V2 features such as multi-item detection or learned rot dates can extend the wor
 ## 11.7 Shared business logic
 
 Stock deduction, low-stock evaluation inputs, and RLS context are centralized so mid-evaluation UI and final voice UI cannot diverge on inventory rules. That shared path is the quality backbone for FR-S-014 through FR-S-016.
+
 
 # 12. References
 
@@ -838,3 +901,4 @@ Stock deduction, low-stock evaluation inputs, and RLS context are centralized so
 ## Diagram assets
 
 Architecture figures in this SAD were authored in the diagrams.net (Draw.io) online visual editor and exported as PNG files under `docs/design/diagrams/`. The master document `docs/design/FreshLens-SAD.md` concatenates sections `01` through `12` in order.
+
