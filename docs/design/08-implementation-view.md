@@ -21,13 +21,16 @@ This view maps source organization to build and deployment artifacts and states 
 
 ## 8.2 Dependency rules
 
-1. Clients call only the FastAPI HTTPS API (plus Supabase Auth and device OS services). They never open PostgreSQL or Redis.
-2. The API never imports or invokes the CNN inline. It publishes jobs only.
-3. `packages/ml` may write scan results and alerts but must not expose HTTP.
+These rules enforce the relaxed layered style of Section 5.4: Presentation → Application → Persistence, with Inference as an async peer.
+
+1. Clients call only the FastAPI HTTPS API (plus Supabase Auth and device OS services). They never open PostgreSQL or Redis (no layer skip from Presentation to Persistence).
+2. The API never imports or invokes the CNN inline. It publishes jobs only (Application does not embed Inference).
+3. `packages/ml` may write scan results and alerts but must not expose HTTP (Inference is not above Application).
 4. `VoiceSaleParser` cannot call persistence services. Draft responses are ephemeral API responses.
 5. Only `SalesService` in `apps/api` deducts `quantity_remaining`.
 6. Redis keys are namespaced `tenant:{tenant_id}:...`.
 7. Migrations that add tenant-scoped tables include RLS in the same change.
+8. Application and Inference may both use Persistence/infrastructure (open layering). Inference must not call Presentation APIs for business logic; push is wake-up only.
 
 ![Figure 8.2. Source to deployment artifact mapping](diagrams/fig-8-2-artifact-mapping.png)
 

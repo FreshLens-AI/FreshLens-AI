@@ -26,7 +26,7 @@ Voice flows send transcript text to the parser and discard raw audio and transcr
 
 ## 11.4 Maintainability and portability
 
-Layered packages and OpenAPI keep client and server contracts explicit. Stub versus FL-2TC share `FreshnessClassifier`, so mid-evaluation demos can swap implementations without rewriting routers. Compose packages API, worker, Redis, and Postgres for local portability. Provider-neutral LLM adapter limits lock-in to one interface.
+Layered packages and OpenAPI keep client and server contracts explicit (Section 5.4 styles and patterns). Stub versus FL-2TC share `FreshnessClassifier` (strategy pattern), so mid-evaluation demos can swap implementations without rewriting routers. Compose packages API, worker, Redis, and Postgres for local portability. Provider-neutral LLM adapter limits lock-in to one interface.
 
 ## 11.5 Extensibility
 

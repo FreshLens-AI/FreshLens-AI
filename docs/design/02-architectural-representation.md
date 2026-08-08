@@ -43,8 +43,12 @@ Baseline: `main` commit `a460540`.
 
 ## 2.4 High-level architecture figure
 
-Figure 2.1 shows the target V1 component topology: clients, API, async worker path, persistence, push delivery, and the draft-only LLM path used for final voice sales.
+Figure 2.1 shows the target V1 component topology: clients, IdP, API, async worker path, persistence, push delivery, and the draft-only LLM path used for final voice sales.
 
 ![Figure 2.1. FreshLens V1 high-level architecture (target)](diagrams/fig-2-1-high-level-architecture.png)
 
-*Figure 2.1. Target V1 high-level architecture. Solid edges are synchronous HTTPS or SQL. Dashed edges are asynchronous queue or push delivery. Dotted edges are auth or draft-only parser calls. The LLM has no database edge.*
+*Figure 2.1. Target V1 high-level architecture. Dotted IdP edges: (1) client sign-in to Supabase Auth, (2) JWT issued back to the client. Solid green: clients present `Authorization: Bearer` to FastAPI (IdP is not on the business request path). FastAPI owns route dispatch after JWT validation; no API gateway product in V1. Dashed edges are Celery/Redis queue or push delivery. The LLM is called only by the API adapter (voice-draft) and has no client or database edge.*
+
+## 2.5 Architectural styles (summary)
+
+Figure 2.1 realizes a **layered multi-tenant SaaS**: client–server HTTPS to a **modular monolith** (FastAPI), with a **brokered async worker** (Redis + Celery) for inference, and **externalized identity** (Supabase Auth as IdP). The synchronous path is Presentation → Application → Persistence; Inference is an async peer of Application, not a strict interlayer. Sales and reads stay request–response; classification and push are asynchronous. Section 5.4 evaluates layered-style constraints and lists patterns. V1 does not use a microservice mesh, a dedicated API-gateway product, event sourcing, or CQRS.
