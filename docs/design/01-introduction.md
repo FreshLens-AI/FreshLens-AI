@@ -2,7 +2,7 @@
 
 ## 1.1 Purpose
 
-This Software Architecture Document (SAD) describes the Version 1 architecture of FreshLens, an AI-powered inventory and freshness monitoring platform for small grocery vendors (CS3203 Group 21, PID 5). It translates the requirements in the System Requirements Specification (SRS) into components, interfaces, runtime processes, deployment topology, and data design.
+This Software Architecture Document (SAD) describes the Version 1 architecture of FreshLens, an AI-powered inventory and freshness monitoring platform for small grocery vendors (CS3203 Group 21, PID 5). It maps the requirements in the System Requirements Specification (SRS) onto components, interfaces, runtime processes, deployment topology, and data design.
 
 The audience is the FreshLens development team, course mentors and examiners reviewing Milestone M2, and anyone who later extends the system. The document is the shared reference for contracts across mobile, web, API, worker, and database work.
 
@@ -42,7 +42,8 @@ Unless a section marks a component as implemented on the current scaffold, the d
 3. FreshLens System Requirements Specification, `docs/srs/FreshLens-SRS.md`.
 4. FreshLens API V1 OpenAPI contract, `docs/api/v1/openapi.yaml`.
 5. P. Kruchten, "The 4+1 View Model of Architecture," IEEE Software, vol. 12, no. 6, 1995.
-6. Diagram tooling: architecture figures were drawn in the diagrams.net (Draw.io) online visual editor and exported as PNG under `docs/design/diagrams/`.
+
+Full citations are in Section 12.
 
 ## 1.5 Overview of the SAD
 

@@ -1,12 +1,14 @@
 # 4. Use-Case View
 
-This view selects the scenarios that force architectural decisions. Ordinary CRUD that does not change concurrency, isolation, or deduction rules is omitted. Actors are Vendor and Platform Admin. External systems appear where they participate in a flow.
+This view covers the scenarios that drive architectural choices. Ordinary CRUD that does not change concurrency, isolation, or stock deduction is omitted. Actors are Vendor and Platform Admin. External systems appear where they take part in a flow.
 
-## 4.1 Use-case diagram
+The view holds use-case diagrams and textual use-case specifications. Sequences and activities are in the Process View (Section 6).
+
+## 4.1 Use-case diagram (overview)
 
 ![Figure 4.1. Architecturally significant use cases](diagrams/fig-4-1-use-cases.png)
 
-*Figure 4.1. Architecturally significant FreshLens V1 use cases. Vendor flows cover authentication, scan, sale (manual and voice-assisted), and alerts. Admin flows cover tenants, catalogue, and analytics. Sales always terminate in the shared sales service.*
+*Figure 4.1. Architecturally significant FreshLens V1 use cases. Actors sit outside the FreshLens boundary. Vendor and admin use cases «include» Authenticate. Manual and voice sales «include» Confirm sale (shared sales API). Secondary actors: Supabase Auth, Celery worker/classifier, LLM (draft only), Expo Push.*
 
 ## 4.2 UC-V-AUTH: Vendor authentication
 
@@ -36,7 +38,7 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 
 ![Figure 4.2. Scan use-case realization](diagrams/fig-4-2-scan-realization.png)
 
-*Figure 4.2. Realization of submit produce scan. The API accepts work and returns 202. Classification runs in the worker, not in the request handler.*
+*Figure 4.2. Focused use-case diagram for UC-V-SCAN. Vendor, scan and result use cases, «include» Authenticate, and Celery worker as a secondary actor. The note records the 202 / async CNN rule; the interaction sequence is Process View Figure 6.3.*
 
 ## 4.4 UC-V-RESULT: View scan result
 
@@ -77,6 +79,10 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 | Extensions | Vendor abandons draft and uses manual form (FR-V-011) |
 | Requirements | FR-V-012, FR-S-015, FR-S-014, NFR-SEC-007, NFR-U-009, IR-HW-003, IR-SW-006 |
 
+![Figure 4.3. Sale use-case realization](diagrams/fig-4-3-sale-realization.png)
+
+*Figure 4.3. Focused use-case diagram for sale confirmation. Manual and voice sales «include» Confirm sale (shared sales API); Confirm sale «include» Authenticate. The LLM is tied to voice drafting only. Sequences are Process View Figures 6.6 and 6.7.*
+
 ## 4.7 UC-V-ALERTS: View alerts and dashboard
 
 | Field | Content |
@@ -116,10 +122,6 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 | Extensions | Category-level defaults if introduced without breaking per-product override |
 | Requirements | FR-A-005, FR-A-006 |
 
-![Figure 4.3. Admin catalogue use-case realization](diagrams/fig-4-3-admin-catalogue-realization.png)
-
-*Figure 4.3. Realization of catalogue and shelf-life administration. Admin web talks only to the API; aging rules later read `shelf_life_days` from persistence.*
-
 ## 4.10 UC-A-ANALYTICS: View platform analytics
 
 | Field | Content |
@@ -133,6 +135,6 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 | Extensions | Export later without changing isolation rules for vendor JWTs |
 | Requirements | FR-A-007, FR-A-008 |
 
-## 4.11 Architecturally significant realizations
+## 4.11 Architecturally significant scenarios
 
-Scan acceptance and sale confirmation are the two realizations that lock concurrency and isolation choices. Scan must return 202 and enqueue work. Sale must be the only deduction path, atomic and idempotent, whether the UI was a form or a confirmed voice draft.
+Scan acceptance and sale confirmation fix the concurrency and isolation rules the rest of the design must honour. Figures 4.2 and 4.3 show those scenarios as focused use-case diagrams. Timing and stock deduction appear in the Process View (Figures 6.3, 6.6, and 6.7).

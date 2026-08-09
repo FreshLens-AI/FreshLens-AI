@@ -10,7 +10,7 @@ This deployment is for local development only. It is not a production or course-
 
 ![Figure 7.1. Current scaffold deployment](diagrams/fig-7-1-current-deployment.png)
 
-*Figure 7.1. Current scaffold on `main@a460540`. API, PostgreSQL, and Redis containers exist; worker is commented; business integrations are not yet connected.*
+*Figure 7.1. Current scaffold deployment. `«device»` Developer machine hosts `«executionEnvironment»` Docker Compose with `api`, `postgres:16`, and `redis:7`. Artifacts show health-only API and unused data stores. Worker is `«not deployed»`; mobile has no API client path.*
 
 ## 7.2 Target V1 deployment
 
@@ -33,7 +33,7 @@ Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenan
 
 ![Figure 7.2. Target V1 deployment](diagrams/fig-7-2-target-deployment.png)
 
-*Figure 7.2. Target V1 deployment. Clients, API, worker, data stores, and external auth, storage, push, and draft-parser services. The LLM has no edge to PostgreSQL.*
+*Figure 7.2. Target V1 deployment. Client devices deploy Expo / Next.js artifacts; Docker Compose host nests `api`, `worker`, `redis`, and `postgres` execution environments. Communication paths use `«HTTPS»` / `«TCP»`. Dashed paths are async queue, push, or draft-only LLM (no PostgreSQL edge).*
 
 ## 7.3 Mapping to Process and Logical views
 

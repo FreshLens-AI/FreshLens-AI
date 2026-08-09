@@ -6,9 +6,7 @@ This section describes the architecturally significant design model: packages ma
 
 Unless a class is marked as implemented on the current scaffold, named classes describe the approved target V1 design. Baseline: `main` commit `a460540` (health API and Expo shell only).
 
-Diagram assets for this section live under `docs/design/diagrams/`. Figures 5.1 through 5.6 were drawn in the diagrams.net (Draw.io) online visual editor and exported as PNG.
-
-Sources: SRS (`docs/srs/`), OpenAPI (`docs/api/v1/openapi.yaml`), architecture rules (Postgres RLS, async scan, shared sales service).
+Figures for this section are under `docs/design/diagrams/`. Sources: SRS (`docs/srs/`), OpenAPI (`docs/api/v1/openapi.yaml`), and the architecture rules for Postgres RLS, async scan, and the shared sales service.
 
 ## 5.1 Overview
 
@@ -59,7 +57,7 @@ These classes are the core business abstractions. They are persisted in PostgreS
 
 ![Figure 5.2. Domain entity class diagram](diagrams/fig-5-2-domain-classes.png)
 
-*Figure 5.2. Domain class diagram. `Tenant` owns users, products, batches, scans, alerts, device tokens, and sales. `Sale` owns `SaleItem` rows. Scans and alerts may optionally reference a product and/or batch. Attributes align with SRS Section 3.10 and OpenAPI schemas.*
+*Figure 5.2. Domain class diagram. Filled diamonds mark composition (`Tenant` owns users, products, batches, scans, alerts, device tokens, and sales; `Sale` owns `SaleItem`). Associations show multiplicities on both ends. Optional product/batch links on scans and alerts use `0..1`. Attributes follow SRS Section 3.10 and the OpenAPI schemas.*
 
 Significant enumerations (not drawn as separate classes):
 
@@ -96,7 +94,7 @@ The application layer exposes the HTTP contract in `docs/api/v1/openapi.yaml`. I
 
 ![Figure 5.3. API package class diagram](diagrams/fig-5-3-api-classes.png)
 
-*Figure 5.3. `apps/api` class diagram. Authenticated requests pass Auth then Tenant middleware before routers. `ScanRouter` coordinates image storage, pending scan creation, and job enqueue without calling the CNN. `SalesRouter` delegates deduction to `SalesService`. `VoiceDraftRouter` calls `VoiceSaleParser` only. `HealthRouter` remains public and unauthenticated.*
+*Figure 5.3. `apps/api` class diagram (UML 2.0 dependencies: dashed open arrows). Authenticated requests pass Auth then Tenant middleware before routers (`«precede»`). `ScanRouter` coordinates image storage, pending scan creation, and job enqueue without calling the CNN. `SalesRouter` depends on `SalesService` (only stock path). `VoiceDraftRouter` depends on `VoiceSaleParser` (draft only). `HealthRouter` remains public and unauthenticated.*
 
 ### 5.2.3 `packages/ml`  -  Celery worker and FL-2TC
 
@@ -118,7 +116,7 @@ Inference runs only in this package. Mid-evaluation may use `StubClassifier` (`m
 
 ![Figure 5.4. ML worker and classifier class diagram](diagrams/fig-5-4-ml-classes.png)
 
-*Figure 5.4. `packages/ml` class diagram. `ClassifyScanTask` depends on the `FreshnessClassifier` interface so stub and FL-2TC can be swapped without changing the API. Results and alerts are written through dedicated writers and evaluators; push notifies the vendor without replacing the HTTP list APIs as source of truth.*
+*Figure 5.4. `packages/ml` class diagram. `StubClassifier` and `FL2TC` realize `«interface» FreshnessClassifier` (dashed line, hollow triangle on the interface). Other links are dependencies. `ClassifyScanTask` depends on the interface so stub and FL-2TC can be swapped without changing the API. Results and alerts are written through dedicated writers and evaluators; push notifies the vendor without replacing the HTTP list APIs as source of truth.*
 
 **Figure 5.6** shows the internal FL-2TC pipeline.
 
@@ -137,11 +135,11 @@ Presentation-layer classes mirror the SRS vendor (FR-V-) and admin (FR-A-) flows
 | `apps/web` | `AdminAuthSession`, `AdminApiClient`, `TenantAdminScreen`, `ProductCatalogueScreen`, `AnalyticsScreen` | Admin sign-in; tenants; catalogue / shelf-life days; aggregated analytics |
 
 
-**Figure 5.5** shows both client packages.
+**Figure 5.5** shows both client packages stacked (Platform Admin above, Vendor below).
 
 ![Figure 5.5. Client package class diagrams (mobile and web)](diagrams/fig-5-5-client-classes.png)
 
-*Figure 5.5. Client class diagrams. Mobile scan flow is Camera -> Quantity -> Submit (202) via `ApiClient`. Manual and voice sale UIs both end at the shared sales API after confirmation. Web admin screens depend on `AdminApiClient` after admin auth. Both clients attach the Supabase JWT as `Authorization: Bearer`.*
+*Figure 5.5. Client class diagrams. Platform Admin (`apps/web`) is on top; Vendor (`apps/mobile`) is below. Screens depend on `AdminApiClient` / `ApiClient`. Mobile scan flow is Camera «precede» Quantity «precede» Submit (202). Manual and voice sale UIs both end at the shared sales API after confirmation.*
 
 ## 5.3 Component interfaces
 
