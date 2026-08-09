@@ -22,7 +22,7 @@ Every business table above includes `tenant_id` and an RLS policy in the same mi
 
 ![Figure 9.1. Entity-relationship model](diagrams/fig-9-1-er-model.png)
 
-*Figure 9.1. Logical ER model for FreshLens V1, including sales, sale_items, and device_tokens.*
+*Figure 9.1. Logical ER model in crow's foot notation for FreshLens V1, including sales, sale_items, and device_tokens.*
 
 ## 9.2 RLS and request context
 

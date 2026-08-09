@@ -2,7 +2,7 @@
 
 ## 1.1 Purpose
 
-This Software Architecture Document (SAD) describes the Version 1 architecture of FreshLens, an AI-powered inventory and freshness monitoring platform for small grocery vendors (CS3203 Group 21, PID 5). It translates the requirements in the System Requirements Specification (SRS) into components, interfaces, runtime processes, deployment topology, and data design.
+This Software Architecture Document (SAD) describes the Version 1 architecture of FreshLens, an AI-powered inventory and freshness monitoring platform for small grocery vendors (CS3203 Group 21, PID 5). It maps the requirements in the System Requirements Specification (SRS) onto components, interfaces, runtime processes, deployment topology, and data design.
 
 The audience is the FreshLens development team, course mentors and examiners reviewing Milestone M2, and anyone who later extends the system. The document is the shared reference for contracts across mobile, web, API, worker, and database work.
 
@@ -42,12 +42,12 @@ Unless a section marks a component as implemented on the current scaffold, the d
 3. FreshLens System Requirements Specification, `docs/srs/FreshLens-SRS.md`.
 4. FreshLens API V1 OpenAPI contract, `docs/api/v1/openapi.yaml`.
 5. P. Kruchten, "The 4+1 View Model of Architecture," IEEE Software, vol. 12, no. 6, 1995.
-6. Diagram tooling: architecture figures were drawn in the diagrams.net (Draw.io) online visual editor and exported as PNG under `docs/design/diagrams/`.
+
+Full citations are in Section 12.
 
 ## 1.5 Overview of the SAD
 
 Section 2 states which views this document uses and how they map to FreshLens. Section 3 records architectural goals and constraints. Section 4 covers architecturally significant use cases. Sections 5 through 9 give the Logical, Process, Deployment, Implementation, and Data views. Sections 10 and 11 relate size, performance, and quality attributes to architectural mechanisms. Section 12 lists references.
-
 
 # 2. Architectural representation
 
@@ -103,7 +103,6 @@ Figure 2.1 shows the target V1 component topology: clients, IdP, API, async work
 ## 2.5 Architectural styles (summary)
 
 Figure 2.1 realizes a **layered multi-tenant SaaS**: client–server HTTPS to a **modular monolith** (FastAPI), with a **brokered async worker** (Redis + Celery) for inference, and **externalized identity** (Supabase Auth as IdP). The synchronous path is Presentation → Application → Persistence; Inference is an async peer of Application, not a strict interlayer. Sales and reads stay request–response; classification and push are asynchronous. Section 5.4 evaluates layered-style constraints and lists patterns. V1 does not use a microservice mesh, a dedicated API-gateway product, event sourcing, or CQRS.
-
 
 # 3. Architectural goals and constraints
 
@@ -174,16 +173,17 @@ Consequence: The SAD must be reviewable for M2 without claiming unimplemented pa
 
 IoT scales, automated procurement, accounting modules, multi-item image detection, and learned rot-date prediction are out of scope for V1. Architecture therefore models one product per photo, static aging from admin-configured shelf life, and sale-driven stock changes rather than hardware-driven inventory sensors.
 
-
 # 4. Use-Case View
 
-This view selects the scenarios that force architectural decisions. Ordinary CRUD that does not change concurrency, isolation, or deduction rules is omitted. Actors are Vendor and Platform Admin. External systems appear where they participate in a flow.
+This view covers the scenarios that drive architectural choices. Ordinary CRUD that does not change concurrency, isolation, or stock deduction is omitted. Actors are Vendor and Platform Admin. External systems appear where they take part in a flow.
 
-## 4.1 Use-case diagram
+The view holds use-case diagrams and textual use-case specifications. Sequences and activities are in the Process View (Section 6).
+
+## 4.1 Use-case diagram (overview)
 
 ![Figure 4.1. Architecturally significant use cases](diagrams/fig-4-1-use-cases.png)
 
-*Figure 4.1. Architecturally significant FreshLens V1 use cases. Vendor flows cover authentication, scan, sale (manual and voice-assisted), and alerts. Admin flows cover tenants, catalogue, and analytics. Sales always terminate in the shared sales service.*
+*Figure 4.1. Architecturally significant FreshLens V1 use cases. Actors sit outside the FreshLens boundary. Vendor and admin use cases «include» Authenticate. Manual and voice sales «include» Confirm sale (shared sales API). Secondary actors: Supabase Auth, Celery worker/classifier, LLM (draft only), Expo Push.*
 
 ## 4.2 UC-V-AUTH: Vendor authentication
 
@@ -213,7 +213,7 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 
 ![Figure 4.2. Scan use-case realization](diagrams/fig-4-2-scan-realization.png)
 
-*Figure 4.2. Realization of submit produce scan. The API accepts work and returns 202. Classification runs in the worker, not in the request handler.*
+*Figure 4.2. Focused use-case diagram for UC-V-SCAN. Vendor, scan and result use cases, «include» Authenticate, and Celery worker as a secondary actor. The note records the 202 / async CNN rule; the interaction sequence is Process View Figure 6.3.*
 
 ## 4.4 UC-V-RESULT: View scan result
 
@@ -254,6 +254,10 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 | Extensions | Vendor abandons draft and uses manual form (FR-V-011) |
 | Requirements | FR-V-012, FR-S-015, FR-S-014, NFR-SEC-007, NFR-U-009, IR-HW-003, IR-SW-006 |
 
+![Figure 4.3. Sale use-case realization](diagrams/fig-4-3-sale-realization.png)
+
+*Figure 4.3. Focused use-case diagram for sale confirmation. Manual and voice sales «include» Confirm sale (shared sales API); Confirm sale «include» Authenticate. The LLM is tied to voice drafting only. Sequences are Process View Figures 6.6 and 6.7.*
+
 ## 4.7 UC-V-ALERTS: View alerts and dashboard
 
 | Field | Content |
@@ -293,10 +297,6 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 | Extensions | Category-level defaults if introduced without breaking per-product override |
 | Requirements | FR-A-005, FR-A-006 |
 
-![Figure 4.3. Admin catalogue use-case realization](diagrams/fig-4-3-admin-catalogue-realization.png)
-
-*Figure 4.3. Realization of catalogue and shelf-life administration. Admin web talks only to the API; aging rules later read `shelf_life_days` from persistence.*
-
 ## 4.10 UC-A-ANALYTICS: View platform analytics
 
 | Field | Content |
@@ -310,10 +310,9 @@ This view selects the scenarios that force architectural decisions. Ordinary CRU
 | Extensions | Export later without changing isolation rules for vendor JWTs |
 | Requirements | FR-A-007, FR-A-008 |
 
-## 4.11 Architecturally significant realizations
+## 4.11 Architecturally significant scenarios
 
-Scan acceptance and sale confirmation are the two realizations that lock concurrency and isolation choices. Scan must return 202 and enqueue work. Sale must be the only deduction path, atomic and idempotent, whether the UI was a form or a confirmed voice draft.
-
+Scan acceptance and sale confirmation fix the concurrency and isolation rules the rest of the design must honour. Figures 4.2 and 4.3 show those scenarios as focused use-case diagrams. Timing and stock deduction appear in the Process View (Figures 6.3, 6.6, and 6.7).
 
 # 5. Logical View
 
@@ -323,9 +322,7 @@ This section describes the architecturally significant design model: packages ma
 
 Unless a class is marked as implemented on the current scaffold, named classes describe the approved target V1 design. Baseline: `main` commit `a460540` (health API and Expo shell only).
 
-Diagram assets for this section live under `docs/design/diagrams/`. Figures 5.1 through 5.6 were drawn in the diagrams.net (Draw.io) online visual editor and exported as PNG.
-
-Sources: SRS (`docs/srs/`), OpenAPI (`docs/api/v1/openapi.yaml`), architecture rules (Postgres RLS, async scan, shared sales service).
+Figures for this section are under `docs/design/diagrams/`. Sources: SRS (`docs/srs/`), OpenAPI (`docs/api/v1/openapi.yaml`), and the architecture rules for Postgres RLS, async scan, and the shared sales service.
 
 ## 5.1 Overview
 
@@ -376,7 +373,7 @@ These classes are the core business abstractions. They are persisted in PostgreS
 
 ![Figure 5.2. Domain entity class diagram](diagrams/fig-5-2-domain-classes.png)
 
-*Figure 5.2. Domain class diagram. `Tenant` owns users, products, batches, scans, alerts, device tokens, and sales. `Sale` owns `SaleItem` rows. Scans and alerts may optionally reference a product and/or batch. Attributes align with SRS Section 3.10 and OpenAPI schemas.*
+*Figure 5.2. Domain class diagram. Filled diamonds mark composition (`Tenant` owns users, products, batches, scans, alerts, device tokens, and sales; `Sale` owns `SaleItem`). Associations show multiplicities on both ends. Optional product/batch links on scans and alerts use `0..1`. Attributes follow SRS Section 3.10 and the OpenAPI schemas.*
 
 Significant enumerations (not drawn as separate classes):
 
@@ -413,7 +410,7 @@ The application layer exposes the HTTP contract in `docs/api/v1/openapi.yaml`. I
 
 ![Figure 5.3. API package class diagram](diagrams/fig-5-3-api-classes.png)
 
-*Figure 5.3. `apps/api` class diagram. Authenticated requests pass Auth then Tenant middleware before routers. `ScanRouter` coordinates image storage, pending scan creation, and job enqueue without calling the CNN. `SalesRouter` delegates deduction to `SalesService`. `VoiceDraftRouter` calls `VoiceSaleParser` only. `HealthRouter` remains public and unauthenticated.*
+*Figure 5.3. `apps/api` class diagram (UML 2.0 dependencies: dashed open arrows). Authenticated requests pass Auth then Tenant middleware before routers (`«precede»`). `ScanRouter` coordinates image storage, pending scan creation, and job enqueue without calling the CNN. `SalesRouter` depends on `SalesService` (only stock path). `VoiceDraftRouter` depends on `VoiceSaleParser` (draft only). `HealthRouter` remains public and unauthenticated.*
 
 ### 5.2.3 `packages/ml`  -  Celery worker and FL-2TC
 
@@ -435,7 +432,7 @@ Inference runs only in this package. Mid-evaluation may use `StubClassifier` (`m
 
 ![Figure 5.4. ML worker and classifier class diagram](diagrams/fig-5-4-ml-classes.png)
 
-*Figure 5.4. `packages/ml` class diagram. `ClassifyScanTask` depends on the `FreshnessClassifier` interface so stub and FL-2TC can be swapped without changing the API. Results and alerts are written through dedicated writers and evaluators; push notifies the vendor without replacing the HTTP list APIs as source of truth.*
+*Figure 5.4. `packages/ml` class diagram. `StubClassifier` and `FL2TC` realize `«interface» FreshnessClassifier` (dashed line, hollow triangle on the interface). Other links are dependencies. `ClassifyScanTask` depends on the interface so stub and FL-2TC can be swapped without changing the API. Results and alerts are written through dedicated writers and evaluators; push notifies the vendor without replacing the HTTP list APIs as source of truth.*
 
 **Figure 5.6** shows the internal FL-2TC pipeline.
 
@@ -454,11 +451,11 @@ Presentation-layer classes mirror the SRS vendor (FR-V-) and admin (FR-A-) flows
 | `apps/web` | `AdminAuthSession`, `AdminApiClient`, `TenantAdminScreen`, `ProductCatalogueScreen`, `AnalyticsScreen` | Admin sign-in; tenants; catalogue / shelf-life days; aggregated analytics |
 
 
-**Figure 5.5** shows both client packages.
+**Figure 5.5** shows both client packages stacked (Platform Admin above, Vendor below).
 
 ![Figure 5.5. Client package class diagrams (mobile and web)](diagrams/fig-5-5-client-classes.png)
 
-*Figure 5.5. Client class diagrams. Mobile scan flow is Camera -> Quantity -> Submit (202) via `ApiClient`. Manual and voice sale UIs both end at the shared sales API after confirmation. Web admin screens depend on `AdminApiClient` after admin auth. Both clients attach the Supabase JWT as `Authorization: Bearer`.*
+*Figure 5.5. Client class diagrams. Platform Admin (`apps/web`) is on top; Vendor (`apps/mobile`) is below. Screens depend on `AdminApiClient` / `ApiClient`. Mobile scan flow is Camera «precede» Quantity «precede» Submit (202). Manual and voice sale UIs both end at the shared sales API after confirmation.*
 
 ## 5.3 Component interfaces
 
@@ -544,7 +541,6 @@ Classical layered style constraints (Buschmann / common CS3203 presentation): or
 - [x] Packages map to monorepo paths (`apps/api`, `apps/web`, `apps/mobile`, `packages/ml`, `infra/db`)
 - [x] Sales and voice-draft classes documented for target V1
 - [x] Stored under `docs/design/` (this file + `docs/design/diagrams/`)
-
 
 # 6. Process View
 
@@ -645,7 +641,6 @@ If parsing fails or the vendor abandons the draft, stock is unchanged. Manual sa
 
 Tenant identity for every transaction comes from the JWT-established `app.tenant_id`, never from request body fields.
 
-
 # 7. Deployment View
 
 This view shows where processes run. It separates the current local scaffold from the target V1 topology so reviewers do not confuse aspirational nodes with what Compose starts today.
@@ -658,7 +653,7 @@ This deployment is for local development only. It is not a production or course-
 
 ![Figure 7.1. Current scaffold deployment](diagrams/fig-7-1-current-deployment.png)
 
-*Figure 7.1. Current scaffold on `main@a460540`. API, PostgreSQL, and Redis containers exist; worker is commented; business integrations are not yet connected.*
+*Figure 7.1. Current scaffold deployment. `«device»` Developer machine hosts `«executionEnvironment»` Docker Compose with `api`, `postgres:16`, and `redis:7`. Artifacts show health-only API and unused data stores. Worker is `«not deployed»`; mobile has no API client path.*
 
 ## 7.2 Target V1 deployment
 
@@ -681,12 +676,11 @@ Trust boundaries: clients are untrusted; JWT proves identity; RLS enforces tenan
 
 ![Figure 7.2. Target V1 deployment](diagrams/fig-7-2-target-deployment.png)
 
-*Figure 7.2. Target V1 deployment. Clients, API, worker, data stores, and external auth, storage, push, and draft-parser services. The LLM has no edge to PostgreSQL.*
+*Figure 7.2. Target V1 deployment. Client devices deploy Expo / Next.js artifacts; Docker Compose host nests `api`, `worker`, `redis`, and `postgres` execution environments. Communication paths use `«HTTPS»` / `«TCP»`. Dashed paths are async queue, push, or draft-only LLM (no PostgreSQL edge).*
 
 ## 7.3 Mapping to Process and Logical views
 
 The FastAPI process in Section 6 deploys on the `api` node. The Celery process deploys on `worker`. Domain persistence from Section 5 lives in `postgres`. Presentation packages deploy to phone and browser, not into the API image.
-
 
 # 8. Implementation View
 
@@ -730,7 +724,6 @@ These rules enforce the relaxed layered style of Section 5.4: Presentation → A
 
 GitHub Actions runs lint and tests per area before merge. Docker Compose builds API (and later worker) images from the monorepo. Mobile and web use their own package managers under `apps/mobile` and `apps/web`. Course demos may run the full Compose target with stub ML before FL-2TC weights are available.
 
-
 # 9. Data View
 
 This view defines the logical data model, tenant isolation, and sale invariants. Physical indexes and migration filenames evolve in `infra/db/migrations/`; the rules here are stable for V1.
@@ -755,7 +748,7 @@ Every business table above includes `tenant_id` and an RLS policy in the same mi
 
 ![Figure 9.1. Entity-relationship model](diagrams/fig-9-1-er-model.png)
 
-*Figure 9.1. Logical ER model for FreshLens V1, including sales, sale_items, and device_tokens.*
+*Figure 9.1. Logical ER model in crow's foot notation for FreshLens V1, including sales, sale_items, and device_tokens.*
 
 ## 9.2 RLS and request context
 
@@ -794,7 +787,6 @@ Application `WHERE tenant_id = ...` filters are defense in depth only.
 | non-negative batches / idempotent sales | NFR-R-005 |
 | no default transcript retention | NFR-SEC-007 |
 
-
 # 10. Size and Performance
 
 This section ties SRS size and performance targets to architectural mechanisms.
@@ -830,7 +822,6 @@ Separating draft latency from deduction latency keeps inventory locks short and 
 ## 10.4 Throughput notes
 
 Celery concurrency is scaled by worker replicas and broker capacity, not by lengthening the API request. Tenant-namespaced keys avoid accidental cross-tenant cache collisions but do not replace RLS.
-
 
 # 11. Quality
 
@@ -878,7 +869,6 @@ V2 features such as multi-item detection or learned rot dates can extend the wor
 
 Stock deduction, low-stock evaluation inputs, and RLS context are centralized so mid-evaluation UI and final voice UI cannot diverge on inventory rules. That shared path is the quality backbone for FR-S-014 through FR-S-016.
 
-
 # 12. References
 
 1. FreshLens Project Proposal, CS3203 Group 21, PID 5, July 2026.
@@ -898,7 +888,7 @@ Stock deduction, low-stock evaluation inputs, and RLS context are centralized so
 15. diagrams.net (Draw.io) online visual editor, https://app.diagrams.net/
 16. FreshLens GitHub issues #6, #19, #45 through #55, and sales issues #80 through #84.
 
-## Diagram assets
+## Tools
 
-Architecture figures in this SAD were authored in the diagrams.net (Draw.io) online visual editor and exported as PNG files under `docs/design/diagrams/`. The master document `docs/design/FreshLens-SAD.md` concatenates sections `01` through `12` in order.
+Architecture figures were drawn in the diagrams.net (Draw.io) online editor and exported as PNG under `docs/design/diagrams/`. The master markdown document `docs/design/FreshLens-SAD.md` concatenates sections `01` through `12` in order.
 

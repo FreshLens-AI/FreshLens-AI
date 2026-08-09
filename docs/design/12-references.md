@@ -17,6 +17,6 @@
 15. diagrams.net (Draw.io) online visual editor, https://app.diagrams.net/
 16. FreshLens GitHub issues #6, #19, #45 through #55, and sales issues #80 through #84.
 
-## Diagram assets
+## Tools
 
-Architecture figures in this SAD were authored in the diagrams.net (Draw.io) online visual editor and exported as PNG files under `docs/design/diagrams/`. The master document `docs/design/FreshLens-SAD.md` concatenates sections `01` through `12` in order.
+Architecture figures were drawn in the diagrams.net (Draw.io) online editor and exported as PNG under `docs/design/diagrams/`. The master markdown document `docs/design/FreshLens-SAD.md` concatenates sections `01` through `12` in order.
