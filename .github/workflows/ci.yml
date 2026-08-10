@@ -94,13 +94,14 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Apply identity schema and verify two-tenant isolation
+      - name: Apply schema and verify two-tenant isolation
         env:
           PGPASSWORD: freshlens
         run: |
           for sql_file in \
             infra/db/local/0000_supabase_compat.sql \
             infra/db/migrations/0001_auth_tenancy.sql \
+            infra/db/migrations/0002_business_tables.sql \
             infra/db/local/0020_runtime_login.sql \
             infra/db/tests/rls_isolation.sql
           do

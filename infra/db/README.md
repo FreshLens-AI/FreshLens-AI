@@ -22,9 +22,18 @@ in filename order through the Supabase SQL editor or CLI.
   `app_role` and `tenant_id` claims only for admins and active-tenant vendors.
 - `freshlens_api` is a `NOLOGIN`, `NOBYPASSRLS` group for API grants and policies.
 
-After applying the migration, enable `public.custom_access_token_hook` under
+`0002_business_tables.sql` adds the mid-eval operational schema:
+
+- Tenant-scoped `products`, `batches`, `scans`, `sales`, `sale_items`, `alerts`,
+  and `device_tokens`, each with `tenant_id` + RLS in the same migration.
+- Composite FKs `(id, tenant_id)` prevent cross-tenant product/batch links.
+- `sales (tenant_id, idempotency_key)` is unique so sale retries cannot double-deduct.
+- Vendor policies match `app.tenant_id` and require an active tenant; platform
+  admins can read/write all business rows for catalogue/admin workflows.
+
+After applying `0001`, enable `public.custom_access_token_hook` under
 **Authentication → Hooks → Custom Access Token**. Existing sessions must sign in
-again before the new claims appear.
+again before the new claims appear. Apply `0002` after `0001` on hosted Supabase.
 
 Do not connect FastAPI with `postgres`, a table owner, or `service_role` for
 business queries: those identities bypass RLS. Create a secret production LOGIN,
@@ -38,8 +47,10 @@ Docker Compose initializes a new disposable development volume in this order:
 
 1. `local/0000_supabase_compat.sql` creates only the Supabase-owned role/schema
    stubs needed by vanilla PostgreSQL.
-2. `migrations/0001_auth_tenancy.sql` creates the real FreshLens schema/policies.
-3. `local/0020_runtime_login.sql` creates the development-only
+2. `migrations/0001_auth_tenancy.sql` creates the identity schema/policies.
+3. `migrations/0002_business_tables.sql` creates tenant-scoped operational tables
+   with RLS in the same migration.
+4. `local/0020_runtime_login.sql` creates the development-only
    `freshlens_api_local` login and grants it `freshlens_api`.
 
 The API container connects as `freshlens_api_local`, never as the database owner.
