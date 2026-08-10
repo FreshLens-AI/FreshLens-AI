@@ -39,9 +39,26 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pytest
 
-  # Always run once identity migration exists on the branch (#73).
-  # Web/mobile client jobs are added in #76/#75 (hashFiles job-level if
-  # prevented this workflow from scheduling on pull_request).
+  # Always run — do not gate with job-level hashFiles (breaks PR scheduling).
+  # Mobile client job lands with #75.
+  web-test:
+    name: Web tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run typecheck
+
   rls-isolation:
     name: PostgreSQL RLS isolation
     runs-on: ubuntu-latest
