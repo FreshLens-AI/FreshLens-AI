@@ -112,8 +112,8 @@ The system shall raise a `low_stock` alert when a product's recorded remaining q
 
 | | |
 |--|--|
-| Inputs | Product/batch quantity remaining; configured threshold |
-| Processing | Compare remaining quantity to threshold; create alert with type `low_stock` and appropriate severity |
+| Inputs | Committed post-sale product/batch quantity remaining; configured threshold |
+| Processing | After a sale deduction commits, compare the resulting remaining quantity to the threshold; create or update an alert with type `low_stock` and appropriate severity |
 | Outputs | Alert record created; push and list delivery per FR-S-013 |
 
 ---
@@ -165,3 +165,39 @@ When the system creates or updates a tenant alert (FR-S-009, FR-S-010, FR-S-012)
 | Outputs | Push notification delivered to vendor device(s); alert retrievable via `GET /api/v1/alerts` (FR-S-011) |
 
 Push delivers the wake-up signal. The HTTP alert list remains the source of truth for alert fields.
+
+---
+
+### FR-S-014 Record a sale and deduct stock (Must)
+
+The system shall use `POST /api/v1/sales` as the only stock-deduction path for confirmed manual and voice-assisted sales.
+
+| | |
+|--|--|
+| Inputs | Authenticated vendor JWT; idempotency key; one or more confirmed sale items containing `product_id`, `batch_id`, and positive `quantity_sold` |
+| Processing | Derive tenant context from the JWT; validate that every product and batch belongs to that tenant and that each batch belongs to the selected product; lock all affected batch rows; verify sufficient stock; deduct every item in one atomic transaction; reject the complete sale without partial changes if any item is invalid or has insufficient stock; evaluate low-stock conditions from committed post-sale quantities |
+| Outputs | Created sale and item results with committed remaining quantities; original result for a repeated idempotency key without another deduction; validation or insufficient-stock error with no stock change |
+
+---
+
+### FR-S-015 Parse a voice sale draft (Must, final V1)
+
+The system shall parse transcript text into a structured, schema-validated multi-item sale draft without mutating inventory.
+
+| | |
+|--|--|
+| Inputs | Authenticated vendor JWT; transcript text produced by device speech-to-text |
+| Processing | Send transcript text, not raw audio, to a provider-neutral LLM parser; validate the response against the sale-draft schema; return product and positive quantity candidates; mark unresolved or ambiguous candidates for vendor correction; do not access persistence through the LLM or call the stock-deduction path |
+| Outputs | Untrusted structured draft containing product and quantity candidates plus ambiguity details; parser or validation error suitable for manual-entry fallback |
+
+---
+
+### FR-S-016 List saleable products and batches (Must)
+
+The system shall list only the authenticated tenant's saleable products and active batches needed to prepare and confirm a sale.
+
+| | |
+|--|--|
+| Inputs | Authenticated vendor JWT; optional product filter for the batch list |
+| Processing | Derive tenant context from the JWT; query products and active batches under RLS; when a product filter is provided, return only batches belonging to that product |
+| Outputs | Product and batch identifiers, display fields, product association, and `quantity_remaining` needed for vendor selection and confirmation |

@@ -125,3 +125,27 @@ The mobile application shall provide a simple dashboard summarizing the vendor's
 ### FR-V-010 Offline capture queue (Could / V2)
 
 Queuing scans while offline is not required for V1. If implemented later, uploads shall resume when connectivity returns without breaking tenant isolation.
+
+---
+
+### FR-V-011 Record a sale manually (Must, mid-evaluation)
+
+The mobile application shall allow the vendor to record a sale manually by selecting one tenant-scoped product and one active batch, entering a positive `quantity_sold`, reviewing the item, and explicitly confirming it.
+
+| | |
+|--|--|
+| Inputs | Authenticated vendor session; one selected product; one selected active batch for that product; positive `quantity_sold` |
+| Processing | Load tenant-scoped products and active batches; validate the quantity; show the product, batch, and quantity for review; require explicit confirmation; submit exactly one confirmed item to `POST /api/v1/sales`; make retries safe by reusing the idempotency key for the same attempted sale |
+| Outputs | Confirmed sale result and updated quantity on success; clear validation or insufficient-stock error without a partial deduction; retry-safe outcome when the same request is submitted again |
+
+---
+
+### FR-V-012 Record a sale by voice (Must, final V1)
+
+The mobile application shall allow the vendor to use voice input to prepare a multi-item sale draft. The draft shall not change inventory until every line has been resolved, reviewed, and explicitly confirmed.
+
+| | |
+|--|--|
+| Inputs | Authenticated vendor session; microphone input; transcript produced by device speech-to-text |
+| Processing | Request a structured multi-item draft from the voice sale parser; treat the draft as untrusted; resolve each product candidate; require the vendor to select an active batch for every line; allow correction of products and positive quantities; show the complete sale for review; require explicit confirmation before submitting to `POST /api/v1/sales`; fall back to manual entry when microphone permission, speech recognition, parsing, or product resolution fails or remains ambiguous |
+| Outputs | Editable multi-item draft with ambiguity indicated; confirmed sale result only after API submission; manual-entry path on permission, speech, parser, or ambiguity failure |

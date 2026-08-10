@@ -24,6 +24,10 @@ Versioned HTTP resources for V1 shall live under `/api/v1` as specified in the O
 
 Requirements apportioned as Version 2 shall not be treated as Must for M3 to M5 grading unless the team pulls them forward with mentor agreement.
 
+### NFR-DC-006 Voice sale interpretation boundary (Must, final V1)
+
+Final V1 may use device speech-to-text and one provider-neutral external LLM parser only to interpret transcript text as a sale draft. The LLM shall not access persistence, mutate inventory, or bypass explicit vendor confirmation. Manual sale entry shall remain available when voice input cannot produce a valid and unambiguous draft.
+
 ## 3.7 Online user documentation / help
 
 ### NFR-HELP-001 In-repo developer docs (Must)
@@ -48,6 +52,8 @@ V1 may depend on the following external or third-party components (prototype acc
 |-----------|-----|
 | Supabase Auth | Identity / JWT |
 | Cloudflare R2 | Image object storage |
+| Device speech-to-text | Convert final V1 microphone input to transcript text without sending raw audio to FreshLens |
+| Provider-neutral external LLM parser | Interpret final V1 transcript text as an untrusted structured sale draft; no persistence or inventory mutation access |
 | Public ML datasets (e.g. Fruits-360 and freshness-labelled sets) | Training FL-2TC |
 | GitHub / GitHub Actions | Source control and CI |
 

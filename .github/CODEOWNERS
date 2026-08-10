@@ -1,14 +1,15 @@
 # Area owners — GitHub auto-requests reviewers on PRs touching these paths.
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Primary is listed first; secondary can approve when primary authors (avoids self-review deadlock with require_code_owner_reviews).
 
-/apps/api/              @buwaneka-halpage
+/apps/api/              @buwaneka-halpage @SMS123456789
 /infra/db/              @buwaneka-halpage
-/infra/docker/          @buwaneka-halpage
+/infra/docker/          @buwaneka-halpage @SMS123456789
 
-/apps/web/              @SMS123456789
+/apps/web/              @SMS123456789 @sathurshna
 
-/apps/mobile/           @sathurshna
+/apps/mobile/           @sathurshna @buwaneka-halpage
 
 /packages/ml/           @buwaneka-halpage @SMS123456789
 
-/.github/workflows/     @buwaneka-halpage
+/.github/workflows/     @buwaneka-halpage @SMS123456789

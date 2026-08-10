@@ -22,18 +22,20 @@ FreshLens is a multi-tenant SaaS product with two roles:
 
 | Role | Client | Primary capabilities |
 |------|--------|----------------------|
-| Vendor (shop owner) | Mobile (Expo / React Native) | Capture produce photos, confirm quantity, view scan results, inventory summary, and alerts |
+| Vendor (shop owner) | Mobile (Expo / React Native) | Capture produce photos, confirm quantity, record sales, view scan results, inventory summary, and alerts |
 | Platform Administrator | Web (Next.js) | Manage tenants / vendor profiles, product catalogues, and platform analytics |
 
 Version 1 includes:
 
 - An asynchronous scan pipeline: the vendor submits a photo and a confirmed quantity; the API accepts with HTTP 202; classification runs in the background
 - FreshLens Two-Tier Classifier (FL-2TC): Tier 1 identifies produce type; Tier 2 labels it `fresh`, `medium`, or `spoiled` (a stub classifier is acceptable at mid-evaluation)
+- Manual sale entry for the mid-evaluation, where the vendor selects one product and one active batch, enters a quantity, reviews the item, and explicitly confirms the sale
+- Voice-assisted sale entry for final V1, where device speech-to-text and a provider-neutral LLM parser may draft multiple products for vendor correction, batch selection, and explicit confirmation
 - Multi-tenant isolation through PostgreSQL Row-Level Security (`tenant_id` on every business table)
 - Low-stock alerts and static aging alerts based on administrator-configured shelf-life days
-- Core entities: tenants, users, products, scans, batches, alerts
+- Core entities: tenants, users, products, scans, batches, sales, sale items, alerts
 
-Version 2 (future) includes image-based age estimation, predicted rot-dates, ML-based nearing-spoilage alerts, voice sale deduction, and multi-item shelf detection.
+Version 2 (future) includes image-based age estimation, predicted rot dates, learned aging alerts, offline capture, and multi-item image detection.
 
 Out of scope for all versions: IoT / smart scales, automated procurement or supply-chain integration, and accounting / tax modules.
 

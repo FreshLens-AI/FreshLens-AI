@@ -8,7 +8,7 @@ Interface requirements state what must be exchanged. Wire formats for HTTP are d
 
 ### IR-UI-001 Vendor mobile UI (Must)
 
-The vendor shall interact via a mobile GUI supporting: sign-in, camera/capture, quantity confirmation, scan submit/result, scan list, alerts, and a simple dashboard (see FR-V-\*).
+The vendor shall interact via a mobile GUI supporting: sign-in, camera/capture, quantity confirmation, scan submit/result, scan list, manual and voice-assisted sale entry, alerts, and a simple dashboard (see FR-V-\*).
 
 ### IR-UI-002 Platform admin web UI (Must)
 
@@ -27,6 +27,10 @@ The vendor client shall use the device camera (or demo gallery fallback) as the 
 ### IR-HW-002 Admin workstation (Must)
 
 The admin client shall run in a modern desktop browser (Chrome/Edge/Firefox or Safari current ESR/stable). No special admin hardware is required.
+
+### IR-HW-003 Smartphone microphone (Must, final V1)
+
+The vendor client shall use the smartphone microphone for final V1 voice-assisted sale entry. The app shall request microphone permission and shall keep manual sale entry available when permission is denied or microphone input fails.
 
 ## Software interfaces
 
@@ -61,11 +65,29 @@ The system shall persist business data in PostgreSQL with RLS as required in Sec
 
 The system shall use Redis-backed Celery (or the project's configured Celery broker) to queue classification jobs. Tenant-related Redis keys shall follow `tenant:{tenant_id}:...`.
 
+### IR-SW-006 Sales API (Must)
+
+The vendor client shall use these tenant-scoped sales interfaces:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/v1/products` | List saleable products for the authenticated tenant |
+| GET | `/api/v1/batches` | List active batches, optionally filtered by product |
+| POST | `/api/v1/sales` | Record one or more explicitly confirmed sale items and perform the only stock deduction |
+
+`POST /api/v1/sales` shall accept an idempotency key and shall return validation and insufficient-stock outcomes without partial stock changes.
+
+### IR-SW-007 Speech-to-text and LLM sale parser (Must, final V1)
+
+The vendor client shall use device speech-to-text to convert microphone input into transcript text. It shall send transcript text, not raw audio, to `POST /api/v1/sales/voice-draft` for provider-neutral LLM parsing. The endpoint shall return an untrusted structured draft and shall not mutate inventory. Every line requires product resolution, a vendor-selected batch, and explicit confirmation through the Sales API before deduction.
+
 ## Communications interfaces
 
 ### IR-COM-001 HTTPS / HTTP JSON (Must)
 
 Clients and API shall communicate over HTTP(S) with JSON response bodies (multipart for scan upload). Prototype local development may use HTTP on localhost.
+
+Transcript text and sales API communication outside localhost shall use HTTPS.
 
 ### IR-COM-002 Bearer token header (Must)
 
