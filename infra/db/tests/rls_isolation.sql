@@ -41,6 +41,155 @@ insert into public.users (id, tenant_id, role, display_name, email) values
     'admin@example.com'
   );
 
+insert into public.products (
+  id, tenant_id, name, shelf_life_days, low_stock_threshold
+) values
+  (
+    '30000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    'Tomato A',
+    5,
+    3
+  ),
+  (
+    '30000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    'Tomato B',
+    5,
+    3
+  ),
+  (
+    '30000000-0000-4000-8000-000000000003',
+    '20000000-0000-4000-8000-000000000003',
+    'Tomato Inactive',
+    5,
+    3
+  );
+
+insert into public.batches (
+  id,
+  tenant_id,
+  product_id,
+  quantity_received,
+  quantity_remaining
+) values
+  (
+    '40000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000001',
+    10,
+    10
+  ),
+  (
+    '40000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    '30000000-0000-4000-8000-000000000002',
+    8,
+    8
+  );
+
+insert into public.scans (
+  id, tenant_id, image_path, quantity, status, product_id, batch_id
+) values
+  (
+    '50000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    'tenant-a/scan-1.jpg',
+    2,
+    'pending',
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000001'
+  ),
+  (
+    '50000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    'tenant-b/scan-1.jpg',
+    1,
+    'pending',
+    '30000000-0000-4000-8000-000000000002',
+    '40000000-0000-4000-8000-000000000002'
+  );
+
+insert into public.alerts (
+  id, tenant_id, type, severity, message, product_id, batch_id
+) values
+  (
+    '60000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    'low_stock',
+    'warning',
+    'Tomato A is low',
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000001'
+  ),
+  (
+    '60000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    'aging',
+    'info',
+    'Tomato B is aging',
+    '30000000-0000-4000-8000-000000000002',
+    '40000000-0000-4000-8000-000000000002'
+  );
+
+insert into public.sales (
+  id, tenant_id, created_by, source, idempotency_key
+) values
+  (
+    '70000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    '10000000-0000-4000-8000-000000000001',
+    'manual',
+    'sale-a-1'
+  ),
+  (
+    '70000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    '10000000-0000-4000-8000-000000000002',
+    'manual',
+    'sale-b-1'
+  );
+
+insert into public.sale_items (
+  id, tenant_id, sale_id, product_id, batch_id, quantity_sold
+) values
+  (
+    '71000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    '70000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000001',
+    1
+  ),
+  (
+    '71000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    '70000000-0000-4000-8000-000000000002',
+    '30000000-0000-4000-8000-000000000002',
+    '40000000-0000-4000-8000-000000000002',
+    1
+  );
+
+insert into public.device_tokens (
+  id, tenant_id, user_id, token, platform, active
+) values
+  (
+    '80000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    '10000000-0000-4000-8000-000000000001',
+    'expo-token-a',
+    'ios',
+    true
+  ),
+  (
+    '80000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000002',
+    '10000000-0000-4000-8000-000000000002',
+    'expo-token-b',
+    'android',
+    true
+  );
+
 do $role_assertions$
 begin
   if (select rolcanlogin from pg_roles where rolname = 'freshlens_api') then
@@ -66,6 +215,15 @@ begin
   if (select count(*) from public.users) <> 0 then
     raise exception 'RLS exposed users without request context';
   end if;
+  if (select count(*) from public.products) <> 0
+    or (select count(*) from public.batches) <> 0
+    or (select count(*) from public.scans) <> 0
+    or (select count(*) from public.sales) <> 0
+    or (select count(*) from public.sale_items) <> 0
+    or (select count(*) from public.alerts) <> 0
+    or (select count(*) from public.device_tokens) <> 0 then
+    raise exception 'RLS exposed business rows without request context';
+  end if;
 end
 $no_context$;
 rollback;
@@ -85,6 +243,34 @@ begin
   if (select array_agg(id order by id) from public.users)
     <> array['10000000-0000-4000-8000-000000000001'::uuid] then
     raise exception 'Tenant A can see another tenant user';
+  end if;
+  if (select array_agg(id order by id) from public.products)
+    <> array['30000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant product';
+  end if;
+  if (select array_agg(id order by id) from public.batches)
+    <> array['40000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant batch';
+  end if;
+  if (select array_agg(id order by id) from public.scans)
+    <> array['50000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant scan';
+  end if;
+  if (select array_agg(id order by id) from public.sales)
+    <> array['70000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant sale';
+  end if;
+  if (select array_agg(id order by id) from public.sale_items)
+    <> array['71000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant sale item';
+  end if;
+  if (select array_agg(id order by id) from public.alerts)
+    <> array['60000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant alert';
+  end if;
+  if (select array_agg(id order by id) from public.device_tokens)
+    <> array['80000000-0000-4000-8000-000000000001'::uuid] then
+    raise exception 'Tenant A can see another tenant device token';
   end if;
 end
 $tenant_a$;
@@ -124,6 +310,22 @@ begin
   if affected_rows <> 0 then
     raise exception 'vendor updated another tenant identity row';
   end if;
+
+  update public.products
+  set name = 'Hijacked Tomato B'
+  where id = '30000000-0000-4000-8000-000000000002';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then
+    raise exception 'vendor updated another tenant product';
+  end if;
+
+  update public.scans
+  set status = 'completed'
+  where id = '50000000-0000-4000-8000-000000000002';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then
+    raise exception 'vendor updated another tenant scan';
+  end if;
 end
 $tenant_a_cannot_update$;
 rollback;
@@ -144,6 +346,17 @@ begin
     <> array['10000000-0000-4000-8000-000000000002'::uuid] then
     raise exception 'Tenant B can see another tenant user';
   end if;
+  if (select array_agg(id order by id) from public.products)
+    <> array['30000000-0000-4000-8000-000000000002'::uuid] then
+    raise exception 'Tenant B can see another tenant product';
+  end if;
+  if (select array_agg(id order by id) from public.scans)
+    <> array['50000000-0000-4000-8000-000000000002'::uuid] then
+    raise exception 'Tenant B can see another tenant scan';
+  end if;
+  if (select count(*) from public.alerts) <> 1 then
+    raise exception 'Tenant B alert isolation failed';
+  end if;
 end
 $tenant_b$;
 rollback;
@@ -162,6 +375,15 @@ begin
   end if;
   if (select count(*) from public.users) <> 0 then
     raise exception 'inactive vendor context exposed users';
+  end if;
+  if (select count(*) from public.products) <> 0
+    or (select count(*) from public.batches) <> 0
+    or (select count(*) from public.scans) <> 0
+    or (select count(*) from public.sales) <> 0
+    or (select count(*) from public.sale_items) <> 0
+    or (select count(*) from public.alerts) <> 0
+    or (select count(*) from public.device_tokens) <> 0 then
+    raise exception 'inactive vendor context exposed business rows';
   end if;
 end
 $inactive_tenant$;
@@ -182,6 +404,15 @@ begin
   end if;
   if (select count(*) from public.users) <> 4 then
     raise exception 'platform admin cannot see every identity row';
+  end if;
+  if (select count(*) from public.products) <> 3
+    or (select count(*) from public.batches) <> 2
+    or (select count(*) from public.scans) <> 2
+    or (select count(*) from public.sales) <> 2
+    or (select count(*) from public.sale_items) <> 2
+    or (select count(*) from public.alerts) <> 2
+    or (select count(*) from public.device_tokens) <> 2 then
+    raise exception 'platform admin cannot see every business row';
   end if;
 
   update public.tenants
