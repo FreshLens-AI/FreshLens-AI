@@ -1,4 +1,5 @@
 ## Acceptance criteria
 - [ ] JWT validation on protected routes
-- [ ] Middleware sets `app.tenant_id` per request
+- [ ] Auth middleware derives trusted role/tenant context from the JWT
+- [ ] The tenant DB transaction sets `app.tenant_id` on its own connection
 - [ ] Vendor vs admin role distinction
