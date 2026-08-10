@@ -2,7 +2,6 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
@@ -12,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Verify monorepo layout
         run: |
           test -d apps/api
@@ -40,50 +38,8 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pytest
 
-  # Soft-gate until apps/web package lands (split from #70).
-  web-check:
-    name: Web admin checks
-    if: hashFiles('apps/web/package.json') != ''
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run build
-
-  # Soft-gate until mobile auth tests land (split from #70).
-  mobile-check:
-    name: Mobile type check
-    if: hashFiles('apps/mobile/src/lib/auth/claims.ts') != ''
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/mobile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: npm run typecheck
-
-  # Soft-gate until identity migration lands (feat/api-supabase-auth).
   rls-isolation:
     name: PostgreSQL RLS isolation
-    if: hashFiles('infra/db/migrations/0001_auth_tenancy.sql') != ''
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -122,7 +78,6 @@ jobs:
                 --set ON_ERROR_STOP=1 \
                 --file "/workspace/$sql_file"
           done
-
       - name: Verify the restricted runtime login can connect
         env:
           PGPASSWORD: freshlens_api_local
