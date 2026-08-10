@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  # Run for stacked pull requests as well as PRs targeting main.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
