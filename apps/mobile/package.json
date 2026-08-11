@@ -11,12 +11,18 @@
     "test": "tsx --test src/lib/auth/*.test.ts"
   },
   "dependencies": {
+    "@react-navigation/native": "^7.3.16",
+    "@react-navigation/native-stack": "^7.18.8",
     "@supabase/supabase-js": "^2.111.0",
     "expo": "~57.0.7",
+    "expo-camera": "~57.0.3",
+    "expo-file-system": "~57.0.2",
     "expo-secure-store": "~57.0.1",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.2",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
     "react-native-url-polyfill": "^4.0.0"
   },
   "devDependencies": {
