@@ -1,16 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from './src/auth/auth-provider';
-import { VendorHomeScreen } from './src/screens/vendor-home-screen';
+import { VendorNavigator } from './src/navigation/vendor-navigator';
 import { VendorLoginScreen } from './src/screens/vendor-login-screen';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AuthGate />
-      <StatusBar style="light" />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AuthGate />
+        <StatusBar style="light" />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -31,13 +34,14 @@ function AuthGate() {
       <SafeAreaView style={styles.centered}>
         <Text style={styles.configTitle}>Authentication is not configured</Text>
         <Text style={styles.configCopy}>
-          Copy .env.example to .env.local and add the Supabase project URL and publishable key.
+          Copy .env.example to .env.local and add the Supabase project URL and
+          publishable key.
         </Text>
       </SafeAreaView>
     );
   }
 
-  if (status === 'authenticated') return <VendorHomeScreen />;
+  if (status === 'authenticated') return <VendorNavigator />;
   return <VendorLoginScreen />;
 }
 
@@ -50,6 +54,17 @@ const styles = StyleSheet.create({
     padding: 28,
   },
   loadingText: { color: '#c5dacd', fontSize: 13, marginTop: 12 },
-  configTitle: { color: '#fff', fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  configCopy: { color: '#b8d0c2', fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 10 },
+  configTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  configCopy: {
+    color: '#b8d0c2',
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
+    marginTop: 10,
+  },
 });
