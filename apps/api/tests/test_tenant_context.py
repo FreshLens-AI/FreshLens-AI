@@ -7,6 +7,7 @@ from app.core import database
 from app.core.config import Settings
 from app.core.database import (
     UnsafeDatabaseRoleError,
+    apply_admin_context,
     apply_tenant_context,
     assert_safe_database_role,
     connect_database,
@@ -52,6 +53,21 @@ def test_database_context_uses_verified_principal_only() -> None:
         ("select set_config('app.tenant_id', $1, true)", str(tenant_id)),
         ("select set_config('app.user_id', $1, true)", str(user_id)),
         ("select set_config('app.user_role', $1, true)", "vendor"),
+    ]
+
+
+def test_admin_context_sets_role_without_tenant() -> None:
+    user_id = uuid4()
+    principal = AuthPrincipal(
+        user_id=user_id,
+        role=AppRole.PLATFORM_ADMIN,
+        tenant_id=None,
+    )
+    connection = RecordingConnection()
+    asyncio.run(apply_admin_context(connection, principal))  # type: ignore[arg-type]
+    assert connection.calls == [
+        ("select set_config('app.user_id', $1, true)", str(user_id)),
+        ("select set_config('app.user_role', $1, true)", "platform_admin"),
     ]
 
 

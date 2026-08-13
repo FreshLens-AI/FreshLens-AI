@@ -1,4 +1,4 @@
-# Local stack: Postgres + Redis + API. Worker stays commented until packages/ml lands (#32).
+# Local stack: Postgres + Redis + API + stub Celery worker.
 services:
   postgres:
     image: postgres:16-alpine
@@ -49,6 +49,9 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SCAN_STORAGE_DIR: /var/lib/freshlens/scans
+    volumes:
+      - scan_images:/var/lib/freshlens/scans
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,11 +64,23 @@ services:
       retries: 5
       start_period: 10s
 
-  # worker:
-  #   build: ../../packages/ml
-  #   depends_on:
-  #     redis:
-  #       condition: service_healthy
+  worker:
+    build:
+      context: ../../packages/ml
+    environment:
+      DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgresql://freshlens_api_local:freshlens_api_local@postgres:5432/freshlens}
+      DATABASE_SSL_MODE: ${COMPOSE_DATABASE_SSL_MODE:-disable}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SCAN_STORAGE_DIR: /var/lib/freshlens/scans
+    volumes:
+      - scan_images:/var/lib/freshlens/scans
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  scan_images:
