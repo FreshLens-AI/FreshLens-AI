@@ -32,6 +32,9 @@ dist/
 runs/
 wandb/
 
+# Local object storage (ObjectStorageClient)
+/data/
+
 # IDE / OS
 .idea/
 .vscode/

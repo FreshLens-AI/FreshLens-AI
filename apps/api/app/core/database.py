@@ -4,8 +4,8 @@ import asyncpg
 from fastapi import Depends
 
 from app.core.config import get_settings
-from app.dependencies.auth import require_vendor
-from app.schemas.auth import AuthPrincipal
+from app.dependencies.auth import require_platform_admin, require_vendor
+from app.schemas.auth import AppRole, AuthPrincipal
 
 FRESHLENS_API_ROLE = "freshlens_api"
 
@@ -80,6 +80,24 @@ async def apply_tenant_context(
     )
 
 
+async def apply_admin_context(
+    connection: asyncpg.Connection,
+    principal: AuthPrincipal,
+) -> None:
+    """Set transaction-local platform-admin identity for admin RLS policies."""
+
+    if principal.role != AppRole.PLATFORM_ADMIN:
+        raise ValueError("Admin database access requires a platform admin.")
+    await connection.execute(
+        "select set_config('app.user_id', $1, true)",
+        str(principal.user_id),
+    )
+    await connection.execute(
+        "select set_config('app.user_role', $1, true)",
+        principal.role.value,
+    )
+
+
 async def get_tenant_connection(
     principal: AuthPrincipal = Depends(require_vendor),
 ) -> AsyncIterator[asyncpg.Connection]:
@@ -92,6 +110,28 @@ async def get_tenant_connection(
         await transaction.start()
         try:
             await apply_tenant_context(connection, principal)
+            yield connection
+        except BaseException:
+            await transaction.rollback()
+            raise
+        else:
+            await transaction.commit()
+    finally:
+        await connection.close()
+
+
+async def get_admin_connection(
+    principal: AuthPrincipal = Depends(require_platform_admin),
+) -> AsyncIterator[asyncpg.Connection]:
+    """Yield one transaction whose RLS role came only from the verified JWT."""
+
+    connection = await connect_database()
+    try:
+        await assert_safe_database_role(connection)
+        transaction = connection.transaction()
+        await transaction.start()
+        try:
+            await apply_admin_context(connection, principal)
             yield connection
         except BaseException:
             await transaction.rollback()

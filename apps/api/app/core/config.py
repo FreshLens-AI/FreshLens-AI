@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     cors_origins: str = (
         "http://localhost:3000,http://localhost:3001,http://localhost:3002"
     )
+    redis_url: str = "redis://localhost:6379/0"
+    celery_broker_url: str = "redis://localhost:6379/0"
+    celery_result_backend: str = "redis://localhost:6379/1"
+    scan_storage_dir: str = "./data/scans"
 
     @model_validator(mode="after")
     def require_database_tls_in_production(self) -> Self:
