@@ -104,3 +104,83 @@ export async function getScan(scanId: string): Promise<Scan> {
   const res = await apiFetch(`api/v1/scans/${scanId}`);
   return parseJsonOrThrow<Scan>(res);
 }
+
+export interface ProductSummary {
+  id: string;
+  name: string;
+  low_stock_threshold: number;
+}
+
+export interface BatchSummary {
+  id: string;
+  product_id: string;
+  intake_date: string;
+  quantity_remaining: number;
+}
+
+export interface Sale {
+  id: string;
+  source: 'manual' | 'voice';
+  items: {
+    id: string;
+    product_id: string;
+    batch_id: string;
+    quantity_sold: number;
+    quantity_remaining: number;
+  }[];
+  created_at: string;
+}
+
+export interface Alert {
+  id: string;
+  type: 'spoilage' | 'low_stock' | 'aging' | 'other';
+  message: string;
+  severity: 'info' | 'warning' | 'critical';
+  created_at: string;
+  batch_id: string | null;
+  product_id: string | null;
+}
+
+export async function listProducts(): Promise<ProductSummary[]> {
+  const res = await apiFetch('api/v1/products');
+  const body = await parseJsonOrThrow<{ items: ProductSummary[] }>(res);
+  return body.items;
+}
+
+export async function listBatches(productId: string): Promise<BatchSummary[]> {
+  const res = await apiFetch(`api/v1/batches?product_id=${productId}&active_only=true`);
+  const body = await parseJsonOrThrow<{ items: BatchSummary[] }>(res);
+  return body.items;
+}
+
+export async function createSale(input: {
+  productId: string;
+  batchId: string;
+  quantitySold: number;
+  idempotencyKey: string;
+}): Promise<Sale> {
+  const res = await apiFetch('api/v1/sales', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': input.idempotencyKey,
+    },
+    body: JSON.stringify({
+      source: 'manual',
+      items: [
+        {
+          product_id: input.productId,
+          batch_id: input.batchId,
+          quantity_sold: input.quantitySold,
+        },
+      ],
+    }),
+  });
+  return parseJsonOrThrow<Sale>(res);
+}
+
+export async function listAlerts(): Promise<Alert[]> {
+  const res = await apiFetch('api/v1/alerts');
+  const body = await parseJsonOrThrow<{ items: Alert[] }>(res);
+  return body.items;
+}

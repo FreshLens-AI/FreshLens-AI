@@ -24,8 +24,7 @@ export function VendorHomeScreen({ navigation }: Props) {
         <Text style={styles.title}>Welcome to your produce workspace.</Text>
         <Text style={styles.copy}>
           {identity?.email ?? 'Your vendor account'} is connected to a verified
-          tenant. Capture a photo, confirm quantity, then submit when the scan
-          API is available.
+          tenant. Scan produce, record a confirmed sale, or review alerts.
         </Text>
         <Pressable
           style={styles.scanButton}
@@ -33,6 +32,20 @@ export function VendorHomeScreen({ navigation }: Props) {
           accessibilityRole="button"
         >
           <Text style={styles.scanButtonText}>Start scan</Text>
+        </Pressable>
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => navigation.navigate('Sale')}
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryButtonText}>Record sale</Text>
+        </Pressable>
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => navigation.navigate('Alerts')}
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryButtonText}>View alerts</Text>
         </Pressable>
         <View style={styles.notice}>
           <Text style={styles.noticeTitle}>Tenant isolation active</Text>
@@ -85,6 +98,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scanButtonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  secondaryButton: {
+    marginTop: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#196a49',
+  },
+  secondaryButtonText: { color: '#196a49', fontSize: 15, fontWeight: '800' },
   notice: {
     padding: 18,
     borderRadius: 15,
