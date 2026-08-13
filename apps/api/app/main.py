@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import SupabaseJWTVerifier
 from app.core.config import get_settings
 from app.middleware.auth import SupabaseAuthMiddleware
-from app.routers import admin, auth, health, scans
+from app.routers import admin, alerts, auth, catalog, health, sales, scans
 
 settings = get_settings()
 
@@ -21,12 +21,15 @@ app.add_middleware(
     allow_origins=list(settings.allowed_cors_origins),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
 )
 
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(scans.router)
+app.include_router(catalog.router)
+app.include_router(sales.router)
+app.include_router(alerts.router)
 app.include_router(admin.router)
 
 
