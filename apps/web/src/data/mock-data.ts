@@ -11,10 +11,10 @@ import type {
 
 export const mockTenants: Tenant[] = [
   {
-    id: "7f1c0bc9-84ea-4c3d-9d2d-a62c2c6bb101",
-    name: "Green Basket Grocers",
-    ownerName: "Nadeesha Perera",
-    email: "nadeesha@greenbasket.lk",
+    id: "11111111-1111-4111-8111-111111111111",
+    name: "Example Grocer",
+    ownerName: "Example Vendor",
+    email: "vendor@example.com",
     phone: "+94 77 234 1801",
     city: "Colombo 05",
     status: "active",

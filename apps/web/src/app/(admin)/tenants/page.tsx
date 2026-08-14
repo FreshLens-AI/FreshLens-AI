@@ -1,21 +1,15 @@
-import type { Metadata } from "next";
+import { TenantList } from "@/components/tenants/tenant-list";
+import { listAdminTenants } from "@/lib/api/tenants";
 
-import { PageHeader } from "@/components/ui/page-header";
-import { Card } from "@/components/ui/card";
+export default async function TenantsPage() {
+  let liveTenants: Awaited<ReturnType<typeof listAdminTenants>> = [];
+  let loadError: string | null = null;
+  try {
+    liveTenants = await listAdminTenants();
+  } catch (error) {
+    loadError =
+      error instanceof Error ? error.message : "Could not load tenants from the API.";
+  }
 
-export const metadata: Metadata = { title: "Tenants" };
-
-export default function StubPage() {
-  return (
-    <div className="page-stack">
-      <PageHeader
-        eyebrow="Coming next"
-        title="Tenants"
-        description="This screen ships in a follow-up split PR from mega-PR #70."
-      />
-      <Card>
-        <p>Tenant profiles UI is intentionally stubbed here so auth, shell, and overview can review independently.</p>
-      </Card>
-    </div>
-  );
+  return <TenantList liveTenants={liveTenants} loadError={loadError} />;
 }

@@ -4,6 +4,12 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { ApiError, getScan, type Scan } from '../lib/api';
 
 const POLL_INTERVAL_MS = 2000;
+const YOLO_CLS_PREFIX = 'yolo26n-cls:';
+
+function identifiedProduce(modelVersion: string | null): string | null {
+  if (!modelVersion?.startsWith(YOLO_CLS_PREFIX)) return null;
+  return modelVersion.slice(YOLO_CLS_PREFIX.length).trim() || null;
+}
 
 export function ScanStatusScreen({
   scanId,
@@ -60,6 +66,7 @@ export function ScanStatusScreen({
   }
 
   const isDone = scan.status === 'completed' || scan.status === 'failed';
+  const produce = identifiedProduce(scan.model_version);
 
   return (
     <View style={styles.container}>
@@ -68,7 +75,13 @@ export function ScanStatusScreen({
 
       {scan.status === 'completed' ? (
         <View style={styles.result}>
-          <Text style={styles.resultLabel}>Classification</Text>
+          {produce ? (
+            <>
+              <Text style={styles.resultLabel}>Produce</Text>
+              <Text style={styles.resultValue}>{produce}</Text>
+            </>
+          ) : null}
+          <Text style={styles.resultLabel}>Freshness</Text>
           <Text style={styles.resultValue}>{scan.classification ?? '—'}</Text>
           <Text style={styles.resultLabel}>Confidence</Text>
           <Text style={styles.resultValue}>

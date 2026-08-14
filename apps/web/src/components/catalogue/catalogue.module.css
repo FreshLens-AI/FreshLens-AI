@@ -1,0 +1,709 @@
+.pageStack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.summaryCard {
+  display: grid;
+  gap: 0.32rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.summaryCard > span,
+.summaryCard > small {
+  color: var(--text-muted, #64748b);
+  font-size: 0.78rem;
+}
+
+.summaryCard > span {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.summaryCard > strong {
+  color: var(--text-strong, #13251d);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.05;
+}
+
+.catalogueCard,
+.rulesCard,
+.formCard,
+.detailCard,
+.notesCard {
+  overflow: hidden;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(10rem, 0.34fr) minmax(9rem, 0.28fr) auto;
+  align-items: end;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--border, #e5ebe8);
+}
+
+.searchField,
+.filterField {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.searchField label,
+.filterField label {
+  color: var(--text-muted, #52645c);
+  font-size: 0.77rem;
+  font-weight: 700;
+}
+
+.inputWithIcon,
+.compactSearch {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--border-strong, #cedbd5);
+  border-radius: 0.65rem;
+  background: var(--surface, #fff);
+  color: var(--text-muted, #64748b);
+}
+
+.inputWithIcon {
+  padding: 0 0.8rem;
+}
+
+.inputWithIcon:focus-within,
+.compactSearch:focus-within {
+  border-color: var(--brand, #137a4a);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #137a4a) 15%, transparent);
+}
+
+.inputWithIcon input,
+.compactSearch input {
+  width: 100%;
+  min-height: 2.65rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-strong, #13251d);
+  font: inherit;
+}
+
+.filterField select,
+.control,
+.textarea {
+  width: 100%;
+  min-height: 2.65rem;
+  border: 1px solid var(--border-strong, #cedbd5);
+  border-radius: 0.65rem;
+  padding: 0.68rem 0.78rem;
+  background: var(--surface, #fff);
+  color: var(--text-strong, #13251d);
+  font: inherit;
+}
+
+.filterField select:focus,
+.control:focus,
+.textarea:focus {
+  border-color: var(--brand, #137a4a);
+  outline: 3px solid color-mix(in srgb, var(--brand, #137a4a) 15%, transparent);
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.clearButton {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--brand, #137a4a);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.clearButton:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.resultBar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 1.25rem;
+  background: var(--surface-subtle, #f7faf8);
+  color: var(--text-muted, #64748b);
+  font-size: 0.8rem;
+}
+
+.resultIcon {
+  display: inline-grid;
+  place-items: center;
+  margin-right: 0.15rem;
+  color: var(--brand, #137a4a);
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text, #33463d);
+  font-size: 0.84rem;
+}
+
+.table th {
+  padding: 0.75rem 1rem;
+  background: var(--surface-subtle, #f7faf8);
+  color: var(--text-muted, #64748b);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid var(--border, #e5ebe8);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: color-mix(in srgb, var(--brand, #137a4a) 3%, transparent);
+}
+
+.productLink {
+  display: inline-flex;
+  min-width: 12rem;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.productLink:hover strong {
+  color: var(--brand, #137a4a);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.productLink > span:last-child {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.productLink small {
+  color: var(--text-muted, #64748b);
+  font-size: 0.74rem;
+}
+
+.productMark,
+.detailStatIcon,
+.saveIcon,
+.notesIcon,
+.ruleCategory > span,
+.explainerIcon,
+.ruleCardIcon {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 0.62rem;
+  background: var(--brand-soft, #e7f5ed);
+  color: var(--brand, #137a4a);
+}
+
+.productMark {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.rowActions a,
+.resetIconButton {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.52rem;
+  color: var(--text-muted, #64748b);
+}
+
+.rowActions a:hover,
+.rowActions a:focus-visible,
+.resetIconButton:hover,
+.resetIconButton:focus-visible {
+  border-color: var(--border-strong, #cedbd5);
+  background: var(--surface, #fff);
+  color: var(--brand, #137a4a);
+  outline: none;
+}
+
+.embeddedEmpty {
+  padding: 1.25rem;
+}
+
+.formLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem);
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.formMain {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.formCard,
+.detailCard,
+.saveCard,
+.notesCard {
+  padding: 1.25rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+  margin-top: 1.2rem;
+}
+
+.numberControl,
+.ruleDaysInput {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-strong, #cedbd5);
+  border-radius: 0.65rem;
+  background: var(--surface, #fff);
+  overflow: hidden;
+}
+
+.numberControl:focus-within,
+.ruleDaysInput:focus-within {
+  border-color: var(--brand, #137a4a);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #137a4a) 15%, transparent);
+}
+
+.numberControl input,
+.ruleDaysInput input {
+  min-width: 0;
+  flex: 1;
+  min-height: 2.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-strong, #13251d);
+  font: inherit;
+}
+
+.numberControl span,
+.ruleDaysInput > span {
+  padding: 0 0.7rem;
+  color: var(--text-muted, #64748b);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.saveCard {
+  position: sticky;
+  top: 5.5rem;
+}
+
+.saveIcon {
+  width: 2.7rem;
+  height: 2.7rem;
+  margin-bottom: 1rem;
+}
+
+.saveCard h2,
+.notesCard h2,
+.explainerCard h2,
+.ruleCard h2 {
+  color: var(--text-strong, #13251d);
+  font-size: 1rem;
+}
+
+.saveCard > p,
+.notesCard p,
+.explainerCard p,
+.ruleCard p {
+  margin-top: 0.55rem;
+  color: var(--text-muted, #64748b);
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+.saveActions {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.15rem;
+}
+
+.pendingMessage {
+  display: flex;
+  min-height: 1.3rem;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--brand, #137a4a) !important;
+}
+
+.successBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #a9dbc0;
+  border-radius: 0.75rem;
+  background: #edf9f2;
+  color: #11683f;
+}
+
+.successBanner > div {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.successBanner span {
+  font-size: 0.82rem;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.detailStat {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+}
+
+.detailStatIcon,
+.notesIcon,
+.ruleCardIcon,
+.explainerIcon {
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+}
+
+.detailStat > div {
+  display: grid;
+  gap: 0.24rem;
+}
+
+.detailStat small {
+  color: var(--text-muted, #64748b);
+}
+
+.detailStat strong {
+  color: var(--text-strong, #13251d);
+  font-size: 1.25rem;
+}
+
+.detailColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.65fr);
+  gap: 1rem;
+}
+
+.descriptionList {
+  display: grid;
+  margin-top: 1.15rem;
+}
+
+.descriptionList > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.4fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.78rem 0;
+  border-top: 1px solid var(--border, #e5ebe8);
+}
+
+.descriptionList dt {
+  color: var(--text-muted, #64748b);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.descriptionList dd {
+  color: var(--text-strong, #13251d);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.descriptionList code {
+  padding: 0.14rem 0.36rem;
+  border-radius: 0.3rem;
+  background: var(--surface-subtle, #f2f6f4);
+  font-size: 0.75rem;
+}
+
+.ruleCard,
+.explainerCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, var(--brand-soft, #eaf7ef), var(--surface, #fff));
+}
+
+.ruleCard :global(.button) {
+  margin-top: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem !important;
+  color: var(--brand, #137a4a) !important;
+  font-size: 0.7rem !important;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.notesCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.explainerCard {
+  border-color: color-mix(in srgb, var(--brand, #137a4a) 28%, var(--border, #e5ebe8));
+}
+
+.scopeNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--brand, #137a4a) 18%, transparent);
+  color: var(--text, #33463d);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.rulesCard > :global(.card__header) {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--border, #e5ebe8);
+}
+
+.compactSearch {
+  width: min(16rem, 100%);
+  padding: 0 0.65rem;
+}
+
+.compactSearch input {
+  min-height: 2.3rem;
+  font-size: 0.82rem;
+}
+
+.saveAnnouncement {
+  display: flex;
+  min-height: 2.2rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1.25rem;
+  background: var(--surface-subtle, #f7faf8);
+  color: var(--brand, #137a4a);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ruleTable td:last-child {
+  min-width: 22rem;
+}
+
+.ruleCategory {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ruleCategory > span {
+  width: 2rem;
+  height: 2rem;
+}
+
+.ruleForm {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ruleDaysInput label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.ruleDaysInput input {
+  width: 4.5rem;
+  min-height: 2.25rem;
+}
+
+.ruleButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.resetIconButton {
+  border: 1px solid var(--border, #e5ebe8);
+  background: transparent;
+  cursor: pointer;
+}
+
+.inlineError {
+  grid-column: 1 / -1;
+  color: #b42318;
+  font-size: 0.75rem;
+  white-space: normal;
+}
+
+.cautionNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #f1d39b;
+  border-radius: 0.7rem;
+  background: #fffbeb;
+  color: #7a4c08;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.skeletonTitle,
+.skeletonGrid > div,
+.skeletonPanel {
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, #eef2f0, #f8faf9, #eef2f0);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeletonTitle {
+  width: min(28rem, 75%);
+  height: 5rem;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.skeletonGrid > div {
+  height: 5rem;
+}
+
+.skeletonPanel {
+  height: 18rem;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+@media (max-width: 1040px) {
+  .toolbar {
+    grid-template-columns: minmax(14rem, 1fr) repeat(2, minmax(9rem, 0.45fr));
+  }
+
+  .clearButton {
+    grid-column: 1 / -1;
+    justify-self: start;
+    min-height: auto;
+  }
+
+  .optionalColumn {
+    display: none;
+  }
+
+  .formLayout,
+  .detailColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .saveCard {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .summaryGrid,
+  .detailGrid,
+  .skeletonGrid,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .ruleCard,
+  .explainerCard {
+    flex-direction: column;
+  }
+
+  .rulesCard > :global(.card__header) {
+    align-items: stretch;
+  }
+
+  .compactSearch {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonTitle,
+  .skeletonGrid > div,
+  .skeletonPanel {
+    animation: none;
+  }
+}
+
