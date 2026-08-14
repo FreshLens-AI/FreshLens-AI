@@ -27,7 +27,7 @@ described in [`../../docs/authentication.md`](../../docs/authentication.md).
 | Route | Purpose |
 |---|---|
 | `/dashboard` | Platform overview and attention items |
-| `/tenants` | Tenant list, aggregate profile view, and profile editing |
+| `/tenants` | Live tenant list from `GET /api/v1/admin/tenants`; detail extras remain demo overlays |
 | `/catalogue` | Produce catalogue list, creation, details, and editing |
 | `/shelf-life` | Category shelf-life rules used by static aging alerts |
 | `/scans` | Aggregate queue and classification activity only |

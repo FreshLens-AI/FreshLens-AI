@@ -1,4 +1,4 @@
-# Local stack: Postgres + Redis + API + stub Celery worker.
+# Local stack: Postgres + Redis + API + Celery worker (YOLO26-cls identify).
 services:
   postgres:
     image: postgres:16-alpine
@@ -74,8 +74,12 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       SCAN_STORAGE_DIR: /var/lib/freshlens/scans
+      CLASSIFIER: ${CLASSIFIER:-yolo26-cls}
+      YOLO_CLS_WEIGHTS: ${YOLO_CLS_WEIGHTS:-/var/lib/freshlens/yolo/yolo26n-cls.pt}
+      YOLO_CONFIG_DIR: /var/lib/freshlens/yolo
     volumes:
       - scan_images:/var/lib/freshlens/scans
+      - yolo_weights:/var/lib/freshlens/yolo
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,3 +89,4 @@ services:
 volumes:
   postgres_data:
   scan_images:
+  yolo_weights:

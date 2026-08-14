@@ -224,6 +224,8 @@ def test_scan_router_does_not_import_classifier() -> None:
 
     source = open(scans_router.__file__, encoding="utf-8").read()
     assert "StubClassifier" not in source
+    assert "Yolo26ClsClassifier" not in source
+    assert "ultralytics" not in source
     assert "classify_scan" not in source
 
 
