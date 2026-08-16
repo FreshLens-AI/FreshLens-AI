@@ -13,7 +13,7 @@ if [[ -z "$uuid" || -z "$email" ]]; then
 fi
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-compose=(docker compose -f "$root/infra/docker/docker-compose.yml")
+compose=(docker compose --env-file "$root/.env" -f "$root/infra/docker/docker-compose.yml")
 
 "${compose[@]}" exec -T postgres \
   env PGPASSWORD=freshlens \

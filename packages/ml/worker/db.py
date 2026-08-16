@@ -5,6 +5,10 @@ import psycopg
 from psycopg.rows import dict_row
 
 from worker.classifier import ClassificationResult
+from worker.imagenet_produce import parse_identified
+
+
+AUTO_BATCH_IDENTITY_MIN_CONFIDENCE = 0.75
 
 
 def _connect() -> psycopg.Connection:
@@ -33,9 +37,76 @@ def set_status(tenant_id: str, scan_id: str, status: str) -> None:
         )
 
 
+def _ensure_inventory_batch(
+    connection: psycopg.Connection,
+    scan_id: str,
+    result: ClassificationResult,
+) -> tuple[object | None, object | None]:
+    """Attach exactly one inventory batch to a confidently identified scan.
+
+    The locked scan row is the idempotency guard: a Celery retry observes the
+    batch_id written by the first successful transaction and does not insert a
+    second batch.
+    """
+    scan = connection.execute(
+        """
+        select product_id, batch_id, quantity
+        from public.scans
+        where id = %s
+        for update
+        """,
+        (scan_id,),
+    ).fetchone()
+    if scan is None:
+        return None, None
+
+    product_id = scan["product_id"]
+    batch_id = scan["batch_id"]
+    if batch_id is not None:
+        return product_id, batch_id
+
+    # An explicitly supplied product wins. Otherwise, only auto-link a
+    # high-confidence YOLO identity that exactly matches this tenant's
+    # catalogue; arbitrary ImageNet labels must never create products.
+    if product_id is None and result.score >= AUTO_BATCH_IDENTITY_MIN_CONFIDENCE:
+        identified = parse_identified(result.model_version)
+        if identified:
+            product = connection.execute(
+                """
+                select id
+                from public.products
+                where lower(trim(name)) = lower(trim(%s))
+                order by created_at, id
+                limit 1
+                """,
+                (identified,),
+            ).fetchone()
+            if product is not None:
+                product_id = product["id"]
+
+    if product_id is None:
+        return None, None
+
+    batch = connection.execute(
+        """
+        insert into public.batches (
+          tenant_id, product_id, intake_date,
+          quantity_received, quantity_remaining
+        )
+        select tenant_id, %s, now(), quantity, quantity
+        from public.scans
+        where id = %s
+        returning id
+        """,
+        (product_id, scan_id),
+    ).fetchone()
+    return product_id, batch["id"] if batch is not None else None
+
+
 def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None:
     with _connect() as connection:
         _with_vendor_tenant(connection, tenant_id)
+        product_id, batch_id = _ensure_inventory_batch(connection, scan_id, result)
         connection.execute(
             """
             update public.scans
@@ -43,10 +114,19 @@ def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None
                 classification = %s::public.classification,
                 freshness_score = %s,
                 model_version = %s,
+                product_id = coalesce(%s, product_id),
+                batch_id = coalesce(%s, batch_id),
                 updated_at = now()
             where id = %s
             """,
-            (result.label, result.score, result.model_version, scan_id),
+            (
+                result.label,
+                result.score,
+                result.model_version,
+                product_id,
+                batch_id,
+                scan_id,
+            ),
         )
 
 

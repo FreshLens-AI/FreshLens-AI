@@ -10,8 +10,20 @@ multipart submit (when `POST /api/v1/scans` is available) → status poll.
 ```bash
 npm install
 cp .env.example .env.local
+npm run env:check
 npm start
 ```
+
+The variable names must retain their complete `EXPO_PUBLIC_` prefix. Expo only
+inlines statically referenced client variables with that prefix; root-level
+names such as `SUPABASE_URL` are not available to the application bundle. After
+changing an env file, fully reload Expo Go. If an old bundle remains open,
+restart Metro with `npx expo start --clear`.
+
+`localhost` in `EXPO_PUBLIC_API_URL` refers to the phone when the application is
+opened on a physical device. Set it to the development machine's LAN address,
+for example `http://10.25.234.137:8000`, and confirm that `/health` opens from
+the phone before submitting a scan.
 
 The shared API helper validates the session and sends
 `Authorization: Bearer <JWT>` without ever sending a client-selected tenant ID.

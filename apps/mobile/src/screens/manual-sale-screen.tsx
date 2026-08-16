@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as Crypto from 'expo-crypto';
 import {
   ActivityIndicator,
   Pressable,
@@ -65,14 +66,14 @@ export function ManualSaleScreen({ onDone }: { onDone: () => void }) {
         productId: product.id,
         batchId: batch.id,
         quantitySold: quantity,
-        idempotencyKey: globalThis.crypto.randomUUID(),
+        idempotencyKey: Crypto.randomUUID(),
       });
       const remaining = sale.items[0]?.quantity_remaining;
       setDoneMessage(
         `Sold ${quantity} ${product.name}. ${remaining ?? 0} remaining in batch.`,
       );
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Sale failed.');
+      setError(err instanceof Error ? err.message : 'Sale failed.');
     } finally {
       setBusy(false);
     }
@@ -96,7 +97,7 @@ export function ManualSaleScreen({ onDone }: { onDone: () => void }) {
         <Text style={styles.eyebrow}>Manual sale</Text>
         <Text style={styles.title}>Confirm one item</Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Text style={styles.label}>Product</Text>
+        <Text style={styles.label}>Product categories</Text>
         {products.map((item) => (
           <Pressable
             key={item.id}

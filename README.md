@@ -23,7 +23,7 @@ docs/       SRS, design, feasibility (course deliverables)
 
 ```bash
 cp .env.example .env
-docker compose -f infra/docker/docker-compose.yml up --build
+docker compose --env-file .env -f infra/docker/docker-compose.yml up --build
 ```
 
 Fill in `SUPABASE_URL` before testing protected API routes. On a new local

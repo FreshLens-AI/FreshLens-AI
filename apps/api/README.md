@@ -37,7 +37,7 @@ From repo root (starts Postgres, Redis, and API):
 
 ```bash
 cp .env.example .env   # once
-docker compose -f infra/docker/docker-compose.yml up --build api
+docker compose --env-file .env -f infra/docker/docker-compose.yml up --build api
 ```
 
 API listens on **http://localhost:8000**.

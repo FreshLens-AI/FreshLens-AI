@@ -9,11 +9,11 @@ Demo tenant UUID (Compose seed): `11111111-1111-4111-8111-111111111111`
 ## 0. Start the stack
 
 ```bash
-docker compose -f infra/docker/docker-compose.yml down -v
-docker compose -f infra/docker/docker-compose.yml up --build
+docker compose --env-file .env -f infra/docker/docker-compose.yml down -v
+docker compose --env-file .env -f infra/docker/docker-compose.yml up --build
 ```
 
-A fresh volume is required so `0030_demo_catalogue.sql` loads Tomato / Banana batches and the aging alert.
+A fresh volume is required only for the initial demo reset so `0030_demo_catalogue.sql` loads Tomato / Banana batches and the aging alert. `down -v` also deletes the local vendor mappings created in section 1, so do not run it again after provisioning. For a normal restart, run only the `up` command.
 
 The worker image now includes CPU PyTorch. First `--build` is slow. First scan downloads `yolo26n-cls.pt` into the `yolo_weights` volume.
 
@@ -55,7 +55,7 @@ Sign in again after provisioning so the access token includes the custom claims.
 1. Sign in on Expo.
 2. **Start scan** → capture one product → quantity ≥ 1 → submit.
 3. Expect HTTP 202. Poll until `completed` or `failed`.
-4. Completed result shows **Produce** from ImageNet YOLO26-cls (`model_version` like `yolo26n-cls:Banana`) and stub Fresh / Medium / Spoiled. First worker start downloads `yolo26n-cls.pt`. Banana / apple / orange / lemon work better than tomato (not in ImageNet). Set `CLASSIFIER=stub` to revert. The API handler never classifies.
+4. Completed result shows **Produce** from ImageNet YOLO26-cls (`model_version` like `yolo26n-cls:Banana`) and stub Fresh / Medium / Spoiled. A result with at least 75% identity confidence that exactly matches an existing catalogue product creates and links one inventory batch using the vendor-confirmed quantity; the scan-row lock prevents duplicate batches on worker retries. First worker start downloads `yolo26n-cls.pt`. Banana / apple / orange / lemon work better than tomato (not in ImageNet). Set `CLASSIFIER=stub` to revert. The API handler never classifies.
 
 ## 3. Vendor sale and alerts (mobile)
 

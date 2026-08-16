@@ -34,6 +34,11 @@ services:
   api:
     build:
       context: ../../apps/api
+    # Read the repository-root configuration directly. Relying only on Compose
+    # interpolation can resolve SUPABASE_URL as empty because this file lives in
+    # infra/docker rather than the repository root.
+    env_file:
+      - ../../.env
     ports:
       - "8000:8000"
     environment:
@@ -43,7 +48,6 @@ services:
       # the host, where the database hostname is localhost rather than postgres.
       DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgresql://freshlens_api_local:freshlens_api_local@postgres:5432/freshlens}
       DATABASE_SSL_MODE: ${COMPOSE_DATABASE_SSL_MODE:-disable}
-      SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_JWT_AUDIENCE: ${SUPABASE_JWT_AUDIENCE:-authenticated}
       SUPABASE_JWT_CLOCK_SKEW_SECONDS: ${SUPABASE_JWT_CLOCK_SKEW_SECONDS:-30}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002}
