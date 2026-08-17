@@ -1,6 +1,3 @@
-import { File } from 'expo-file-system';
-
-import { parseVendorClaims } from './auth/claims';
 import { reportSessionExpired } from './auth/session-events';
 import { getSupabaseClient } from './supabase';
 
@@ -42,13 +39,6 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   if (!apiUrl) throw new Error('EXPO_PUBLIC_API_URL is not configured.');
 
   const supabase = getSupabaseClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  if (claimsError || !parseVendorClaims(claimsData?.claims)) {
-    await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-    reportSessionExpired();
-    throw new Error('A valid vendor session is required.');
-  }
-
   const { data, error: sessionError } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
   if (sessionError || !accessToken) {
@@ -59,15 +49,23 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
 
   const headers = new Headers(init.headers);
   headers.set('Authorization', `Bearer ${accessToken}`);
-  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
-    ...init,
-    headers,
-  });
-  if (response.status === 401) {
-    await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
-    reportSessionExpired();
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const response = await fetch(`${apiUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
+      ...init,
+      headers,
+      signal: controller.signal,
+    });
+    if (response.status === 401) {
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      reportSessionExpired();
+    }
+    return response;
+  } finally {
+    clearTimeout(timeout);
   }
-  return response;
 }
 
 async function parseJsonOrThrow<T>(res: Response): Promise<T> {
@@ -85,24 +83,82 @@ async function parseJsonOrThrow<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-/** Multipart scan submit. Requires Day-2 POST /api/v1/scans. Never sends tenant_id. */
+/** Multipart scan submit — POST /api/v1/scans. */
 export async function submitScan(
   photoUri: string,
   quantity: number,
 ): Promise<ScanAccepted> {
-  // Expo SDK 57 FormData needs a real File/Blob, not the old { uri, name, type } shorthand.
-  const file = new File(photoUri);
+  // React Native / Hermes requires a real Blob; fetch the local file first.
+  const imageResponse = await fetch(photoUri);
+  const blob = await imageResponse.blob();
+
   const form = new FormData();
-  form.append('image', file, 'scan.jpg');
+  form.append('image', blob, 'scan.jpg');
   form.append('quantity', String(quantity));
 
+  console.log('[submitScan] uploading blob size=', blob.size, 'qty=', quantity);
   const res = await apiFetch('api/v1/scans', { method: 'POST', body: form });
+  console.log('[submitScan] response status=', res.status);
   return parseJsonOrThrow<ScanAccepted>(res);
 }
 
 export async function getScan(scanId: string): Promise<Scan> {
   const res = await apiFetch(`api/v1/scans/${scanId}`);
   return parseJsonOrThrow<Scan>(res);
+}
+
+export async function listScans(
+  limit: number = 20,
+  offset: number = 0,
+): Promise<{ items: Scan[]; total: number; limit: number; offset: number }> {
+  const res = await apiFetch(`api/v1/scans?limit=${limit}&offset=${offset}`);
+  return parseJsonOrThrow<{ items: Scan[]; total: number; limit: number; offset: number }>(res);
+}
+
+export function parseIdentifiedProduce(modelVersion: string | null | undefined): string {
+  if (!modelVersion) return 'Standard Produce';
+  const prefixMatch = modelVersion.match(/^yolo26[a-z]*-cls:\s*(.+)$/i);
+  if (prefixMatch && prefixMatch[1]) {
+    return prefixMatch[1].trim();
+  }
+  return modelVersion;
+}
+
+export function getProduceEmoji(name?: string | null): string {
+  if (!name) return '🥬';
+  const n = name.toLowerCase();
+  if (n.includes('apple')) return '🍎';
+  if (n.includes('banana')) return '🍌';
+  if (n.includes('tomato')) return '🍅';
+  if (n.includes('strawberr')) return '🍓';
+  if (n.includes('orange') || n.includes('citrus')) return '🍊';
+  if (n.includes('potato')) return '🥔';
+  if (n.includes('pepper')) return '🫑';
+  if (n.includes('broccoli')) return '🥦';
+  if (n.includes('carrot')) return '🥕';
+  if (n.includes('cucumber')) return '🥒';
+  if (n.includes('grape')) return '🍇';
+  if (n.includes('mango')) return '🥭';
+  if (n.includes('avocado')) return '🥑';
+  if (n.includes('lemon')) return '🍋';
+  return '🥬';
+}
+
+export function getFreshnessBadge(classification: Classification | null | undefined): {
+  label: string;
+  badgeBg: string;
+  badgeColor: string;
+} {
+  switch (classification) {
+    case 'fresh':
+      return { label: 'Fresh', badgeBg: '#e8f5ed', badgeColor: '#196a49' };
+    case 'medium':
+      return { label: 'Medium', badgeBg: '#fff8e6', badgeColor: '#c47d00' };
+    case 'spoiled':
+      return { label: 'Spoiled', badgeBg: '#ffebe9', badgeColor: '#ba1a1a' };
+    default:
+      return { label: 'Pending', badgeBg: '#edf2ee', badgeColor: '#536158' };
+  }
 }
 
 export interface ProductSummary {
@@ -184,3 +240,4 @@ export async function listAlerts(): Promise<Alert[]> {
   const body = await parseJsonOrThrow<{ items: Alert[] }>(res);
   return body.items;
 }
+
