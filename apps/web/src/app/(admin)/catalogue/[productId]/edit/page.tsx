@@ -1,6 +1,11 @@
-import { ProductFormScreen } from "@/components/catalogue/product-form";
+import { redirect } from "next/navigation";
 
-export default function EditProductPage() {
-  return <ProductFormScreen mode="edit" />;
+export default async function EditProductPage({
+  params,
+}: {
+  params: Promise<{ productId: string }>;
+}) {
+  const { productId } = await params;
+  redirect(`/catalogue/${productId}`);
 }
 
