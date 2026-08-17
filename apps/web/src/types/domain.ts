@@ -1,5 +1,5 @@
 export type TenantStatus = "active" | "inactive";
-export type TenantPlan = "Starter" | "Growth" | "Pilot";
+export type TenantPlan = "Starter" | "Growth" | "Pilot" | "Not configured";
 export type ProductStatus = "active" | "draft" | "archived";
 export type Classification = "fresh" | "medium" | "spoiled";
 export type ScanStatus = "pending" | "processing" | "completed" | "failed";
@@ -28,6 +28,8 @@ export interface Tenant {
 
 export interface Product {
   id: string;
+  tenantId?: string;
+  tenantName?: string;
   name: string;
   scientificName?: string;
   category: string;
@@ -35,6 +37,7 @@ export interface Product {
   status: ProductStatus;
   tenantCoverage: number;
   scansThisMonth: number;
+  lowStockThreshold?: number;
   updatedAt: string;
   note?: string;
 }
@@ -69,6 +72,22 @@ export interface TrendPoint {
   spoiled: number;
 }
 
+export interface PipelineSummary {
+  status: ScanStatus;
+  count: number;
+  helper: string;
+}
+
+export interface AdminDataSnapshot {
+  tenants: Tenant[];
+  products: Product[];
+  alerts: Alert[];
+  shelfLifeRules: ShelfLifeRule[];
+  trend: TrendPoint[];
+  pipelineSummary: PipelineSummary[];
+}
+
+// Kept temporarily while the live-data UI is introduced across focused PRs.
 export interface TenantAggregate {
   tenantId: string;
   scans: number;
@@ -76,12 +95,6 @@ export interface TenantAggregate {
   medium: number;
   spoiled: number;
   activeAlerts: number;
-}
-
-export interface PipelineSummary {
-  status: ScanStatus;
-  count: number;
-  helper: string;
 }
 
 export interface AdminActivity {

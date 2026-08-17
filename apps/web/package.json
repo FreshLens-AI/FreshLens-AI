@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "tsx --test src/lib/auth/*.test.ts"
+    "test": "tsx --test src/lib/auth/*.test.ts src/lib/api/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
