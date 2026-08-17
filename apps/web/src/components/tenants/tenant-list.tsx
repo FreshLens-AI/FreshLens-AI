@@ -24,19 +24,13 @@ import {
   initials,
 } from "@/lib/formatters";
 import { useAdminData } from "@/store/admin-data-provider";
-import type { TenantPlan, TenantStatus } from "@/types/domain";
-import {
-  liveTenantToAdminTenant,
-  type LiveTenant,
-} from "@/lib/api/tenant-map";
-
+import type { TenantStatus } from "@/types/domain";
 import styles from "./tenants.module.css";
 import { TenantStatusBadge } from "./tenant-status-badge";
 
 const PAGE_SIZE = 5;
 
 type StatusFilter = "all" | TenantStatus;
-type PlanFilter = "all" | TenantPlan;
 
 function spoilageTone(rate: number) {
   if (rate >= 9) return "danger" as const;
@@ -44,26 +38,11 @@ function spoilageTone(rate: number) {
   return "success" as const;
 }
 
-export function TenantList({
-  liveTenants,
-  loadError,
-}: {
-  liveTenants?: LiveTenant[];
-  loadError?: string | null;
-}) {
-  const { tenants: mockTenants } = useAdminData();
+export function TenantList() {
+  const { tenants } = useAdminData();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [plan, setPlan] = useState<PlanFilter>("all");
   const [page, setPage] = useState(1);
-
-  const tenants = useMemo(() => {
-    if (liveTenants == null) return mockTenants;
-    const extras = new Map(mockTenants.map((tenant) => [tenant.id, tenant]));
-    return liveTenants.map((row) =>
-      liveTenantToAdminTenant(row, extras.get(row.id)),
-    );
-  }, [liveTenants, mockTenants]);
 
   const filteredTenants = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -80,22 +59,20 @@ export function TenantList({
 
       return (
         (!normalizedQuery || searchableText.includes(normalizedQuery)) &&
-        (status === "all" || tenant.status === status) &&
-        (plan === "all" || tenant.plan === plan)
+        (status === "all" || tenant.status === status)
       );
     });
-  }, [plan, query, status, tenants]);
+  }, [query, status, tenants]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTenants.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const visibleTenants = filteredTenants.slice(pageStart, pageStart + PAGE_SIZE);
-  const hasFilters = query.length > 0 || status !== "all" || plan !== "all";
+  const hasFilters = query.length > 0 || status !== "all";
 
   function resetFilters() {
     setQuery("");
     setStatus("all");
-    setPlan("all");
     setPage(1);
   }
 
@@ -104,7 +81,7 @@ export function TenantList({
       <PageHeader
         eyebrow="Vendor organizations"
         title="Tenants"
-        description="Live tenant rows from the application database. Extra profile fields are demo overlays when the IDs match."
+        description="Live tenant profiles and privacy-safe aggregate activity from the FreshLens API."
       />
 
       <Card className={styles.filtersCard}>
@@ -142,23 +119,6 @@ export function TenantList({
           </select>
         </div>
 
-        <div className={styles.filterField}>
-          <label htmlFor="tenant-plan">Plan</label>
-          <select
-            id="tenant-plan"
-            value={plan}
-            onChange={(event) => {
-              setPlan(event.target.value as PlanFilter);
-              setPage(1);
-            }}
-          >
-            <option value="all">All plans</option>
-            <option value="Starter">Starter</option>
-            <option value="Growth">Growth</option>
-            <option value="Pilot">Pilot</option>
-          </select>
-        </div>
-
         {hasFilters ? (
           <Button variant="ghost" size="sm" onClick={resetFilters}>
             Clear filters
@@ -175,13 +135,7 @@ export function TenantList({
         <p>Profile and aggregate data only</p>
       </div>
 
-      {loadError ? (
-        <EmptyState
-          icon={<Store size={24} aria-hidden="true" />}
-          title="Could not load live tenants"
-          description={`${loadError} Start Compose API at NEXT_PUBLIC_API_URL and sign in as platform_admin.`}
-        />
-      ) : visibleTenants.length === 0 ? (
+      {visibleTenants.length === 0 ? (
         <EmptyState
           icon={<Store size={24} aria-hidden="true" />}
           title="No tenants match these filters"
@@ -203,7 +157,6 @@ export function TenantList({
                 <tr>
                   <th scope="col">Tenant</th>
                   <th scope="col">Location</th>
-                  <th scope="col">Plan</th>
                   <th scope="col">Last active</th>
                   <th scope="col">Scans this month</th>
                   <th scope="col">Spoilage rate</th>
@@ -232,7 +185,6 @@ export function TenantList({
                       </div>
                     </td>
                     <td>{tenant.city}</td>
-                    <td><Badge tone="brand" dot={false}>{tenant.plan}</Badge></td>
                     <td>
                       <span title={formatDateTime(tenant.lastActiveAt)}>
                         {formatDate(tenant.lastActiveAt)}
