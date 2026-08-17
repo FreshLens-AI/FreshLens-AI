@@ -8,7 +8,7 @@ export function TenantNotFound() {
     <EmptyState
       icon={<Store size={24} aria-hidden="true" />}
       title="Tenant not found"
-      description="This tenant ID is not available in the demo workspace. It may be incomplete or no longer valid."
+      description="This tenant ID was not returned by the admin API. It may be incomplete or no longer valid."
       action={<Button href="/tenants">Return to tenants</Button>}
     />
   );

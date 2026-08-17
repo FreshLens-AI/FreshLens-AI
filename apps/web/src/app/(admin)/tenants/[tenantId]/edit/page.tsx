@@ -1,4 +1,4 @@
-import { TenantEditForm } from "@/components/tenants/tenant-edit-form";
+import { redirect } from "next/navigation";
 
 interface TenantEditPageProps {
   params: Promise<{ tenantId: string }>;
@@ -6,6 +6,5 @@ interface TenantEditPageProps {
 
 export default async function TenantEditPage({ params }: TenantEditPageProps) {
   const { tenantId } = await params;
-
-  return <TenantEditForm tenantId={tenantId} />;
+  redirect(`/tenants/${tenantId}`);
 }
