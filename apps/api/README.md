@@ -31,6 +31,18 @@ signed `app_role` and `tenant_id` as request context. Vendor database work must
 use `get_tenant_connection`, which opens the query transaction and sets its
 transaction-local PostgreSQL RLS context on that same connection.
 
+### Platform-admin reads
+
+The admin web uses platform-admin-only endpoints backed by `get_admin_connection`:
+
+- `GET /api/v1/admin/tenants` returns tenant profiles and monthly aggregates.
+- `GET /api/v1/admin/products` returns product metadata without inventory rows.
+- `GET /api/v1/admin/alerts` returns alert signals without batch identifiers.
+- `GET /api/v1/admin/analytics` returns daily and pipeline-status aggregates.
+
+These responses deliberately omit scan images, individual scan records,
+quantities, batches, and inventory details.
+
 ## Docker Compose
 
 From repo root (starts Postgres, Redis, and API):
