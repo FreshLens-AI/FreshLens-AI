@@ -5,8 +5,6 @@ import { useDeferredValue, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   Leaf,
-  Pencil,
-  Plus,
   Search,
   SlidersHorizontal,
   X,
@@ -58,7 +56,10 @@ export function CatalogueScreen() {
 
   const activeFilters = query.length > 0 || category !== "all" || status !== "all";
   const activeCount = products.filter((product) => product.status === "active").length;
-  const draftCount = products.filter((product) => product.status === "draft").length;
+  const monthlyScans = products.reduce(
+    (sum, product) => sum + product.scansThisMonth,
+    0,
+  );
 
   function clearFilters() {
     setQuery("");
@@ -71,29 +72,24 @@ export function CatalogueScreen() {
       <PageHeader
         eyebrow="Catalogue operations"
         title="Product catalogue"
-        description="Maintain the produce types used for identification, inventory records, and static aging rules."
-        actions={
-          <Button href="/catalogue/new" icon={<Plus size={17} aria-hidden="true" />}>
-            Add product
-          </Button>
-        }
+        description="Live tenant product configurations used for identification, inventory, and static aging rules."
       />
 
       <section className={styles.summaryGrid} aria-label="Catalogue summary">
         <Card className={styles.summaryCard}>
           <span>Total products</span>
           <strong>{formatNumber(products.length)}</strong>
-          <small>Produce types in the global catalogue</small>
+          <small>Tenant product configurations</small>
         </Card>
         <Card className={styles.summaryCard}>
-          <span>Active products</span>
+          <span>Active configurations</span>
           <strong>{formatNumber(activeCount)}</strong>
           <small>Available to vendor inventory workflows</small>
         </Card>
         <Card className={styles.summaryCard}>
-          <span>Draft products</span>
-          <strong>{formatNumber(draftCount)}</strong>
-          <small>Awaiting catalogue review</small>
+          <span>Monthly scans</span>
+          <strong>{formatNumber(monthlyScans)}</strong>
+          <small>Across linked tenant products</small>
         </Card>
       </section>
 
@@ -114,13 +110,13 @@ export function CatalogueScreen() {
           </div>
 
           <div className={styles.filterField}>
-            <label htmlFor="catalogue-category">Category</label>
+            <label htmlFor="catalogue-category">Tenant</label>
             <select
               id="catalogue-category"
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
-              <option value="all">All categories</option>
+              <option value="all">All tenants</option>
               {categories.map((item) => (
                 <option value={item} key={item}>
                   {item}
@@ -165,9 +161,9 @@ export function CatalogueScreen() {
               <thead>
                 <tr>
                   <th scope="col">Product</th>
-                  <th scope="col">Category</th>
+                  <th scope="col">Tenant</th>
                   <th scope="col">Shelf life</th>
-                  <th scope="col" className={styles.optionalColumn}>Coverage</th>
+                  <th scope="col" className={styles.optionalColumn}>Low-stock threshold</th>
                   <th scope="col" className={styles.optionalColumn}>Monthly scans</th>
                   <th scope="col">Status</th>
                   <th scope="col" className={styles.optionalColumn}>Updated</th>
@@ -188,21 +184,14 @@ export function CatalogueScreen() {
                         </span>
                       </Link>
                     </td>
-                    <td>{product.category}</td>
+                    <td>{product.tenantName ?? product.category}</td>
                     <td><strong>{product.shelfLifeDays}</strong> days</td>
-                    <td className={styles.optionalColumn}>{product.tenantCoverage} tenants</td>
+                    <td className={styles.optionalColumn}>{formatNumber(product.lowStockThreshold ?? 0)}</td>
                     <td className={styles.optionalColumn}>{formatNumber(product.scansThisMonth)}</td>
                     <td><ProductStatusBadge status={product.status} /></td>
                     <td className={styles.optionalColumn}>{formatDate(product.updatedAt)}</td>
                     <td>
                       <div className={styles.rowActions}>
-                        <Link
-                          href={`/catalogue/${product.id}/edit`}
-                          aria-label={`Edit ${product.name}`}
-                          title={`Edit ${product.name}`}
-                        >
-                          <Pencil size={16} aria-hidden="true" />
-                        </Link>
                         <Link
                           href={`/catalogue/${product.id}`}
                           aria-label={`View ${product.name}`}
@@ -225,16 +214,12 @@ export function CatalogueScreen() {
               description={
                 activeFilters
                   ? "Try a different search term or reset the category and status filters."
-                  : "Add the first produce type to start building the platform catalogue."
+                  : "Products will appear after vendors configure their catalogues."
               }
               action={
                 activeFilters ? (
                   <Button variant="secondary" onClick={clearFilters}>Reset filters</Button>
-                ) : (
-                  <Button href="/catalogue/new" icon={<Plus size={16} aria-hidden="true" />}>
-                    Add product
-                  </Button>
-                )
+                ) : undefined
               }
             />
           </div>
