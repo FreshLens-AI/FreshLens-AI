@@ -40,8 +40,8 @@ in [`docs/authentication.md`](docs/authentication.md).
 
 ### Authenticated admin UI
 
-The platform-admin workflow uses Supabase Auth and browser-persisted demo data.
-It does not require a running API yet, but it does require a provisioned
+The platform-admin workflow uses Supabase Auth and live, privacy-safe FastAPI
+aggregates. It requires a running API, database, and a provisioned
 `platform_admin` account:
 
 ```bash
@@ -52,7 +52,7 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The routable workspace covers
-tenant profiles, catalogue and shelf-life management, alert administration,
+tenant profiles, product and shelf-life views, alert monitoring,
 aggregate scan activity, and analytics. See [`apps/web/README.md`](apps/web/README.md)
 for the route map and [`docs/authentication.md`](docs/authentication.md) for
 Supabase setup and account provisioning.
