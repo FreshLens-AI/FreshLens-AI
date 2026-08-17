@@ -7,10 +7,8 @@ import {
   Boxes,
   Building2,
   ChartNoAxesCombined,
-  Clock3,
   Leaf,
   ScanLine,
-  Settings2,
   Sparkles,
 } from "lucide-react";
 
@@ -20,56 +18,67 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
-import { adminActivity, platformTrend } from "@/data/mock-data";
 import { formatDateTime, formatNumber, formatPercent, initials } from "@/lib/formatters";
 import { alertSeverityTone, titleCase } from "@/lib/presentation";
 import { useAdminData } from "@/store/admin-data-provider";
 
 export function DashboardOverview() {
-  const { alerts, products, tenants } = useAdminData();
+  const { alerts, products, tenants, trend } = useAdminData();
   const activeTenants = tenants.filter((tenant) => tenant.status === "active");
   const totalScans = tenants.reduce((sum, tenant) => sum + tenant.scansThisMonth, 0);
   const activeAlerts = alerts.filter((alert) => alert.status === "active");
+  const completed = tenants.reduce(
+    (sum, tenant) =>
+      sum +
+      tenant.scansThisMonth *
+        (tenant.classificationMix.fresh +
+          tenant.classificationMix.medium +
+          tenant.classificationMix.spoiled) /
+        100,
+    0,
+  );
   const weighted = (key: "fresh" | "medium" | "spoiled") =>
     Math.round(
       tenants.reduce(
         (sum, tenant) => sum + tenant.scansThisMonth * tenant.classificationMix[key],
         0,
-      ) / Math.max(totalScans, 1),
+      ) / Math.max(completed, 1),
     );
   const fresh = weighted("fresh");
   const medium = weighted("medium");
   const spoiled = Math.max(0, 100 - fresh - medium);
+  const recentScans = trend.reduce((sum, point) => sum + point.scans, 0);
+  const todayScans = trend.at(-1)?.scans ?? 0;
 
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Friday, 31 July 2026"
-        title="Good morning, Admin"
-        description="Here’s the platform picture across FreshLens vendors. All operational figures below are aggregate demo data."
+        eyebrow={new Intl.DateTimeFormat("en", { dateStyle: "full" }).format(new Date())}
+        title="FreshLens platform overview"
+        description="Live, privacy-safe tenant and classification aggregates from the FreshLens API."
         actions={<Button href="/analytics" variant="secondary" icon={<ChartNoAxesCombined size={17} />}>View analytics</Button>}
       />
 
       <section className="stat-grid" aria-label="Platform summary">
-        <StatCard label="Active tenants" value={`${activeTenants.length}`} helper={`of ${tenants.length} onboarded`} icon={<Building2 size={21} />} trend={{ value: "+2 this month", direction: "up" }} />
-        <StatCard label="Monthly scans" value={formatNumber(totalScans)} helper="aggregate submissions" icon={<ScanLine size={21} />} tone="blue" trend={{ value: "12.4%", direction: "up" }} />
-        <StatCard label="Catalogue items" value={`${products.length}`} helper={`${products.filter((item) => item.status === "active").length} published`} icon={<Leaf size={21} />} tone="amber" />
-        <StatCard label="Active alerts" value={`${activeAlerts.length}`} helper={`${activeAlerts.filter((item) => item.severity === "critical").length} critical`} icon={<BellRing size={21} />} tone="red" trend={{ value: "2 fewer", direction: "down", positive: true }} />
+        <StatCard label="Active tenants" value={`${activeTenants.length}`} helper={`of ${tenants.length} onboarded`} icon={<Building2 size={21} />} />
+        <StatCard label="Monthly scans" value={formatNumber(totalScans)} helper="aggregate submissions" icon={<ScanLine size={21} />} tone="blue" />
+        <StatCard label="Tenant products" value={`${products.length}`} helper="live product configurations" icon={<Leaf size={21} />} tone="amber" />
+        <StatCard label="Active alerts" value={`${activeAlerts.length}`} helper={`${activeAlerts.filter((item) => item.severity === "critical").length} critical`} icon={<BellRing size={21} />} tone="red" />
       </section>
 
       <section className="dashboard-main-grid">
         <Card className="chart-card">
           <CardHeader
             title="Platform scan volume"
-            description="Accepted scans across all tenants · last 12 days"
+            description="Accepted scans across all tenants · last 90 days"
             action={<Link href="/scans" className="text-link">Open activity <ArrowRight size={15} /></Link>}
           />
           <div className="chart-summary-row">
-            <div><strong>241</strong><span>today</span></div>
-            <div><strong>1.9k</strong><span>last 12 days</span></div>
-            <Badge tone="success">Healthy throughput</Badge>
+            <div><strong>{formatNumber(todayScans)}</strong><span>today</span></div>
+            <div><strong>{formatNumber(recentScans)}</strong><span>last 90 days</span></div>
+            <Badge tone="info">Live API aggregate</Badge>
           </div>
-          <TrendChart data={platformTrend} />
+          <TrendChart data={trend} />
         </Card>
 
         <Card className="classification-card">
@@ -86,14 +95,14 @@ export function DashboardOverview() {
 
       <section className="dashboard-secondary-grid">
         <Card>
-          <CardHeader title="Tenants at a glance" description="Aggregate adoption and spoilage signals" action={<Link href="/tenants" className="text-link">View all <ArrowRight size={15} /></Link>} />
+          <CardHeader title="Tenants at a glance" description="Live aggregate adoption and spoilage signals" action={<Link href="/tenants" className="text-link">View all <ArrowRight size={15} /></Link>} />
           <div className="table-wrap">
             <table>
               <thead><tr><th>Tenant</th><th>Status</th><th>Monthly scans</th><th>Spoiled signals</th><th><span className="sr-only">Open</span></th></tr></thead>
               <tbody>
                 {tenants.slice(0, 4).map((tenant) => (
                   <tr key={tenant.id}>
-                    <td><div className="entity-cell"><span className="entity-avatar">{initials(tenant.name)}</span><div><strong>{tenant.name}</strong><small>{tenant.city}</small></div></div></td>
+                    <td><div className="entity-cell"><span className="entity-avatar">{initials(tenant.name)}</span><div><strong>{tenant.name}</strong><small>{tenant.ownerName}</small></div></div></td>
                     <td><Badge tone={tenant.status === "active" ? "success" : "neutral"}>{titleCase(tenant.status)}</Badge></td>
                     <td>{formatNumber(tenant.scansThisMonth)}</td>
                     <td><span className={tenant.spoilageRate >= 9 ? "metric metric--danger" : "metric"}>{formatPercent(tenant.spoilageRate)}</span></td>
@@ -106,41 +115,18 @@ export function DashboardOverview() {
         </Card>
 
         <Card>
-          <CardHeader title="Needs attention" description="Active platform-level alert signals" action={<Link href="/alerts" className="text-link">Review all <ArrowRight size={15} /></Link>} />
+          <CardHeader title="Needs attention" description="Live alert signals" action={<Link href="/alerts" className="text-link">Review all <ArrowRight size={15} /></Link>} />
           <div className="alert-list-compact">
             {activeAlerts.slice(0, 3).map((alert) => {
               const tenant = tenants.find((item) => item.id === alert.tenantId);
               return (
-                <Link href={`/alerts/${alert.id}`} className="alert-compact" key={alert.id}>
+                <div className="alert-compact" key={alert.id}>
                   <span className={`alert-compact__icon alert-compact__icon--${alert.severity}`}><BellRing size={17} /></span>
                   <span className="alert-compact__copy"><strong>{alert.title}</strong><small>{tenant?.name ?? "Unknown tenant"} · {formatDateTime(alert.createdAt)}</small></span>
                   <Badge tone={alertSeverityTone(alert.severity)}>{titleCase(alert.severity)}</Badge>
-                </Link>
+                </div>
               );
             })}
-          </div>
-        </Card>
-      </section>
-
-      <section className="dashboard-secondary-grid">
-        <Card>
-          <CardHeader title="Quick actions" description="Common platform administration tasks" />
-          <div className="quick-actions">
-            <Link href="/catalogue/new"><span className="quick-action__icon"><Leaf size={19} /></span><span><strong>Add catalogue item</strong><small>Create a produce type</small></span><ArrowRight size={17} /></Link>
-            <Link href="/shelf-life"><span className="quick-action__icon quick-action__icon--amber"><Settings2 size={19} /></span><span><strong>Configure shelf life</strong><small>Review static aging rules</small></span><ArrowRight size={17} /></Link>
-            <Link href="/alerts/new"><span className="quick-action__icon quick-action__icon--red"><BellRing size={19} /></span><span><strong>Create an alert</strong><small>Notify a tenant</small></span><ArrowRight size={17} /></Link>
-          </div>
-        </Card>
-        <Card>
-          <CardHeader title="Recent admin activity" description="Changes made in this demo workspace" />
-          <div className="activity-list">
-            {adminActivity.map((activity) => (
-              <div className="activity-item" key={activity.id}>
-                <span className={`activity-item__dot activity-item__dot--${activity.tone}`} />
-                <div><strong>{activity.action}</strong><p>{activity.subject} · {activity.detail}</p></div>
-                <span><Clock3 size={13} /> {formatDateTime(activity.createdAt)}</span>
-              </div>
-            ))}
           </div>
         </Card>
       </section>
