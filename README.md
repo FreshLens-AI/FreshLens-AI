@@ -26,6 +26,12 @@ cp .env.example .env
 docker compose --env-file .env -f infra/docker/docker-compose.yml up --build
 ```
 
+The worker defaults to the four-product identity model. Place the trained
+checkpoint at `packages/ml/models/identity-v1.pt` before building, or set
+`CLASSIFIER=stub` when running without model artifacts. Dataset preparation,
+training, evaluation, and model activation are documented in
+[`packages/ml/README.md`](packages/ml/README.md).
+
 Fill in `SUPABASE_URL` before testing protected API routes. On a new local
 PostgreSQL volume, Compose applies the identity migration and creates the
 development-only `freshlens_api_local` login used by the API container. The

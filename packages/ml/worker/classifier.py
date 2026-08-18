@@ -10,6 +10,9 @@ class ClassificationResult:
     label: str
     score: float
     model_version: str = MODEL_VERSION
+    identity_label: str | None = None
+    identity_score: float | None = None
+    identity_model_version: str | None = None
 
 
 class StubClassifier:

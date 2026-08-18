@@ -71,7 +71,13 @@ export function ScanFlowScreen({ onDone }: { onDone: () => void }) {
     );
   }
 
-  return <ScanStatusScreen scanId={step.scanId} onDone={onDone} />;
+  return (
+    <ScanStatusScreen
+      scanId={step.scanId}
+      onDone={onDone}
+      onRetry={() => setStep({ name: 'capture' })}
+    />
+  );
 }
 
 const styles = StyleSheet.create({

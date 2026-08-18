@@ -5,7 +5,6 @@ import psycopg
 from psycopg.rows import dict_row
 
 from worker.classifier import ClassificationResult
-from worker.imagenet_produce import parse_identified
 
 
 AUTO_BATCH_IDENTITY_MIN_CONFIDENCE = 0.75
@@ -66,11 +65,13 @@ def _ensure_inventory_batch(
         return product_id, batch_id
 
     # An explicitly supplied product wins. Otherwise, only auto-link a
-    # high-confidence YOLO identity that exactly matches this tenant's
-    # catalogue; arbitrary ImageNet labels must never create products.
-    if product_id is None and result.score >= AUTO_BATCH_IDENTITY_MIN_CONFIDENCE:
-        identified = parse_identified(result.model_version)
-        if identified:
+    # high-confidence identity-v1 label that exactly matches the catalogue.
+    if (
+        product_id is None
+        and result.identity_score is not None
+        and result.identity_score >= AUTO_BATCH_IDENTITY_MIN_CONFIDENCE
+    ):
+        if result.identity_label:
             product = connection.execute(
                 """
                 select id
@@ -79,7 +80,7 @@ def _ensure_inventory_batch(
                 order by created_at, id
                 limit 1
                 """,
-                (identified,),
+                (result.identity_label,),
             ).fetchone()
             if product is not None:
                 product_id = product["id"]
@@ -114,6 +115,9 @@ def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None
                 classification = %s::public.classification,
                 freshness_score = %s,
                 model_version = %s,
+                identity_label = %s,
+                identity_score = %s,
+                identity_model_version = %s,
                 product_id = coalesce(%s, product_id),
                 batch_id = coalesce(%s, batch_id),
                 updated_at = now()
@@ -123,6 +127,9 @@ def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None
                 result.label,
                 result.score,
                 result.model_version,
+                result.identity_label,
+                result.identity_score,
+                result.identity_model_version,
                 product_id,
                 batch_id,
                 scan_id,

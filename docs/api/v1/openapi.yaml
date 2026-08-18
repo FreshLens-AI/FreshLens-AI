@@ -801,7 +801,25 @@ components:
           oneOf:
             - type: string
             - type: "null"
-          description: e.g. `stub-v0` for mid-eval; real FL-2TC version later.
+          description: Combined pipeline version; identity-v1 currently runs with stub-v0 freshness.
+        identity_label:
+          oneOf:
+            - type: string
+              enum: [Banana, Cucumber, Eggplant, Tomato]
+            - type: "null"
+          description: Tier-1 catalogue-compatible label; null for unknown or rejected input.
+        identity_score:
+          oneOf:
+            - type: number
+              format: float
+              minimum: 0
+              maximum: 1
+            - type: "null"
+          description: Tier-1 identity confidence; distinct from freshness_score.
+        identity_model_version:
+          oneOf:
+            - type: string
+            - type: "null"
         product_id:
           oneOf:
             - $ref: "#/components/schemas/Uuid"

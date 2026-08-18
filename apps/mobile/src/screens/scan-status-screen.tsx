@@ -12,9 +12,9 @@ import {
 import {
   ApiError,
   getFreshnessBadge,
+  getIdentifiedProduce,
   getProduceEmoji,
   getScan,
-  parseIdentifiedProduce,
   type Scan,
 } from '../lib/api';
 
@@ -23,9 +23,11 @@ const POLL_INTERVAL_MS = 1800;
 export function ScanStatusScreen({
   scanId,
   onDone,
+  onRetry,
 }: {
   scanId: string;
   onDone: () => void;
+  onRetry: () => void;
 }) {
   const [scan, setScan] = useState<Scan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,7 @@ export function ScanStatusScreen({
           </View>
           <Text style={styles.loadingTitle}>Processing AI Inspection…</Text>
           <Text style={styles.loadingSubtitle}>
-            Image is queued for YOLO classification & freshness analysis.
+            Image is queued for produce identification.
           </Text>
 
           <View style={styles.stepsCard}>
@@ -97,7 +99,7 @@ export function ScanStatusScreen({
             <View style={styles.stepRow}>
               <Text style={styles.stepPending}>○</Text>
               <Text style={[styles.stepText, { color: '#849188' }]}>
-                Computing batch freshness confidence
+                Freshness model is not trained yet
               </Text>
             </View>
           </View>
@@ -106,11 +108,12 @@ export function ScanStatusScreen({
     );
   }
 
-  const produce = parseIdentifiedProduce(scan.model_version);
+  const produce = getIdentifiedProduce(scan);
   const emoji = getProduceEmoji(produce);
   const badge = getFreshnessBadge(scan.classification);
-  const confidencePct =
-    scan.freshness_score != null ? Math.round(scan.freshness_score * 100) : null;
+  const freshnessIsDemo = scan.model_version?.includes('stub-v0') ?? false;
+  const identityConfidencePct =
+    scan.identity_score != null ? Math.round(scan.identity_score * 100) : null;
 
   return (
     <SafeAreaView style={styles.page}>
@@ -162,30 +165,25 @@ export function ScanStatusScreen({
                       { color: badge.badgeColor },
                     ]}
                   >
-                    {badge.label}
+                    {freshnessIsDemo ? `${badge.label} demo` : badge.label}
                   </Text>
                 </View>
               </View>
 
               {/* Confidence Gauge */}
-              {confidencePct != null ? (
+              {identityConfidencePct != null ? (
                 <View style={styles.gaugeContainer}>
                   <View style={styles.gaugeHeader}>
-                    <Text style={styles.gaugeLabel}>Freshness Confidence</Text>
-                    <Text style={styles.gaugeValue}>{confidencePct}%</Text>
+                    <Text style={styles.gaugeLabel}>Identity Confidence</Text>
+                    <Text style={styles.gaugeValue}>{identityConfidencePct}%</Text>
                   </View>
                   <View style={styles.gaugeTrack}>
                     <View
                       style={[
                         styles.gaugeFill,
                         {
-                          width: `${Math.min(100, Math.max(5, confidencePct))}%`,
-                          backgroundColor:
-                            scan.classification === 'fresh'
-                              ? '#196a49'
-                              : scan.classification === 'medium'
-                              ? '#c47d00'
-                              : '#ba1a1a',
+                          width: `${Math.min(100, Math.max(5, identityConfidencePct))}%`,
+                          backgroundColor: '#196a49',
                         },
                       ]}
                     />
@@ -208,9 +206,20 @@ export function ScanStatusScreen({
               </View>
               <View style={styles.detailDivider} />
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Model Version</Text>
-                <Text style={styles.detailVal}>{scan.model_version || 'yolo26-cls'}</Text>
+                <Text style={styles.detailLabel}>Identity Model</Text>
+                <Text style={styles.detailVal}>
+                  {scan.identity_model_version || 'Not available'}
+                </Text>
               </View>
+              {freshnessIsDemo ? (
+                <>
+                  <View style={styles.detailDivider} />
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Freshness Model</Text>
+                    <Text style={styles.detailVal}>Demo only</Text>
+                  </View>
+                </>
+              ) : null}
               <View style={styles.detailDivider} />
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Timestamp</Text>
@@ -227,8 +236,11 @@ export function ScanStatusScreen({
           <View style={styles.failedCard}>
             <Text style={styles.failedTitle}>Classification Incomplete</Text>
             <Text style={styles.failedCopy}>
-              The AI classifier was unable to determine freshness for this photo. Please retake with clear lighting.
+              The uploaded photo could not be processed. Retake it and try again.
             </Text>
+            <Pressable style={styles.retryScanBtn} onPress={onRetry}>
+              <Text style={styles.retryScanBtnText}>Retake Photo</Text>
+            </Pressable>
           </View>
         )}
 
@@ -392,6 +404,15 @@ const styles = StyleSheet.create({
   },
   failedTitle: { color: '#ba1a1a', fontSize: 16, fontWeight: '800' },
   failedCopy: { color: '#536158', fontSize: 13, lineHeight: 18 },
+  retryScanBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#b91c1c',
+    borderRadius: 10,
+    marginTop: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+  },
+  retryScanBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   primaryBtn: {
     backgroundColor: '#196a49',
     borderRadius: 14,
@@ -406,4 +427,3 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });
-

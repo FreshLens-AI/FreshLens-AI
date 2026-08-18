@@ -1,3 +1,6 @@
+import { fetch as expoFetch } from 'expo/fetch';
+import { File as ExpoFile } from 'expo-file-system';
+
 import { reportSessionExpired } from './auth/session-events';
 import { getSupabaseClient } from './supabase';
 
@@ -21,6 +24,9 @@ export interface Scan {
   classification: Classification | null;
   freshness_score: number | null;
   model_version: string | null;
+  identity_label: string | null;
+  identity_score: number | null;
+  identity_model_version: string | null;
   product_id: string | null;
   batch_id: string | null;
   created_at: string;
@@ -53,7 +59,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const response = await fetch(`${apiUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
+    const response = await expoFetch(`${apiUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
       ...init,
       headers,
       signal: controller.signal,
@@ -88,15 +94,19 @@ export async function submitScan(
   photoUri: string,
   quantity: number,
 ): Promise<ScanAccepted> {
-  // React Native / Hermes requires a real Blob; fetch the local file first.
-  const imageResponse = await fetch(photoUri);
-  const blob = await imageResponse.blob();
+  // Camera URIs are device-local files. Fetching a file:// URI on Android can
+  // return a successful-looking "File not found" response, which then gets
+  // uploaded as text. Expo's File implements Blob and streams the real bytes.
+  const image = new ExpoFile(photoUri);
+  if (!image.exists || image.size === 0) {
+    throw new ApiError(422, 'Captured photo is no longer available. Please retake it.');
+  }
 
   const form = new FormData();
-  form.append('image', blob, 'scan.jpg');
+  form.append('image', image, image.name || 'scan.jpg');
   form.append('quantity', String(quantity));
 
-  console.log('[submitScan] uploading blob size=', blob.size, 'qty=', quantity);
+  console.log('[submitScan] uploading file size=', image.size, 'qty=', quantity);
   const res = await apiFetch('api/v1/scans', { method: 'POST', body: form });
   console.log('[submitScan] response status=', res.status);
   return parseJsonOrThrow<ScanAccepted>(res);
@@ -122,6 +132,18 @@ export function parseIdentifiedProduce(modelVersion: string | null | undefined):
     return prefixMatch[1].trim();
   }
   return modelVersion;
+}
+
+export function getIdentifiedProduce(
+  scan: Pick<Scan, 'identity_label' | 'identity_model_version' | 'model_version'>,
+): string {
+  const identity = scan.identity_label?.trim();
+  if (identity) return identity;
+  // A populated identity model version means the new classifier ran and
+  // deliberately rejected the image as unknown. Only parse model_version for
+  // scans produced by the pre-identity schema.
+  if (scan.identity_model_version) return 'Unknown produce';
+  return parseIdentifiedProduce(scan.model_version);
 }
 
 export function getProduceEmoji(name?: string | null): string {
@@ -240,4 +262,3 @@ export async function listAlerts(): Promise<Alert[]> {
   const body = await parseJsonOrThrow<{ items: Alert[] }>(res);
   return body.items;
 }
-

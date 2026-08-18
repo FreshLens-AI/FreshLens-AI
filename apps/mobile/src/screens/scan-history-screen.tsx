@@ -13,9 +13,9 @@ import {
 import {
   ApiError,
   getFreshnessBadge,
+  getIdentifiedProduce,
   getProduceEmoji,
   listScans,
-  parseIdentifiedProduce,
   type Classification,
   type Scan,
 } from '../lib/api';
@@ -133,9 +133,10 @@ export function ScanHistoryScreen({ onDone }: { onDone: () => void }) {
             </View>
           ) : (
             filteredScans.map((item) => {
-              const produceName = parseIdentifiedProduce(item.model_version);
+              const produceName = getIdentifiedProduce(item);
               const emoji = getProduceEmoji(produceName);
               const badge = getFreshnessBadge(item.classification as Classification | null);
+              const freshnessIsDemo = item.model_version?.includes('stub-v0') ?? false;
               const formattedDate = new Date(item.created_at).toLocaleString(undefined, {
                 month: 'short',
                 day: 'numeric',
@@ -167,7 +168,7 @@ export function ScanHistoryScreen({ onDone }: { onDone: () => void }) {
                           { color: badge.badgeColor },
                         ]}
                       >
-                        {badge.label}
+                        {freshnessIsDemo ? `${badge.label} demo` : badge.label}
                       </Text>
                     </View>
                   </View>
@@ -180,10 +181,10 @@ export function ScanHistoryScreen({ onDone }: { onDone: () => void }) {
                       <Text style={styles.metaValue}>{item.quantity} units</Text>
                     </View>
                     <View style={styles.metaCol}>
-                      <Text style={styles.metaLabel}>Confidence</Text>
+                      <Text style={styles.metaLabel}>Identity</Text>
                       <Text style={styles.metaValue}>
-                        {item.freshness_score != null
-                          ? `${Math.round(item.freshness_score * 100)}%`
+                        {item.identity_score != null
+                          ? `${Math.round(item.identity_score * 100)}%`
                           : '—'}
                       </Text>
                     </View>
@@ -204,10 +205,10 @@ export function ScanHistoryScreen({ onDone }: { onDone: () => void }) {
                     </View>
                   </View>
 
-                  {item.model_version ? (
+                  {item.identity_model_version ? (
                     <View style={styles.modelPill}>
                       <Text style={styles.modelPillText}>
-                        Model: {item.model_version}
+                        Identity model: {item.identity_model_version}
                       </Text>
                     </View>
                   ) : null}

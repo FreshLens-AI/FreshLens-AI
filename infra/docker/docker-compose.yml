@@ -13,6 +13,7 @@ services:
       - ../db/local/0000_supabase_compat.sql:/docker-entrypoint-initdb.d/0000_supabase_compat.sql:ro
       - ../db/migrations/0001_auth_tenancy.sql:/docker-entrypoint-initdb.d/0010_auth_tenancy.sql:ro
       - ../db/migrations/0002_business_tables.sql:/docker-entrypoint-initdb.d/0015_business_tables.sql:ro
+      - ../db/migrations/0003_scan_identity.sql:/docker-entrypoint-initdb.d/0016_scan_identity.sql:ro
       - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
       - ../db/local/0030_demo_catalogue.sql:/docker-entrypoint-initdb.d/0030_demo_catalogue.sql:ro
     healthcheck:
@@ -78,8 +79,11 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       SCAN_STORAGE_DIR: /var/lib/freshlens/scans
-      CLASSIFIER: ${CLASSIFIER:-yolo26-cls}
-      YOLO_CLS_WEIGHTS: ${YOLO_CLS_WEIGHTS:-/var/lib/freshlens/yolo/yolo26n-cls.pt}
+      CLASSIFIER: ${CLASSIFIER:-identity-v1}
+      IDENTITY_WEIGHTS: ${IDENTITY_WEIGHTS:-/app/models/identity-v1.pt}
+      IDENTITY_MODEL_VERSION: ${IDENTITY_MODEL_VERSION:-identity-yolo26n-cls-v1}
+      IDENTITY_IMAGE_SIZE: ${IDENTITY_IMAGE_SIZE:-160}
+      IDENTITY_MIN_CONFIDENCE: ${IDENTITY_MIN_CONFIDENCE:-0.75}
       YOLO_CONFIG_DIR: /var/lib/freshlens/yolo
     volumes:
       - scan_images:/var/lib/freshlens/scans

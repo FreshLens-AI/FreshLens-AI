@@ -25,6 +25,7 @@ class FakeConnection:
         }
         self.matched_product_id = matched_product_id
         self.batch_inserts = 0
+        self.last_update = None
 
     def __enter__(self):
         return self
@@ -49,17 +50,21 @@ class FakeConnection:
             self.batch_inserts += 1
             return FakeCursor({"id": "new-batch"})
         if normalized.startswith("update public.scans"):
-            self.scan["product_id"] = params[3] or self.scan["product_id"]
-            self.scan["batch_id"] = params[4] or self.scan["batch_id"]
+            self.last_update = params
+            self.scan["product_id"] = params[6] or self.scan["product_id"]
+            self.scan["batch_id"] = params[7] or self.scan["batch_id"]
             return FakeCursor()
         raise AssertionError(f"Unexpected SQL: {normalized}")
 
 
-def _result(name: str, confidence: float = 0.99) -> ClassificationResult:
+def _result(name: str | None, confidence: float = 0.99) -> ClassificationResult:
     return ClassificationResult(
         label="fresh",
-        score=confidence,
-        model_version=f"yolo26n-cls:{name}",
+        score=0.91,
+        model_version="identity-yolo26n-cls-v1+stub-v0",
+        identity_label=name,
+        identity_score=confidence,
+        identity_model_version="identity-yolo26n-cls-v1",
     )
 
 
@@ -73,11 +78,17 @@ def test_completed_identified_scan_creates_one_batch_on_retry(monkeypatch) -> No
     assert connection.scan["product_id"] == "banana-product"
     assert connection.scan["batch_id"] == "new-batch"
     assert connection.batch_inserts == 1
+    assert connection.last_update[1] == 0.91
+    assert connection.last_update[3:6] == (
+        "Banana",
+        0.99,
+        "identity-yolo26n-cls-v1",
+    )
 
 
 def test_unknown_or_low_confidence_identity_does_not_create_batch(monkeypatch) -> None:
     for result, matched_product_id in [
-        (_result("menu"), None),
+        (_result(None), None),
         (_result("Banana", confidence=0.40), "banana-product"),
     ]:
         connection = FakeConnection(matched_product_id=matched_product_id)

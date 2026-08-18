@@ -2,6 +2,16 @@ from pathlib import Path
 from uuid import UUID
 
 _MAX_IMAGE_BYTES = 8 * 1024 * 1024
+_JPEG_SIGNATURE = b"\xff\xd8\xff"
+_PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
+def detect_image_suffix(data: bytes) -> str:
+    if data.startswith(_JPEG_SIGNATURE):
+        return ".jpg"
+    if data.startswith(_PNG_SIGNATURE):
+        return ".png"
+    raise ValueError("Image must be a valid JPEG or PNG file.")
 
 
 class ObjectStorageClient:
@@ -15,6 +25,8 @@ class ObjectStorageClient:
             raise ValueError("Image is empty.")
         if len(data) > _MAX_IMAGE_BYTES:
             raise ValueError("Image exceeds 8MB.")
+        # Trust the bytes, not the multipart filename or content type.
+        suffix = detect_image_suffix(data)
         relative = f"{tenant_id}/{scan_id}{suffix}"
         destination = self.root / relative
         destination.parent.mkdir(parents=True, exist_ok=True)

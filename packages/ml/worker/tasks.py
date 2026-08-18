@@ -8,7 +8,7 @@ _classifier = None
 
 
 def _build_classifier():
-    if os.environ.get("CLASSIFIER", "stub") == "yolo26-cls":
+    if os.environ.get("CLASSIFIER", "stub") in {"identity-v1", "yolo26-cls"}:
         from worker.yolo_cls import Yolo26ClsClassifier
 
         return Yolo26ClsClassifier()
