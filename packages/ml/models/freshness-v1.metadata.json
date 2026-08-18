@@ -1,0 +1,54 @@
+{
+  "model_version": "freshness-yolo26n-cls-v1",
+  "task": "whole-image produce freshness classification",
+  "architecture": "YOLO26n-cls",
+  "classes": [
+    "fresh",
+    "medium",
+    "spoiled"
+  ],
+  "supported_products": [
+    "banana",
+    "cucumber",
+    "eggplant",
+    "tomato"
+  ],
+  "image_size": 224,
+  "confidence_threshold": 0.5,
+  "checkpoint": {
+    "filename": "freshness-v1.pt",
+    "size_bytes": 3188866,
+    "sha256": "c2f945ad1e6028eb2d7a3765efed6f774e0e35b061e961d230793a2ddceb4b10"
+  },
+  "training": {
+    "seed": 21,
+    "epochs_requested": 15,
+    "epochs_completed": 15,
+    "best_validation_accuracy": 0.97297,
+    "batch_size": 64,
+    "device": "cpu",
+    "ultralytics_version": "8.4.121",
+    "torch_version": "2.13.0+cpu",
+    "completed_at": "2026-08-18T07:26:14.469245+00:00"
+  },
+  "dataset": {
+    "train_samples": 5039,
+    "validation_samples": 407,
+    "test_samples": 413,
+    "unique_source_groups": 2844,
+    "exact_duplicates_removed": 11,
+    "evaluation_images_are_unaugmented": true,
+    "source": "AgriFreshNET",
+    "source_doi": "10.17632/42m5tb7yv9.1",
+    "source_license": "CC BY 4.0",
+    "source_url": "https://data.mendeley.com/datasets/42m5tb7yv9/1"
+  },
+  "limitations": [
+    "This is a CPU-trained integration baseline, not a production release.",
+    "The held-out split uses unseen source groups but comes from the same public dataset as training.",
+    "Eggplant has the weakest held-out accuracy and requires more varied local images.",
+    "The cucumber-spoiled test stratum contains only seven images.",
+    "Validate with unaugmented photos captured on target phones before deployment.",
+    "The model expects one main produce type per image and runs only after Model 1 accepts identity."
+  ]
+}
