@@ -2,8 +2,9 @@
 
 The V1 pipeline uses two whole-image classifiers because the mobile capture flow
 allows one produce type per photo. Identity-v1 covers `banana`, `cucumber`,
-`eggplant`, `tomato`, and an `unknown` rejection class. Freshness remains on the
-deterministic stub until the second model is trained.
+`eggplant`, `tomato`, and an `unknown` rejection class. Freshness-v1 grades an
+accepted identity as `fresh`, `medium`, or `spoiled`. Images rejected by Model 1
+are not sent to Model 2 and are stored without a freshness grade.
 
 ## Identity dataset
 
@@ -58,6 +59,25 @@ The generated `manifest.csv` records provenance and grouping. The generated
 `dataset-summary.json` records class counts, licences, and source URLs. Dataset
 images and model weights are gitignored; do not commit third-party image data.
 
+## Freshness dataset
+
+Freshness-v1 uses the 12 AgriFreshNET folders formed by four supported products
+and three stages: Fresh, Semi Fresh, and Rotten. The labels are mapped to
+`fresh`, `medium`, and `spoiled`. All offline augmentations derived from the same
+source filename stay in the same split, and validation/test contain only the
+unaugmented source photos.
+
+```bash
+python -m training.prepare_freshness_dataset \
+  --agrifresh-root ../../data/ml-sources/agrifreshnet/extracted \
+  --output ../../data/ml-datasets/freshness-v1
+```
+
+The current prepared set has 5,039 training images, 407 validation images, and
+413 held-out test images after removing 11 exact duplicates. These evaluation
+splits test unseen source groups, but they remain from the same public dataset;
+phone-captured images are still required for the release test.
+
 ## Train and evaluate
 
 Use an exact, recorded Ultralytics/PyTorch environment and a CUDA device for the
@@ -92,6 +112,24 @@ include a team-captured, device-diverse local test set; public web datasets can
 contain unrecorded near-duplicates and do not reproduce the app's camera flow.
 
 To activate a checkpoint locally, copy it to `models/identity-v1.pt`, then
-build the worker. The worker applies a configurable `IDENTITY_MIN_CONFIDENCE`
-threshold (0.75 by default); rejected and explicit `unknown` predictions are
-stored without auto-linking an inventory product.
+copy the freshness checkpoint to `models/freshness-v1.pt` and build the worker.
+The worker applies configurable `IDENTITY_MIN_CONFIDENCE` (0.75) and
+`FRESHNESS_MIN_CONFIDENCE` (0.50) gates. A rejected identity is completed
+without a grade; a rejected freshness prediction fails safely and asks for a
+retake.
+
+Train and evaluate Model 2 with:
+
+```bash
+python -m training.train_freshness \
+  --data ../../data/ml-datasets/freshness-v1 \
+  --epochs 60 --imgsz 224 --device 0 \
+  --project ../../runs/freshness \
+  --name freshness-yolo26n-cls-v1
+
+python -m training.evaluate_freshness \
+  --weights ../../runs/freshness/freshness-yolo26n-cls-v1/weights/best.pt \
+  --data ../../data/ml-datasets/freshness-v1 \
+  --imgsz 224 --confidence-threshold 0.50 \
+  --output ../../runs/freshness/freshness-yolo26n-cls-v1/test-metrics.json
+```
