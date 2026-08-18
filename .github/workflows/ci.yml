@@ -40,7 +40,7 @@ jobs:
       - run: pytest
 
   ml-test:
-    name: ML stub tests
+    name: ML pipeline tests
     runs-on: ubuntu-latest
     defaults:
       run:
