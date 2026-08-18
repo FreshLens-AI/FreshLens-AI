@@ -12,6 +12,7 @@ import {
 import {
   ApiError,
   getFreshnessBadge,
+  getFreshnessModelVersion,
   getIdentifiedProduce,
   getProduceEmoji,
   getScan,
@@ -82,7 +83,7 @@ export function ScanStatusScreen({
           </View>
           <Text style={styles.loadingTitle}>Processing AI Inspection…</Text>
           <Text style={styles.loadingSubtitle}>
-            Image is queued for produce identification.
+            Image is queued for produce identification and freshness grading.
           </Text>
 
           <View style={styles.stepsCard}>
@@ -93,13 +94,13 @@ export function ScanStatusScreen({
             <View style={styles.stepRow}>
               <ActivityIndicator size="small" color="#196a49" style={{ marginRight: 4 }} />
               <Text style={[styles.stepText, { fontWeight: '700', color: '#196a49' }]}>
-                Running produce neural network…
+                Running produce identity model…
               </Text>
             </View>
             <View style={styles.stepRow}>
               <Text style={styles.stepPending}>○</Text>
               <Text style={[styles.stepText, { color: '#849188' }]}>
-                Freshness model is not trained yet
+                Freshness model runs after identity is accepted
               </Text>
             </View>
           </View>
@@ -114,6 +115,9 @@ export function ScanStatusScreen({
   const freshnessIsDemo = scan.model_version?.includes('stub-v0') ?? false;
   const identityConfidencePct =
     scan.identity_score != null ? Math.round(scan.identity_score * 100) : null;
+  const freshnessConfidencePct =
+    scan.freshness_score != null ? Math.round(scan.freshness_score * 100) : null;
+  const freshnessModelVersion = getFreshnessModelVersion(scan.model_version);
 
   return (
     <SafeAreaView style={styles.page}>
@@ -190,6 +194,25 @@ export function ScanStatusScreen({
                   </View>
                 </View>
               ) : null}
+              {freshnessConfidencePct != null ? (
+                <View style={styles.gaugeContainer}>
+                  <View style={styles.gaugeHeader}>
+                    <Text style={styles.gaugeLabel}>Freshness Confidence</Text>
+                    <Text style={styles.gaugeValue}>{freshnessConfidencePct}%</Text>
+                  </View>
+                  <View style={styles.gaugeTrack}>
+                    <View
+                      style={[
+                        styles.gaugeFill,
+                        {
+                          width: `${Math.min(100, Math.max(5, freshnessConfidencePct))}%`,
+                          backgroundColor: badge.badgeColor,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ) : null}
             </View>
 
             {/* Inspection Details Card */}
@@ -219,7 +242,17 @@ export function ScanStatusScreen({
                     <Text style={styles.detailVal}>Demo only</Text>
                   </View>
                 </>
-              ) : null}
+              ) : (
+                <>
+                  <View style={styles.detailDivider} />
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Freshness Model</Text>
+                    <Text style={styles.detailVal}>
+                      {freshnessModelVersion || 'Not run (identity rejected)'}
+                    </Text>
+                  </View>
+                </>
+              )}
               <View style={styles.detailDivider} />
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Timestamp</Text>

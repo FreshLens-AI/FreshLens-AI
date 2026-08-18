@@ -135,6 +135,33 @@ def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None
                 scan_id,
             ),
         )
+        if (
+            result.label == "spoiled"
+            and product_id is not None
+            and batch_id is not None
+        ):
+            confidence = f"{result.score:.0%}" if result.score is not None else "unknown"
+            product = result.identity_label or "Produce"
+            message = (
+                f"{product} batch was classified as spoiled "
+                f"({confidence} confidence)."
+            )
+            connection.execute(
+                """
+                insert into public.alerts (
+                  tenant_id, type, severity, message, product_id, batch_id
+                )
+                select
+                  %s, 'spoilage', 'critical', %s, %s, %s
+                where not exists (
+                  select 1
+                  from public.alerts
+                  where type = 'spoilage'
+                    and batch_id = %s
+                )
+                """,
+                (tenant_id, message, product_id, batch_id, batch_id),
+            )
 
 
 def read_image(image_path: str) -> bytes:

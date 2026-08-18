@@ -1,4 +1,4 @@
-# Local stack: Postgres + Redis + API + Celery worker (YOLO26-cls identify).
+# Local stack: Postgres + Redis + API + two-tier YOLO26-cls worker.
 services:
   postgres:
     image: postgres:16-alpine
@@ -84,6 +84,10 @@ services:
       IDENTITY_MODEL_VERSION: ${IDENTITY_MODEL_VERSION:-identity-yolo26n-cls-v1}
       IDENTITY_IMAGE_SIZE: ${IDENTITY_IMAGE_SIZE:-160}
       IDENTITY_MIN_CONFIDENCE: ${IDENTITY_MIN_CONFIDENCE:-0.75}
+      FRESHNESS_WEIGHTS: ${FRESHNESS_WEIGHTS:-/app/models/freshness-v1.pt}
+      FRESHNESS_MODEL_VERSION: ${FRESHNESS_MODEL_VERSION:-freshness-yolo26n-cls-v1}
+      FRESHNESS_IMAGE_SIZE: ${FRESHNESS_IMAGE_SIZE:-224}
+      FRESHNESS_MIN_CONFIDENCE: ${FRESHNESS_MIN_CONFIDENCE:-0.50}
       YOLO_CONFIG_DIR: /var/lib/freshlens/yolo
     volumes:
       - scan_images:/var/lib/freshlens/scans

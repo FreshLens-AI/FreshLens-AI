@@ -179,8 +179,18 @@ export function getFreshnessBadge(classification: Classification | null | undefi
     case 'spoiled':
       return { label: 'Spoiled', badgeBg: '#ffebe9', badgeColor: '#ba1a1a' };
     default:
-      return { label: 'Pending', badgeBg: '#edf2ee', badgeColor: '#536158' };
+      return { label: 'Not graded', badgeBg: '#edf2ee', badgeColor: '#536158' };
   }
+}
+
+export function getFreshnessModelVersion(
+  modelVersion: string | null | undefined,
+): string | null {
+  if (!modelVersion) return null;
+  const freshnessVersion = modelVersion
+    .split('+')
+    .find((version) => version.startsWith('freshness-'));
+  return freshnessVersion ?? null;
 }
 
 export interface ProductSummary {

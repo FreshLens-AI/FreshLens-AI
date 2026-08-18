@@ -11,8 +11,8 @@ info:
     - Tenant isolation: auth middleware derives trusted identity from the JWT, and
       the tenant DB transaction sets Postgres `app.tenant_id` on its own connection;
       never trust a client-supplied `tenant_id`
-    - Async scan only: `POST /api/v1/scans` returns **202**; CNN runs in Celery, never
-      in the request handler (stub classifier acceptable for mid-eval)
+    - Async scan only: `POST /api/v1/scans` returns **202**; the two-tier CNN
+      pipeline runs in Celery, never in the request handler
 
     See `docs/api/README.md` for human overview and out-of-scope notes.
 servers:
@@ -124,8 +124,9 @@ paths:
       summary: Get a scan by id
       description: |
         Returns the full scan resource. While status is `pending` or `processing`,
-        classification fields may be null. When `completed`, classification and
-        freshness_score are populated (stub values OK for mid-eval).
+        classification fields may be null. For an accepted identity, a completed
+        scan includes the Model 2 classification and freshness score. Rejected
+        identities complete without a freshness grade.
       operationId: getScan
       security:
         - bearerAuth: []
@@ -504,7 +505,7 @@ components:
     Classification:
       type: string
       enum: [fresh, medium, spoiled]
-      description: FL-2TC Tier-2 freshness label (stub OK for mid-eval).
+      description: FL-2TC Tier-2 freshness label.
 
     ScanStatus:
       type: string
@@ -801,7 +802,7 @@ components:
           oneOf:
             - type: string
             - type: "null"
-          description: Combined pipeline version; identity-v1 currently runs with stub-v0 freshness.
+          description: Combined identity and freshness pipeline version when both models run.
         identity_label:
           oneOf:
             - type: string

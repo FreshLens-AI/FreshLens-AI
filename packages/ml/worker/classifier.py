@@ -7,8 +7,8 @@ MODEL_VERSION = "stub-v0"
 
 @dataclass(frozen=True)
 class ClassificationResult:
-    label: str
-    score: float
+    label: str | None
+    score: float | None
     model_version: str = MODEL_VERSION
     identity_label: str | None = None
     identity_score: float | None = None
@@ -16,7 +16,7 @@ class ClassificationResult:
 
 
 class StubClassifier:
-    """Deterministic Fresh/Medium/Spoiled stand-in. Replace with FL-2TC in M4."""
+    """Deterministic Fresh/Medium/Spoiled stand-in for local fallback use."""
 
     def classify(self, image: bytes) -> ClassificationResult:
         idx = sum(image[:64]) % 3 if image else 0
