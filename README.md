@@ -26,10 +26,12 @@ cp .env.example .env
 docker compose --env-file .env -f infra/docker/docker-compose.yml up --build
 ```
 
-The worker defaults to the four-product identity model. Place the trained
-checkpoint at `packages/ml/models/identity-v1.pt` before building, or set
-`CLASSIFIER=stub` when running without model artifacts. Dataset preparation,
-training, evaluation, and model activation are documented in
+The worker defaults to the two-tier classifier: Model 1 identifies banana,
+cucumber, eggplant, or tomato, then Model 2 grades accepted produce as fresh,
+medium, or spoiled. Place both `identity-v1.pt` and `freshness-v1.pt` in
+`packages/ml/models` before building, or set `CLASSIFIER=stub` when running
+without model artifacts. Dataset preparation, training, evaluation, and model
+activation are documented in
 [`packages/ml/README.md`](packages/ml/README.md).
 
 Fill in `SUPABASE_URL` before testing protected API routes. On a new local

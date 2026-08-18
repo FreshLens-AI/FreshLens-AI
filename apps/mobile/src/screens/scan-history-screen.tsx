@@ -205,10 +205,10 @@ export function ScanHistoryScreen({ onDone }: { onDone: () => void }) {
                     </View>
                   </View>
 
-                  {item.identity_model_version ? (
+                  {item.model_version ? (
                     <View style={styles.modelPill}>
                       <Text style={styles.modelPillText}>
-                        Identity model: {item.identity_model_version}
+                        Pipeline: {item.model_version}
                       </Text>
                     </View>
                   ) : null}

@@ -25,6 +25,7 @@ class FakeConnection:
         }
         self.matched_product_id = matched_product_id
         self.batch_inserts = 0
+        self.alert_inserts = 0
         self.last_update = None
 
     def __enter__(self):
@@ -54,14 +55,21 @@ class FakeConnection:
             self.scan["product_id"] = params[6] or self.scan["product_id"]
             self.scan["batch_id"] = params[7] or self.scan["batch_id"]
             return FakeCursor()
+        if normalized.startswith("insert into public.alerts"):
+            self.alert_inserts += 1
+            return FakeCursor()
         raise AssertionError(f"Unexpected SQL: {normalized}")
 
 
-def _result(name: str | None, confidence: float = 0.99) -> ClassificationResult:
+def _result(
+    name: str | None,
+    confidence: float = 0.99,
+    label: str | None = "fresh",
+) -> ClassificationResult:
     return ClassificationResult(
-        label="fresh",
-        score=0.91,
-        model_version="identity-yolo26n-cls-v1+stub-v0",
+        label=label,
+        score=0.91 if label is not None else None,
+        model_version="identity-yolo26n-cls-v1+freshness-yolo26n-cls-v1",
         identity_label=name,
         identity_score=confidence,
         identity_model_version="identity-yolo26n-cls-v1",
@@ -78,6 +86,7 @@ def test_completed_identified_scan_creates_one_batch_on_retry(monkeypatch) -> No
     assert connection.scan["product_id"] == "banana-product"
     assert connection.scan["batch_id"] == "new-batch"
     assert connection.batch_inserts == 1
+    assert connection.alert_inserts == 0
     assert connection.last_update[1] == 0.91
     assert connection.last_update[3:6] == (
         "Banana",
@@ -88,7 +97,7 @@ def test_completed_identified_scan_creates_one_batch_on_retry(monkeypatch) -> No
 
 def test_unknown_or_low_confidence_identity_does_not_create_batch(monkeypatch) -> None:
     for result, matched_product_id in [
-        (_result(None), None),
+        (_result(None, label=None), None),
         (_result("Banana", confidence=0.40), "banana-product"),
     ]:
         connection = FakeConnection(matched_product_id=matched_product_id)
@@ -109,3 +118,20 @@ def test_existing_batch_is_preserved(monkeypatch) -> None:
 
     assert connection.scan["batch_id"] == "existing-batch"
     assert connection.batch_inserts == 0
+
+
+def test_spoiled_result_creates_critical_alert(monkeypatch) -> None:
+    connection = FakeConnection()
+    monkeypatch.setattr(db, "_connect", lambda: connection)
+    spoiled = ClassificationResult(
+        label="spoiled",
+        score=0.88,
+        model_version="identity-yolo26n-cls-v1+freshness-yolo26n-cls-v1",
+        identity_label="Banana",
+        identity_score=0.99,
+        identity_model_version="identity-yolo26n-cls-v1",
+    )
+
+    db.complete("tenant-1", "scan-1", spoiled)
+
+    assert connection.alert_inserts == 1

@@ -83,7 +83,7 @@ request bodies or user-editable metadata. See [`../authentication.md`](../authen
 
 ## Out of scope (later)
 
-Presigned R2 upload · webhooks · real FL-2TC model payloads · alert CRUD · product/batch full CRUD · analytics dashboards.
+Presigned R2 upload · webhooks · alert CRUD · product/batch full CRUD · analytics dashboards.
 
 ## Viewing the OpenAPI
 
