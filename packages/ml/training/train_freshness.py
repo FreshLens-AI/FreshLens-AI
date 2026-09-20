@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch", type=int, default=64)
     parser.add_argument("--lr0", type=float, default=0.008, help="Initial learning rate.")
     parser.add_argument("--patience", type=int, default=15)
-    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--device", default="0")
     parser.add_argument("--seed", type=int, default=21)
     parser.add_argument("--project", type=Path, default=Path("runs/freshness"))
@@ -64,6 +64,8 @@ def main() -> None:
     run_dir = Path(model.trainer.save_dir)
     best_weights = run_dir / "weights" / "best.pt"
     summary_path = args.data / "dataset-summary.json"
+    if not summary_path.exists():
+        summary_path = args.data.parent / "dataset-summary.json"
     summary_data = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
 
     metadata = {

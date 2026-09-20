@@ -52,14 +52,21 @@ def parse_product(name: str) -> str:
     for target in TARGET_PRODUCTS:
         if target in tokens or target in clean:
             return target
+    # Handle chillies spelling variations (e.g. chilllies with 3 L's, chilli, chili)
+    if "chilli" in clean or "chili" in clean or "chilllie" in clean:
+        return "chillies"
     # Recognize common non-target fruits/vegetables as negative samples
     other_produce = (
         "apple", "orange", "potato", "capsicum", "pepper", "bell pepper",
         "guava", "lime", "lemon", "pomegranate", "strawberry", "mango",
-        "carrot", "onion", "cabbage", "broccoli", "chillies"
+        "carrot", "onion", "cabbage", "broccoli"
     )
     for other in other_produce:
         if other in clean:
+            if other in ("capsicum", "bell pepper"):
+                return "pepper"
+            if other == "lime":
+                return "lemon"
             return other.replace(" ", "_")
     return "other"
 
@@ -104,9 +111,9 @@ def scan_dataset_directory(root: Path) -> list[DatasetSample]:
         if not file_path.is_file() or file_path.suffix.casefold() not in IMAGE_SUFFIXES:
             continue
 
-        # Extract information from parent directory names and filename
-        path_parts = [p.name for p in file_path.parents] + [file_path.stem]
-        combined_text = " ".join(path_parts)
+        # Extract information safely from parent directory name and filename
+        parent_name = file_path.parent.name
+        combined_text = f"{parent_name} {file_path.stem}"
 
         product_name = parse_product(combined_text)
         is_target = product_name in TARGET_PRODUCTS
@@ -125,7 +132,7 @@ def scan_dataset_directory(root: Path) -> list[DatasetSample]:
             DatasetSample(
                 source_path=file_path,
                 filename=file_path.name,
-                product=product_name if is_target else "unknown",
+                product=product_name,
                 freshness=freshness_label,
                 is_target_product=is_target,
                 sha256=sha,
@@ -195,17 +202,35 @@ def build_yolo_datasets(
     freshness_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     manifest_rows: list[dict[str, Any]] = []
 
-    # Balance unknown samples if necessary
-    target_count = sum(1 for s in samples if s.is_target_product)
-    unknown_samples = [s for s in samples if not s.is_target_product]
     target_samples = [s for s in samples if s.is_target_product]
+    unknown_candidates = [s for s in samples if not s.is_target_product]
 
-    # Limit unknown class so it doesn't overwhelm the 4 target classes
+    # Stratified sampling across non-target categories to avoid single-commodity bias
+    unknown_by_category: dict[str, list[DatasetSample]] = defaultdict(list)
+    for s in unknown_candidates:
+        unknown_by_category[s.product].append(s)
+
+    # Determine balanced unknown quota (aiming for ~35% of target count)
+    target_count = len(target_samples)
     max_unknown = max(500, int(target_count * 0.35))
-    if len(unknown_samples) > max_unknown:
-        unknown_samples = unknown_samples[:max_unknown]
 
-    active_samples = target_samples + unknown_samples
+    selected_unknown: list[DatasetSample] = []
+    stratification_summary: dict[str, int] = {}
+    if unknown_by_category:
+        import random
+        rng = random.Random(seed)
+        num_categories = len(unknown_by_category)
+        per_cat_quota = max(1, max_unknown // num_categories)
+
+        for cat, cat_samples in sorted(unknown_by_category.items()):
+            # Sort deterministically by sha256 before shuffling with seed
+            sorted_samples = sorted(cat_samples, key=lambda x: x.sha256)
+            rng.shuffle(sorted_samples)
+            sampled = sorted_samples[:per_cat_quota]
+            selected_unknown.extend(sampled)
+            stratification_summary[cat] = len(sampled)
+
+    active_samples = target_samples + selected_unknown
 
     for s in active_samples:
         split = assign_split(s.group_id, seed=seed)
@@ -254,6 +279,7 @@ def build_yolo_datasets(
             "root": str(identity_dir),
             "classes": list(IDENTITY_CLASSES),
             "splits": dict(identity_counts),
+            "unknown_stratification": stratification_summary,
         },
         "freshness_dataset": {
             "root": str(freshness_dir),
@@ -262,8 +288,14 @@ def build_yolo_datasets(
         },
     }
 
+    summary_json = json.dumps(summary, indent=2) + "\n"
     summary_path = output_dir / "dataset-summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    summary_path.write_text(summary_json, encoding="utf-8")
+
+    # Also place a copy directly in each dataset split root for convenient lookup
+    (identity_dir / "dataset-summary.json").write_text(summary_json, encoding="utf-8")
+    (freshness_dir / "dataset-summary.json").write_text(summary_json, encoding="utf-8")
+
     return summary
 
 

@@ -12,9 +12,13 @@ def test_parse_product():
     assert parse_product("fresh_banana_001") == "banana"
     assert parse_product("rotten_cucumber") == "cucumber"
     assert parse_product("eggplant_medium") == "eggplant"
+    assert parse_product("fresh brinjal") == "eggplant"
     assert parse_product("fresh_tomato_front") == "tomato"
     assert parse_product("fresh_apple_01") == "apple"
     assert parse_product("rotten_orange_02") == "orange"
+    assert parse_product("medium chilllies") == "chillies"
+    assert parse_product("fresh bell pepper") == "pepper"
+    assert parse_product("fresh lime") == "lemon"
     assert parse_product("random_unrelated_object") == "other"
 
 
@@ -89,3 +93,55 @@ def test_build_yolo_datasets(tmp_path: Path):
     assert "banana" in summary["identity_dataset"]["classes"]
     assert "unknown" in summary["identity_dataset"]["classes"]
     assert "fresh" in summary["freshness_dataset"]["classes"]
+
+
+def test_stratified_unknown_sampling(tmp_path: Path):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    # Create 4 target samples and multiple non-target produce samples
+    target_samples = []
+    for i, prod in enumerate(("banana", "cucumber", "eggplant", "tomato")):
+        p = source_dir / f"{prod}_{i}.jpg"
+        p.write_bytes(f"{prod}_{i}".encode())
+        target_samples.append(
+            DatasetSample(
+                source_path=p,
+                filename=p.name,
+                product=prod,
+                freshness="fresh",
+                is_target_product=True,
+                sha256=f"hash_{prod}_{i}",
+                group_id=f"{prod}:{i}",
+            )
+        )
+
+    # Create 10 apples, 10 oranges, 10 lemons
+    unknown_samples = []
+    for non_prod in ("apple", "orange", "lemon"):
+        for j in range(10):
+            p = source_dir / f"{non_prod}_{j}.jpg"
+            p.write_bytes(f"{non_prod}_{j}".encode())
+            unknown_samples.append(
+                DatasetSample(
+                    source_path=p,
+                    filename=p.name,
+                    product=non_prod,
+                    freshness=None,
+                    is_target_product=False,
+                    sha256=f"hash_{non_prod}_{j}",
+                    group_id=f"{non_prod}:{j}",
+                )
+            )
+
+    all_samples = target_samples + unknown_samples
+    summary = build_yolo_datasets(all_samples, out_dir, seed=21)
+
+    strat = summary["identity_dataset"]["unknown_stratification"]
+    assert "apple" in strat
+    assert "orange" in strat
+    assert "lemon" in strat
+    # Verify each category receives a balanced allocation
+    assert strat["apple"] == strat["orange"] == strat["lemon"]
+
