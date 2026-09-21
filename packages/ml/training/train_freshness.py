@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=21)
     parser.add_argument("--project", type=Path, default=Path("runs/freshness"))
     parser.add_argument("--name", default="freshness-yolo11s-cls-v2")
+    parser.add_argument("--resume", action="store_true", help="Resume training from previous checkpoint.")
     return parser.parse_args()
 
 
@@ -33,8 +34,16 @@ def main() -> None:
         if not (args.data / split).is_dir():
             raise FileNotFoundError(f"Missing dataset split: {args.data / split}")
 
-    model = YOLO(args.model)
-    model.train(
+    if args.resume:
+        last_weights = (args.project / args.name / "weights" / "last.pt").resolve()
+        if not last_weights.exists():
+            raise FileNotFoundError(f"Cannot resume: {last_weights} not found.")
+        print(f"Resuming training from {last_weights}...")
+        model = YOLO(str(last_weights))
+        model.train(resume=True)
+    else:
+        model = YOLO(args.model)
+        model.train(
         data=str(args.data.resolve()),
         epochs=args.epochs,
         imgsz=args.imgsz,
