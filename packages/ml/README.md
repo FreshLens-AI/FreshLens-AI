@@ -133,3 +133,50 @@ python -m training.evaluate_freshness \
   --imgsz 224 --confidence-threshold 0.50 \
   --output ../../runs/freshness/freshness-yolo26n-cls-v1/test-metrics.json
 ```
+
+## SnapStock-AI / Fahad et al. (CMC 2022) Dataset & Colab Training
+
+To eliminate the cross-domain generalization gap and provide dense sample strata across all 3 freshness stages (`fresh`, `medium`, `spoiled`), the pipeline integrates the **SnapStock-AI** Hugging Face dataset (`SnapStock-AI/snapstock-freshness-dataset-v2`).
+
+### 1. 1-Click Google Colab GPU Training (Recommended)
+
+Open [`packages/ml/notebooks/train_fl2tc_colab.ipynb`](notebooks/train_fl2tc_colab.ipynb) in Google Colab:
+- Select a GPU runtime (T4, L4, or A100).
+- Provide your `HF_TOKEN` in Colab **Secrets** or interactive input.
+- Click **Runtime -> Run all**.
+- The notebook downloads the dataset, formats YOLO splits, trains both Model 1 and Model 2 using `yolo11s-cls`, evaluates on held-out test data, and automatically downloads the release archive `freshlens-fl2tc-v2-artifacts.zip`.
+
+### 2. Local / Headless CLI Pipeline
+
+```bash
+# 1. Download & format SnapStock dataset into YOLO splits
+python -m training.dataset_snapstock \
+  --repo-id SnapStock-AI/snapstock-freshness-dataset-v2 \
+  --output-dir ../../data/ml-datasets/snapstock-fl2tc \
+  --token $HF_TOKEN
+
+# 2. Train Model 1 (Identity)
+python -m training.train_identity \
+  --data ../../data/ml-datasets/snapstock-fl2tc/identity \
+  --model yolo11s-cls.pt \
+  --epochs 80 --imgsz 224 --device 0 \
+  --project ../../runs/identity \
+  --name identity-yolo11s-cls-v2
+
+# 3. Train Model 2 (Freshness)
+python -m training.train_freshness \
+  --data ../../data/ml-datasets/snapstock-fl2tc/freshness \
+  --model yolo11s-cls.pt \
+  --epochs 70 --imgsz 224 --device 0 \
+  --project ../../runs/freshness \
+  --name freshness-yolo11s-cls-v2
+
+# 4. Unified FL-2TC evaluation and metrics report
+python -m training.evaluate_fl2tc \
+  --identity-weights ../../runs/identity/identity-yolo11s-cls-v2/weights/best.pt \
+  --freshness-weights ../../runs/freshness/freshness-yolo11s-cls-v2/weights/best.pt \
+  --dataset-dir ../../data/ml-datasets/snapstock-fl2tc \
+  --split test \
+  --output-dir ../../runs/eval
+```
+
