@@ -7,12 +7,13 @@ from fastapi.testclient import TestClient
 
 from app.core.database import get_tenant_connection
 from app.core.jobs import ClassificationJobPublisher, TASK_NAME, get_publisher
-from app.core.storage import get_storage
+from app.core.storage import detect_image_suffix, get_storage
 from app.main import app
 from tests.conftest import StaticVerifier
 from tests.test_auth import admin_claims, vendor_claims
 
 NOW = datetime(2026, 8, 13, tzinfo=UTC)
+JPEG_BYTES = b"\xff\xd8\xff\xe0jpeg-test-data\xff\xd9"
 
 
 class FakeStorage:
@@ -22,6 +23,7 @@ class FakeStorage:
     def put(self, tenant_id: UUID, scan_id: UUID, data: bytes, suffix: str = ".jpg") -> str:
         if not data:
             raise ValueError("Image is empty.")
+        suffix = detect_image_suffix(data)
         self.puts.append((tenant_id, scan_id, data, suffix))
         return f"{tenant_id}/{scan_id}{suffix}"
 
@@ -56,6 +58,9 @@ class FakeConnection:
                 "classification": None,
                 "freshness_score": None,
                 "model_version": None,
+                "identity_label": None,
+                "identity_score": None,
+                "identity_model_version": None,
                 "product_id": product_id,
                 "batch_id": batch_id,
                 "created_at": NOW,
@@ -99,7 +104,7 @@ def test_create_scan_returns_202_and_does_not_classify(
     response = client.post(
         "/api/v1/scans",
         headers={"Authorization": "Bearer valid"},
-        files={"image": ("scan.jpg", b"jpeg-bytes", "image/jpeg")},
+        files={"image": ("scan.jpg", JPEG_BYTES, "image/jpeg")},
         data={"quantity": "2"},
     )
     body = response.json()
@@ -108,7 +113,7 @@ def test_create_scan_returns_202_and_does_not_classify(
     assert "classification" not in body
     assert len(jobs.calls) == 1
     assert jobs.calls[0][0] == UUID(str(claims["tenant_id"]))
-    assert storage.puts[0][2] == b"jpeg-bytes"
+    assert storage.puts[0][2] == JPEG_BYTES
 
 
 def test_create_scan_rejects_empty_image(
@@ -126,6 +131,22 @@ def test_create_scan_rejects_empty_image(
     assert jobs.calls == []
 
 
+def test_create_scan_rejects_non_image_content(
+    scan_stack: tuple[TestClient, StaticVerifier, FakeStorage, FakePublisher, FakeConnection],
+) -> None:
+    client, verifier, _storage, jobs, _connection = scan_stack
+    verifier.claims = vendor_claims()
+    response = client.post(
+        "/api/v1/scans",
+        headers={"Authorization": "Bearer valid"},
+        files={"image": ("scan.jpg", b"File not found", "image/jpeg")},
+        data={"quantity": "1"},
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Image must be a valid JPEG or PNG file."
+    assert jobs.calls == []
+
+
 def test_create_scan_rejects_quantity_below_one(
     scan_stack: tuple[TestClient, StaticVerifier, FakeStorage, FakePublisher, FakeConnection],
 ) -> None:
@@ -134,7 +155,7 @@ def test_create_scan_rejects_quantity_below_one(
     response = client.post(
         "/api/v1/scans",
         headers={"Authorization": "Bearer valid"},
-        files={"image": ("scan.jpg", b"jpeg-bytes", "image/jpeg")},
+        files={"image": ("scan.jpg", JPEG_BYTES, "image/jpeg")},
         data={"quantity": "0"},
     )
     assert response.status_code == 422
@@ -149,7 +170,7 @@ def test_admin_cannot_create_scan(
     response = client.post(
         "/api/v1/scans",
         headers={"Authorization": "Bearer valid"},
-        files={"image": ("scan.jpg", b"jpeg-bytes", "image/jpeg")},
+        files={"image": ("scan.jpg", JPEG_BYTES, "image/jpeg")},
         data={"quantity": "1"},
     )
     assert response.status_code == 403
@@ -164,7 +185,7 @@ def test_enqueue_failure_marks_scan_failed(
     response = client.post(
         "/api/v1/scans",
         headers={"Authorization": "Bearer valid"},
-        files={"image": ("scan.jpg", b"jpeg-bytes", "image/jpeg")},
+        files={"image": ("scan.jpg", JPEG_BYTES, "image/jpeg")},
         data={"quantity": "1"},
     )
     assert response.status_code == 503
@@ -200,6 +221,9 @@ def test_list_scans_returns_page(
             "classification": "fresh",
             "freshness_score": 0.91,
             "model_version": "stub-v0",
+            "identity_label": "Banana",
+            "identity_score": 0.94,
+            "identity_model_version": "identity-yolo26n-cls-v1",
             "product_id": None,
             "batch_id": None,
             "created_at": NOW,
@@ -217,6 +241,8 @@ def test_list_scans_returns_page(
     assert body["total"] == 1
     assert body["items"][0]["classification"] == "fresh"
     assert body["items"][0]["model_version"] == "stub-v0"
+    assert body["items"][0]["identity_label"] == "Banana"
+    assert body["items"][0]["identity_score"] == pytest.approx(0.94)
 
 
 def test_scan_router_does_not_import_classifier() -> None:

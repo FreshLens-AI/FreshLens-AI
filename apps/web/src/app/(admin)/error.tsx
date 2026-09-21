@@ -10,7 +10,7 @@ export default function AdminError({ unstable_retry }: { unstable_retry: () => v
       <div className="standalone-state__mark"><TriangleAlert size={25} /></div>
       <p className="eyebrow">Something went wrong</p>
       <h1>We couldn’t load this admin view.</h1>
-      <p>Your demo data is still safe in this browser. Try loading the page again.</p>
+      <p>Check the FastAPI service and your admin session, then try loading the page again.</p>
       <Button onClick={unstable_retry}>Try again</Button>
     </div>
   );

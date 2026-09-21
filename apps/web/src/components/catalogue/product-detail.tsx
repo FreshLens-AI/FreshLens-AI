@@ -1,14 +1,12 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   BarChart3,
   CalendarClock,
-  CheckCircle2,
   Clock3,
   Layers3,
   PackageSearch,
-  Pencil,
   Settings2,
   Store,
 } from "lucide-react";
@@ -25,17 +23,15 @@ import styles from "./catalogue.module.css";
 
 export function ProductDetailScreen() {
   const params = useParams<{ productId: string }>();
-  const searchParams = useSearchParams();
   const { products } = useAdminData();
   const product = products.find((item) => item.id === params.productId);
-  const notice = searchParams.get("notice");
 
   if (!product) {
     return (
       <EmptyState
         icon={<PackageSearch size={25} aria-hidden="true" />}
         title="Product not found"
-        description="This catalogue item may not exist in the current demo workspace."
+        description="This product was not returned by the admin API."
         action={<Button href="/catalogue" variant="secondary">Back to catalogue</Button>}
       />
     );
@@ -46,27 +42,12 @@ export function ProductDetailScreen() {
       <PageHeader
         eyebrow="Catalogue product"
         title={product.name}
-        description={product.scientificName || "No scientific name has been recorded."}
+        description={`Tenant product configuration for ${product.tenantName ?? "an unknown tenant"}.`}
         breadcrumbs={[
           { label: "Catalogue", href: "/catalogue" },
           { label: product.name },
         ]}
-        actions={
-          <Button href={`/catalogue/${product.id}/edit`} icon={<Pencil size={16} aria-hidden="true" />}>
-            Edit product
-          </Button>
-        }
       />
-
-      {notice === "created" || notice === "updated" ? (
-        <div className={styles.successBanner} role="status">
-          <CheckCircle2 size={18} aria-hidden="true" />
-          <div>
-            <strong>{notice === "created" ? "Product added" : "Changes saved"}</strong>
-            <span>{product.name} is up to date in this demo workspace.</span>
-          </div>
-        </div>
-      ) : null}
 
       <section className={styles.detailGrid} aria-label="Product overview">
         <Card className={styles.detailStat}>
@@ -75,7 +56,7 @@ export function ProductDetailScreen() {
         </Card>
         <Card className={styles.detailStat}>
           <span className={styles.detailStatIcon} aria-hidden="true"><Store size={20} /></span>
-          <div><small>Tenant coverage</small><strong>{product.tenantCoverage}</strong></div>
+          <div><small>Low-stock threshold</small><strong>{formatNumber(product.lowStockThreshold ?? 0)}</strong></div>
         </Card>
         <Card className={styles.detailStat}>
           <span className={styles.detailStatIcon} aria-hidden="true"><BarChart3 size={20} /></span>
@@ -89,8 +70,8 @@ export function ProductDetailScreen() {
           <dl className={styles.descriptionList}>
             <div><dt>Status</dt><dd><ProductStatusBadge status={product.status} /></dd></div>
             <div><dt>Common name</dt><dd>{product.name}</dd></div>
-            <div><dt>Scientific name</dt><dd>{product.scientificName || "Not provided"}</dd></div>
-            <div><dt>Category</dt><dd>{product.category}</dd></div>
+            <div><dt>Tenant</dt><dd>{product.tenantName ?? "Not recorded"}</dd></div>
+            <div><dt>Low-stock threshold</dt><dd>{formatNumber(product.lowStockThreshold ?? 0)}</dd></div>
             <div><dt>Last updated</dt><dd>{formatDate(product.updatedAt)}</dd></div>
             <div><dt>Catalogue ID</dt><dd><code>{product.id}</code></dd></div>
           </dl>

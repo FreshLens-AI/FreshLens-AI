@@ -11,8 +11,8 @@ info:
     - Tenant isolation: auth middleware derives trusted identity from the JWT, and
       the tenant DB transaction sets Postgres `app.tenant_id` on its own connection;
       never trust a client-supplied `tenant_id`
-    - Async scan only: `POST /api/v1/scans` returns **202**; CNN runs in Celery, never
-      in the request handler (stub classifier acceptable for mid-eval)
+    - Async scan only: `POST /api/v1/scans` returns **202**; the two-tier CNN
+      pipeline runs in Celery, never in the request handler
 
     See `docs/api/README.md` for human overview and out-of-scope notes.
 servers:
@@ -124,8 +124,9 @@ paths:
       summary: Get a scan by id
       description: |
         Returns the full scan resource. While status is `pending` or `processing`,
-        classification fields may be null. When `completed`, classification and
-        freshness_score are populated (stub values OK for mid-eval).
+        classification fields may be null. For an accepted identity, a completed
+        scan includes the Model 2 classification and freshness score. Rejected
+        identities complete without a freshness grade.
       operationId: getScan
       security:
         - bearerAuth: []
@@ -307,8 +308,8 @@ paths:
   /api/v1/admin/tenants:
     get:
       tags: [Admin]
-      summary: List tenants (platform admin placeholder)
-      description: Placeholder for the Next.js admin scaffold (#10).
+      summary: List tenant profiles and privacy-safe aggregates
+      description: Returns organization metadata and current-month aggregate activity. No individual scan or inventory rows are exposed.
       operationId: listTenants
       security:
         - bearerAuth: []
@@ -323,6 +324,105 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TenantList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/products:
+    get:
+      tags: [Admin]
+      summary: List tenant product metadata
+      description: Returns product configuration metadata without batches, quantities, or inventory rows.
+      operationId: listAdminProducts
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Tenant product metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProductList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/alerts:
+    get:
+      tags: [Admin]
+      summary: List tenant alert signals
+      description: Returns alert signals and product context without batch identifiers.
+      operationId: listAdminAlerts
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Tenant alert signals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAlertList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/analytics:
+    get:
+      tags: [Admin]
+      summary: Get aggregate scan analytics
+      description: Returns daily classification totals and pipeline-status counts without individual scan records.
+      operationId: getAdminAnalytics
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 90
+        - name: tenant_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/Uuid"
+              - type: "null"
+      responses:
+        "200":
+          description: Aggregate scan analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAnalytics"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -405,7 +505,7 @@ components:
     Classification:
       type: string
       enum: [fresh, medium, spoiled]
-      description: FL-2TC Tier-2 freshness label (stub OK for mid-eval).
+      description: FL-2TC Tier-2 freshness label.
 
     ScanStatus:
       type: string
@@ -702,7 +802,25 @@ components:
           oneOf:
             - type: string
             - type: "null"
-          description: e.g. `stub-v0` for mid-eval; real FL-2TC version later.
+          description: Combined identity and freshness pipeline version when both models run.
+        identity_label:
+          oneOf:
+            - type: string
+              enum: [Banana, Cucumber, Eggplant, Tomato]
+            - type: "null"
+          description: Tier-1 catalogue-compatible label; null for unknown or rejected input.
+        identity_score:
+          oneOf:
+            - type: number
+              format: float
+              minimum: 0
+              maximum: 1
+            - type: "null"
+          description: Tier-1 identity confidence; distinct from freshness_score.
+        identity_model_version:
+          oneOf:
+            - type: string
+            - type: "null"
         product_id:
           oneOf:
             - $ref: "#/components/schemas/Uuid"
@@ -783,16 +901,58 @@ components:
 
     Tenant:
       type: object
-      required: [id, name, created_at]
+      required: [id, name, status, created_at, member_count, catalogue_coverage, scans_this_month, fresh_scans_this_month, medium_scans_this_month, spoiled_scans_this_month, active_alerts]
       additionalProperties: false
       properties:
         id:
           $ref: "#/components/schemas/Uuid"
         name:
           type: string
+        status:
+          type: string
+          enum: [active, inactive]
         created_at:
           type: string
           format: date-time
+        updated_at:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        last_active_at:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        primary_contact_name:
+          oneOf:
+            - type: string
+            - type: "null"
+        primary_contact_email:
+          oneOf:
+            - type: string
+            - type: "null"
+        member_count:
+          type: integer
+          minimum: 0
+        catalogue_coverage:
+          type: integer
+          minimum: 0
+        scans_this_month:
+          type: integer
+          minimum: 0
+        fresh_scans_this_month:
+          type: integer
+          minimum: 0
+        medium_scans_this_month:
+          type: integer
+          minimum: 0
+        spoiled_scans_this_month:
+          type: integer
+          minimum: 0
+        active_alerts:
+          type: integer
+          minimum: 0
 
     TenantList:
       type: object
@@ -812,3 +972,153 @@ components:
         offset:
           type: integer
           minimum: 0
+
+    AdminProduct:
+      type: object
+      required: [id, tenant_id, tenant_name, name, shelf_life_days, low_stock_threshold, created_at, updated_at, scans_this_month]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_name:
+          type: string
+        name:
+          type: string
+        shelf_life_days:
+          type: integer
+          minimum: 1
+        low_stock_threshold:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        scans_this_month:
+          type: integer
+          minimum: 0
+
+    AdminProductList:
+      type: object
+      required: [items, total, limit, offset]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminProduct"
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+
+    AdminAlert:
+      type: object
+      required: [id, tenant_id, tenant_name, type, severity, message, created_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_name:
+          type: string
+        type:
+          $ref: "#/components/schemas/AlertType"
+        severity:
+          $ref: "#/components/schemas/AlertSeverity"
+        message:
+          type: string
+        product_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        product_name:
+          oneOf:
+            - type: string
+            - type: "null"
+        created_at:
+          type: string
+          format: date-time
+
+    AdminAlertList:
+      type: object
+      required: [items, total, limit, offset]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminAlert"
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+
+    AdminTrendPoint:
+      type: object
+      required: [date, scans, fresh, medium, spoiled]
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        scans:
+          type: integer
+          minimum: 0
+        fresh:
+          type: integer
+          minimum: 0
+        medium:
+          type: integer
+          minimum: 0
+        spoiled:
+          type: integer
+          minimum: 0
+
+    AdminPipelineTotal:
+      type: object
+      required: [status, count]
+      additionalProperties: false
+      properties:
+        status:
+          $ref: "#/components/schemas/ScanStatus"
+        count:
+          type: integer
+          minimum: 0
+
+    AdminAnalytics:
+      type: object
+      required: [days, tenant_id, trend, pipeline]
+      additionalProperties: false
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          maximum: 90
+        tenant_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        trend:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminTrendPoint"
+        pipeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminPipelineTotal"

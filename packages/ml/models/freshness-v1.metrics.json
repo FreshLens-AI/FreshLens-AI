@@ -1,0 +1,76 @@
+{
+  "model_version": "freshness-yolo26n-cls-v1",
+  "image_size": 224,
+  "confidence_threshold": 0.5,
+  "held_out_test": {
+    "samples": 413,
+    "accuracy": 0.9661016949152542,
+    "macro_f1": 0.9687414831430309,
+    "coverage": 0.9975786924939467,
+    "accepted_accuracy": 0.9684466019417476,
+    "severe_fresh_spoiled_error_rate": 0.0,
+    "mean_top1_confidence": 0.9782350751014368,
+    "mean_batched_cpu_inference_ms": 3.195096687650837,
+    "per_class": {
+      "fresh": {
+        "support": 172,
+        "precision": 0.9655172413793104,
+        "recall": 0.9767441860465116,
+        "f1": 0.9710982658959537
+      },
+      "medium": {
+        "support": 142,
+        "precision": 0.9571428571428572,
+        "recall": 0.9436619718309859,
+        "f1": 0.9503546099290779
+      },
+      "spoiled": {
+        "support": 99,
+        "precision": 0.9897959183673469,
+        "recall": 0.9797979797979798,
+        "f1": 0.9847715736040609
+      }
+    },
+    "per_product": {
+      "banana": {
+        "support": 99,
+        "accuracy": 0.98989898989899,
+        "macro_f1": 0.990489043120622
+      },
+      "cucumber": {
+        "support": 61,
+        "accuracy": 0.9836065573770492,
+        "macro_f1": 0.9875475613974403
+      },
+      "eggplant": {
+        "support": 96,
+        "accuracy": 0.8958333333333334,
+        "macro_f1": 0.904040404040404
+      },
+      "tomato": {
+        "support": 157,
+        "accuracy": 0.9872611464968153,
+        "macro_f1": 0.9893864495492876
+      }
+    }
+  },
+  "threshold_sweep": {
+    "0.00": {
+      "coverage": 1.0,
+      "accepted_accuracy": 0.9685230024213075
+    },
+    "0.50": {
+      "coverage": 0.9975786924939467,
+      "accepted_accuracy": 0.9684466019417476
+    },
+    "0.60": {
+      "coverage": 0.9830508474576272,
+      "accepted_accuracy": 0.9729064039408867
+    },
+    "0.70": {
+      "coverage": 0.9733656174334141,
+      "accepted_accuracy": 0.9751243781094527
+    }
+  },
+  "interpretation": "The split prevents source-group leakage and excludes offline augmentations from evaluation, but it is not a cross-dataset or target-phone release test."
+}

@@ -1,0 +1,36 @@
+{
+  "pipeline": "FL-2TC",
+  "version": "v2",
+  "generated_at": "2026-09-21T08:59:55Z",
+  "models": {
+    "identity": {
+      "model_file": "identity-v2.pt",
+      "architecture": "yolo11s-cls",
+      "classes": ["banana", "cucumber", "eggplant", "tomato", "unknown"],
+      "confidence_threshold": 0.75,
+      "test_metrics": {
+        "samples": 3768,
+        "overall_accuracy": 0.987,
+        "accepted_accuracy": 0.9968,
+        "coverage": 0.9902,
+        "macro_f1": 0.9916,
+        "mean_latency_ms": 34.08
+      }
+    },
+    "freshness": {
+      "model_file": "freshness-v2.pt",
+      "architecture": "yolo11s-cls",
+      "classes": ["fresh", "medium", "spoiled"],
+      "confidence_threshold": 0.50,
+      "test_metrics": {
+        "samples": 2795,
+        "overall_accuracy": 0.9753,
+        "accepted_accuracy": 0.9753,
+        "coverage": 1.0,
+        "macro_f1": 0.9707,
+        "severe_fresh_spoiled_error_rate": 0.0011,
+        "mean_latency_ms": 34.96
+      }
+    }
+  }
+}

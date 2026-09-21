@@ -1,0 +1,36 @@
+{
+  "model_version": "identity-yolo26n-cls-v1",
+  "image_size": 160,
+  "confidence_threshold": 0.75,
+  "internal_test": {
+    "samples": 1325,
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "unknown_false_accept_rate": 0.0,
+    "mean_top1_confidence": 0.9978050747907387,
+    "mean_batched_cpu_inference_ms": 1.6638622664151008,
+    "per_class": {
+      "banana": {"support": 257, "precision": 1.0, "recall": 1.0, "f1": 1.0},
+      "cucumber": {"support": 276, "precision": 1.0, "recall": 1.0, "f1": 1.0},
+      "eggplant": {"support": 218, "precision": 1.0, "recall": 1.0, "f1": 1.0},
+      "tomato": {"support": 224, "precision": 1.0, "recall": 1.0, "f1": 1.0},
+      "unknown": {"support": 350, "precision": 1.0, "recall": 1.0, "f1": 1.0}
+    }
+  },
+  "cross_domain_test": {
+    "samples": 554,
+    "accuracy": 0.9115523465703971,
+    "macro_f1": 0.6265118687958566,
+    "unknown_false_accept_rate": 0.016666666666666666,
+    "mean_top1_confidence": 0.9001428234232892,
+    "mean_batched_cpu_inference_ms": 1.704235425992529,
+    "per_class": {
+      "banana": {"support": 18, "precision": 0.5714285714285714, "recall": 0.2222222222222222, "f1": 0.32},
+      "cucumber": {"support": 23, "precision": 0.8235294117647058, "recall": 0.6086956521739131, "f1": 0.7},
+      "eggplant": {"support": 11, "precision": 1.0, "recall": 0.36363636363636365, "f1": 0.5333333333333333},
+      "tomato": {"support": 22, "precision": 0.8461538461538461, "recall": 0.5, "f1": 0.6285714285714286},
+      "unknown": {"support": 480, "precision": 0.9200779727095516, "recall": 0.9833333333333333, "f1": 0.9506545820745216}
+    }
+  },
+  "interpretation": "Internal public-source scores are optimistic. Use the deduplicated cross-domain result for release decisions, then add a target-phone test set before production."
+}

@@ -18,6 +18,13 @@ class Classification(StrEnum):
     SPOILED = "spoiled"
 
 
+class ProductIdentity(StrEnum):
+    BANANA = "Banana"
+    CUCUMBER = "Cucumber"
+    EGGPLANT = "Eggplant"
+    TOMATO = "Tomato"
+
+
 class ScanAccepted(BaseModel):
     id: UUID
     status: ScanStatus
@@ -35,6 +42,9 @@ class Scan(BaseModel):
     classification: Classification | None = None
     freshness_score: float | None = None
     model_version: str | None = None
+    identity_label: ProductIdentity | None = None
+    identity_score: float | None = None
+    identity_model_version: str | None = None
     product_id: UUID | None = None
     batch_id: UUID | None = None
     created_at: datetime

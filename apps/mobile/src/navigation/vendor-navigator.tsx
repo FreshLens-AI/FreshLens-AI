@@ -3,14 +3,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { AlertsScreen } from '../screens/alerts-screen';
 import { ManualSaleScreen } from '../screens/manual-sale-screen';
-import { VendorHomeScreen } from '../screens/vendor-home-screen';
 import { ScanFlowScreen } from '../screens/scan-flow-screen';
+import { ScanHistoryScreen } from '../screens/scan-history-screen';
+import { VendorHomeScreen } from '../screens/vendor-home-screen';
 
 export type VendorStackParamList = {
   Home: undefined;
   Scan: undefined;
   Sale: undefined;
   Alerts: undefined;
+  History: undefined;
 };
 
 const Stack = createNativeStackNavigator<VendorStackParamList>();
@@ -46,6 +48,14 @@ export function VendorNavigator() {
         >
           {({ navigation }) => (
             <AlertsScreen onDone={() => navigation.navigate('Home')} />
+          )}
+        </Stack.Screen>
+        <Stack.Screen
+          name="History"
+          options={{ presentation: 'fullScreenModal', headerShown: false }}
+        >
+          {({ navigation }) => (
+            <ScanHistoryScreen onDone={() => navigation.navigate('Home')} />
           )}
         </Stack.Screen>
       </Stack.Navigator>

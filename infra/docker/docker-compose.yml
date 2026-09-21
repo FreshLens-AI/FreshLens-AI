@@ -1,4 +1,4 @@
-# Local stack: Postgres + Redis + API + Celery worker (YOLO26-cls identify).
+# Local stack: Postgres + Redis + API + two-tier YOLO26-cls worker.
 services:
   postgres:
     image: postgres:16-alpine
@@ -13,6 +13,7 @@ services:
       - ../db/local/0000_supabase_compat.sql:/docker-entrypoint-initdb.d/0000_supabase_compat.sql:ro
       - ../db/migrations/0001_auth_tenancy.sql:/docker-entrypoint-initdb.d/0010_auth_tenancy.sql:ro
       - ../db/migrations/0002_business_tables.sql:/docker-entrypoint-initdb.d/0015_business_tables.sql:ro
+      - ../db/migrations/0003_scan_identity.sql:/docker-entrypoint-initdb.d/0016_scan_identity.sql:ro
       - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
       - ../db/local/0030_demo_catalogue.sql:/docker-entrypoint-initdb.d/0030_demo_catalogue.sql:ro
     healthcheck:
@@ -34,6 +35,11 @@ services:
   api:
     build:
       context: ../../apps/api
+    # Read the repository-root configuration directly. Relying only on Compose
+    # interpolation can resolve SUPABASE_URL as empty because this file lives in
+    # infra/docker rather than the repository root.
+    env_file:
+      - ../../.env
     ports:
       - "8000:8000"
     environment:
@@ -43,7 +49,6 @@ services:
       # the host, where the database hostname is localhost rather than postgres.
       DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgresql://freshlens_api_local:freshlens_api_local@postgres:5432/freshlens}
       DATABASE_SSL_MODE: ${COMPOSE_DATABASE_SSL_MODE:-disable}
-      SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_JWT_AUDIENCE: ${SUPABASE_JWT_AUDIENCE:-authenticated}
       SUPABASE_JWT_CLOCK_SKEW_SECONDS: ${SUPABASE_JWT_CLOCK_SKEW_SECONDS:-30}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002}
@@ -74,8 +79,15 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       SCAN_STORAGE_DIR: /var/lib/freshlens/scans
-      CLASSIFIER: ${CLASSIFIER:-yolo26-cls}
-      YOLO_CLS_WEIGHTS: ${YOLO_CLS_WEIGHTS:-/var/lib/freshlens/yolo/yolo26n-cls.pt}
+      CLASSIFIER: ${CLASSIFIER:-identity-v1}
+      IDENTITY_WEIGHTS: ${IDENTITY_WEIGHTS:-/app/models/identity-v1.pt}
+      IDENTITY_MODEL_VERSION: ${IDENTITY_MODEL_VERSION:-identity-yolo26n-cls-v1}
+      IDENTITY_IMAGE_SIZE: ${IDENTITY_IMAGE_SIZE:-160}
+      IDENTITY_MIN_CONFIDENCE: ${IDENTITY_MIN_CONFIDENCE:-0.75}
+      FRESHNESS_WEIGHTS: ${FRESHNESS_WEIGHTS:-/app/models/freshness-v1.pt}
+      FRESHNESS_MODEL_VERSION: ${FRESHNESS_MODEL_VERSION:-freshness-yolo26n-cls-v1}
+      FRESHNESS_IMAGE_SIZE: ${FRESHNESS_IMAGE_SIZE:-224}
+      FRESHNESS_MIN_CONFIDENCE: ${FRESHNESS_MIN_CONFIDENCE:-0.50}
       YOLO_CONFIG_DIR: /var/lib/freshlens/yolo
     volumes:
       - scan_images:/var/lib/freshlens/scans

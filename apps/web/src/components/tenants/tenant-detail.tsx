@@ -5,14 +5,12 @@ import {
   BellRing,
   Boxes,
   Building2,
-  Pencil,
   ScanLine,
   ShieldCheck,
   Users,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -24,32 +22,17 @@ import {
   formatPercent,
 } from "@/lib/formatters";
 import { useAdminData } from "@/store/admin-data-provider";
-import {
-  liveTenantToAdminTenant,
-  type LiveTenant,
-} from "@/lib/api/tenant-map";
 
 import styles from "./tenants.module.css";
 import { TenantStatusBadge } from "./tenant-status-badge";
 
 export function TenantDetail({
   tenantId,
-  liveTenant,
-  updated = false,
 }: {
   tenantId: string;
-  liveTenant?: LiveTenant | null;
-  updated?: boolean;
 }) {
   const { tenants } = useAdminData();
-  const mockTenant = tenants.find((item) => item.id === tenantId);
-  const tenant = mockTenant
-    ? liveTenant
-      ? liveTenantToAdminTenant(liveTenant, mockTenant)
-      : mockTenant
-    : liveTenant
-      ? liveTenantToAdminTenant(liveTenant)
-      : null;
+  const tenant = tenants.find((item) => item.id === tenantId);
 
   if (!tenant) notFound();
 
@@ -84,28 +67,7 @@ export function TenantDetail({
         eyebrow="Tenant profile"
         title={tenant.name}
         description="Organization details and privacy-safe platform aggregates for this vendor."
-        actions={
-          mockTenant ? (
-            <Button
-              href={`/tenants/${tenant.id}/edit`}
-              variant="secondary"
-              icon={<Pencil size={16} aria-hidden="true" />}
-            >
-              Edit profile
-            </Button>
-          ) : undefined
-        }
       />
-
-      {updated ? (
-        <div className={styles.successBanner} role="status">
-          <span aria-hidden="true">✓</span>
-          <div>
-            <strong>Tenant profile updated</strong>
-            <p>The saved name and status are now reflected in this demo workspace.</p>
-          </div>
-        </div>
-      ) : null}
 
       <section className={styles.statGrid} aria-label="Tenant aggregate metrics">
         <StatCard
@@ -156,11 +118,11 @@ export function TenantDetail({
             </div>
             <div>
               <dt>Email</dt>
-              <dd><a href={`mailto:${tenant.email}`}>{tenant.email}</a></dd>
+              <dd>{tenant.email === "Not recorded" ? tenant.email : <a href={`mailto:${tenant.email}`}>{tenant.email}</a>}</dd>
             </div>
             <div>
               <dt>Phone</dt>
-              <dd><a href={`tel:${tenant.phone.replace(/\s/g, "")}`}>{tenant.phone}</a></dd>
+              <dd>{tenant.phone === "Not recorded" ? tenant.phone : <a href={`tel:${tenant.phone.replace(/\s/g, "")}`}>{tenant.phone}</a>}</dd>
             </div>
             <div>
               <dt>Location</dt>

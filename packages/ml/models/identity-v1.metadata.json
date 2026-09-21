@@ -1,0 +1,48 @@
+{
+  "model_version": "identity-yolo26n-cls-v1",
+  "task": "whole-image produce identification with unknown rejection",
+  "architecture": "YOLO26n-cls",
+  "classes": [
+    "banana",
+    "cucumber",
+    "eggplant",
+    "tomato",
+    "unknown"
+  ],
+  "image_size": 160,
+  "confidence_threshold": 0.75,
+  "checkpoint": {
+    "filename": "identity-v1.pt",
+    "size_bytes": 3193282,
+    "sha256": "50ad4b0be1f74c0ad678646e83010f2438a5ae3c6475f173ae67cd9c846ca646"
+  },
+  "training": {
+    "seed": 21,
+    "epochs_requested": 8,
+    "epochs_completed": 4,
+    "best_epoch": 1,
+    "early_stopping_patience": 3,
+    "batch_size": 64,
+    "device": "cpu",
+    "ultralytics_version": "8.4.121",
+    "torch_version": "2.13.0+cpu",
+    "completed_at": "2026-08-18T04:30:29.502422+00:00"
+  },
+  "dataset": {
+    "train_samples": 8198,
+    "validation_samples": 1839,
+    "internal_test_samples": 1325,
+    "cross_domain_test_samples": 554,
+    "fruits360_revision": "a638d50ae5ebe4c4001fe6a8e091e0253e1168fd",
+    "agrifreshnet_doi": "10.17632/42m5tb7yv9.1",
+    "external_dataset_revision": "dcd4a762672597eb73c630fc9017e8ae93401dc7",
+    "external_test_hashes_excluded_from_training": 65
+  },
+  "limitations": [
+    "This is a CPU-trained integration baseline, not a production release.",
+    "Cross-domain recall is weakest for banana and remains below a production target.",
+    "Validate with unaugmented photos captured on target phones before deployment.",
+    "The model expects one main produce type per image; it does not return boxes.",
+    "Freshness classification is still a deterministic stub and is not part of this checkpoint."
+  ]
+}

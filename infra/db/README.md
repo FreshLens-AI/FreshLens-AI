@@ -31,9 +31,14 @@ in filename order through the Supabase SQL editor or CLI.
 - Vendor policies match `app.tenant_id` and require an active tenant; platform
   admins can read/write all business rows for catalogue/admin workflows.
 
+`0003_scan_identity.sql` separates Tier-1 produce identity metadata from the
+Tier-2 freshness fields on `scans`. This prevents identity confidence from being
+reported as freshness confidence and allows unknown inputs to remain unlinked.
+
 After applying `0001`, enable `public.custom_access_token_hook` under
 **Authentication → Hooks → Custom Access Token**. Existing sessions must sign in
-again before the new claims appear. Apply `0002` after `0001` on hosted Supabase.
+again before the new claims appear. Apply `0002` and then `0003` after `0001` on
+hosted Supabase.
 
 Do not connect FastAPI with `postgres`, a table owner, or `service_role` for
 business queries: those identities bypass RLS. Create a secret production LOGIN,
@@ -50,7 +55,8 @@ Docker Compose initializes a new disposable development volume in this order:
 2. `migrations/0001_auth_tenancy.sql` creates the identity schema/policies.
 3. `migrations/0002_business_tables.sql` creates tenant-scoped operational tables
    with RLS in the same migration.
-4. `local/0020_runtime_login.sql` creates the development-only
+4. `migrations/0003_scan_identity.sql` adds Tier-1 identity result fields.
+5. `local/0020_runtime_login.sql` creates the development-only
    `freshlens_api_local` login and grants it `freshlens_api`.
 
 The API container connects as `freshlens_api_local`, never as the database owner.

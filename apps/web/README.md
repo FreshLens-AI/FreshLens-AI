@@ -1,9 +1,9 @@
 # FreshLens Admin UI
 
 Platform administration workspace for FreshLens. Supabase Auth protects every
-admin route with the `platform_admin` role. The documented tenant, catalogue,
-shelf-life, alert, scan-activity, and analytics workflows still use typed demo
-data until their API endpoints land.
+admin route with the `platform_admin` role. Tenant profiles, product metadata,
+alert signals, scan-pipeline totals, and analytics are loaded from authenticated
+FastAPI admin endpoints. The current admin integration is read-only.
 
 ## Run locally
 
@@ -14,10 +14,10 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Add the Supabase project URL and publishable key to `.env.local`, then open
-[http://localhost:3000](http://localhost:3000). Changes made through the forms
-are persisted in browser `localStorage`; use **Reset demo data** at the bottom of
-the navigation to restore the original fixtures.
+Add the Supabase project URL, publishable key, and `NEXT_PUBLIC_API_URL` to
+`.env.local`; start the API, then open [http://localhost:3000](http://localhost:3000).
+The admin layout fails explicitly when live API data cannot be loaded instead of
+falling back to browser fixtures.
 
 There is no admin signup. Create accounts out-of-band and provision them as
 described in [`../../docs/authentication.md`](../../docs/authentication.md).
@@ -27,12 +27,12 @@ described in [`../../docs/authentication.md`](../../docs/authentication.md).
 | Route | Purpose |
 |---|---|
 | `/dashboard` | Platform overview and attention items |
-| `/tenants` | Live tenant list from `GET /api/v1/admin/tenants`; detail extras remain demo overlays |
-| `/catalogue` | Produce catalogue list, creation, details, and editing |
-| `/shelf-life` | Category shelf-life rules used by static aging alerts |
+| `/tenants` | Live tenant profiles and monthly aggregates |
+| `/catalogue` | Live tenant product metadata and details |
+| `/shelf-life` | Read-only tenant product shelf-life values |
 | `/scans` | Aggregate queue and classification activity only |
-| `/alerts` | Alert list, creation, details, editing, acknowledgement, and dismissal |
-| `/analytics` | Platform and tenant-level aggregate trends |
+| `/alerts` | Live tenant alert signals without batch identifiers |
+| `/analytics` | Live platform and tenant-level aggregate trends |
 
 Platform admins never receive raw vendor images, scan quantities, batches, or
 inventory records in this UI. Tenant views deliberately expose aggregates only.
@@ -47,22 +47,21 @@ src/
   components/
     layout/             Persistent navigation and top bar
     ui/                 Reusable primitives
-    tenants/            Tenant list, detail, and edit workflow
-    catalogue/          Catalogue forms, detail, and shelf-life workflow
-    alerts/             Alert administration workflow
+    tenants/            Tenant list and aggregate detail workflow
+    catalogue/          Product detail and shelf-life views
+    alerts/             Read-only alert operations view
     analytics/          Aggregate charts and dashboards
     dashboard/          Overview composition
-  data/                 Stable, typed demo fixtures
   lib/                  Formatting, navigation, and presentation helpers
-    api/                Server-only authenticated FastAPI client
+    api/                Authenticated FastAPI clients and response mappers
     auth/               Signed claim parsing and secure route checks
     supabase/           Browser, server, and Proxy Supabase clients
-  store/                Browser-persisted demo data provider
+  store/                Server-hydrated admin data provider
   types/                Shared domain models and exact V1 enums
 ```
 
-Route files stay small and compose feature components. The data provider is the
-replaceable boundary for future API integration.
+Route files stay small and compose feature components. The admin layout loads a
+typed snapshot from `/api/v1/admin/*` and passes it through the client provider.
 
 ## Checks
 

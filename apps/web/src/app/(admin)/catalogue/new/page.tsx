@@ -1,6 +1,6 @@
-import { ProductFormScreen } from "@/components/catalogue/product-form";
+import { redirect } from "next/navigation";
 
 export default function NewProductPage() {
-  return <ProductFormScreen mode="create" />;
+  redirect("/catalogue");
 }
 

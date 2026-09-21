@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { requirePlatformAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -18,6 +19,16 @@ function requireFreshSession(): never {
   redirect("/session-expired");
 }
 
+const getAdminAccessToken = cache(async () => {
+  await requirePlatformAdmin();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (error || !accessToken) requireFreshSession();
+  return accessToken;
+});
+
 /**
  * Call FastAPI from trusted server code with a verified platform-admin token.
  *
@@ -29,12 +40,7 @@ export async function adminApiFetch(
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  await requirePlatformAdmin();
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getSession();
-  const accessToken = data.session?.access_token;
-  if (error || !accessToken) requireFreshSession();
+  const accessToken = await getAdminAccessToken();
 
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);

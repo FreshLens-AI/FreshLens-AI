@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Bell, LogOut, Menu, RotateCcw, Sprout, X } from "lucide-react";
+import { Bell, LogOut, Menu, Sprout, X } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { insightNavigation, primaryNavigation } from "@/lib/navigation";
@@ -57,7 +57,7 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const { alerts, resetDemoData } = useAdminData();
+  const { alerts } = useAdminData();
   const [open, setOpen] = useState(false);
   const activeAlerts = alerts.filter((alert) => alert.status === "active").length;
   const currentPage =
@@ -120,22 +120,10 @@ export function AdminShell({
               <Sprout size={17} />
             </span>
             <div>
-              <strong>Demo workspace</strong>
-              <p>Typed local data · no backend</p>
+              <strong>API workspace</strong>
+              <p>Authenticated live aggregates</p>
             </div>
           </div>
-          <button
-            type="button"
-            className="sidebar__reset"
-            onClick={() => {
-              if (window.confirm("Reset every local demo change and restore the original FreshLens fixtures?")) {
-                resetDemoData();
-              }
-            }}
-          >
-            <RotateCcw size={13} aria-hidden="true" />
-            Reset demo data
-          </button>
           <p className="sidebar__version">FreshLens V1 · Group 21</p>
         </div>
       </aside>
@@ -159,7 +147,7 @@ export function AdminShell({
           <div className="topbar__actions">
             <span className="data-pill">
               <span aria-hidden="true" />
-              Live demo data
+              Live API data
             </span>
             <Link href="/alerts" className="icon-button notification-button" aria-label={`${activeAlerts} active alerts`}>
               <Bell size={20} />
