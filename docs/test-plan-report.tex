@@ -1,0 +1,882 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[11pt,
+]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\setstretch{1.1}
+\usepackage{parskip}
+
+% Strict Widow and Club Penalties
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+\interlinepenalty=500
+\brokenpenalty=10000
+
+% Section Numbering
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+ % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\usepackage{caption}
+\captionsetup[table]{skip=6pt}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+% fallback for those not using the hyperref driver hyperxmp:
+\makeatletter
+\@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
+\makeatother
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+
+
+
+
+\begin{document}
+\begin{titlepage}
+    \vspace*{2cm}
+    \begin{center}
+        {\Huge \textbf{FreshLens}} \\[1cm]
+        {\LARGE AI Powered Freshness Monitoring System for Small Scale Retailers} \\[1.5cm]
+        {\Large \textbf{Test Plan Report}} \\[3cm]
+        {\Large Group 21} \\[0.5cm]
+        {\Large PID 5}
+    \end{center}
+    \vfill
+    \thispagestyle{empty}
+\end{titlepage}
+\newpage
+
+
+{
+\setcounter{tocdepth}{3}
+\tableofcontents\newpage
+}
+\section{Evaluation Mission and Test
+Motivation}\label{evaluation-mission-and-test-motivation}
+
+Hey everyone! This Master Test Plan report covers our overall approach
+to testing the FreshLens system. Since FreshLens is our core SaaS
+platform for grocery retailers (and our main project for CS3203), we
+really needed to make sure it works as expected under real-world
+conditions. The main mission here is to provide a reliable, easy-to-use,
+and highly secure online app for tracking inventory scans and freshness.
+To give our end-users the best experience, we realized we had to design
+and test this system pretty thoroughly across the board.
+
+Since this is a web and mobile application handling people's business
+data, it needs to be spot on. Even a single bug or a small security
+loophole in the database could be a disaster for a vendor's inventory.
+Our user interfaces and the backend logic have to be solid to deliver
+exactly what the vendors expect. Since our requirements explicitly
+outline multi-tenant data isolation, we had to put together a
+well-organized testing process to verify that the system actually does
+what it's supposed to do.
+
+Our system is built using a modern architecture---mostly FastAPI for the
+backend, Next.js for the web admin, and Expo for the mobile side. So our
+testing plan has to cover all these different moving parts.
+
+The main objectives of our testing process are:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Finding bugs:} We want to catch as many bugs as possible and
+  fix them before we actually deploy this to our test users. We're doing
+  a special search specifically for data leaks to make sure vendor CVs
+  (like their company details) and inventory are completely
+  confidential.
+\item
+  \textbf{Fixing design problems:} We need to find important problems in
+  our design and implementation that might pose a threat to the quality
+  of the system. For example, if our YOLO models are too slow, that's a
+  problem we need to correct before the final delivery.
+\item
+  \textbf{Risk mitigation:} We're identifying risks associated with the
+  project implementation. Things like failing user acceptance because
+  the mobile camera lags. We test and refactor these before they happen
+  by getting feedback early on.
+\item
+  \textbf{Quality standards:} The system has to keep up with existing
+  standards. To achieve this, we're doing performance testing along with
+  user acceptance testing to check if we're hitting our goals.
+\item
+  \textbf{Requirements check:} The system simply has to meet its
+  requirements. A proper testing process helps us verify that we are
+  actually building the functional and non-functional requirements we
+  agreed upon, rather than wasting time on useless features.
+\item
+  \textbf{Legal/Process mandates:} We have to make sure we aren't
+  violating any data privacy rules, so we're testing the system's legal
+  and security boundaries. Every violation needs to be fixed before
+  deployment.
+\end{itemize}
+
+\subsection{Out of Scope}\label{out-of-scope}
+
+To keep our testing efforts focused on code our team actually wrote, the
+following areas are explicitly \textbf{out of scope} for this test plan:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Supabase Authentication Infrastructure:} We test our parsing
+  of JWTs, but we do not test the internal uptime, password hashing
+  algorithms, or email delivery systems of Supabase itself.
+\item
+  \textbf{R2 / Cloud Storage Provider Internals:} We mock storage
+  interactions or assume the bucket is available. The internal
+  durability and replication of Cloudflare R2 are not tested by us.
+\item
+  \textbf{GitHub Actions Engine:} We rely on GitHub Actions for our CI
+  pipeline, but we assume the underlying runner infrastructure is
+  stable.
+\end{itemize}
+
+\subsection{Dependencies}\label{dependencies}
+
+Our testing relies heavily on the following external and internal
+dependencies to function correctly:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Working Test Accounts:} We require pre-seeded, active test
+  accounts mapped to specific roles (\texttt{vendor},
+  \texttt{platform\_admin}) and tenants to perform access control
+  testing.
+\item
+  \textbf{CI Pipeline Uptime:} Automated tests require GitHub Actions to
+  remain online.
+\item
+  \textbf{External Services:} Supabase endpoints (for JWKS retrieval)
+  must stay reachable during integration test runs.
+\end{itemize}
+
+\subsection{Assumptions}\label{assumptions}
+
+We are taking the following conditions as given during this testing
+phase:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Stable Requirements:} The core functional requirements for ML
+  inference and tenant isolation are stable and won't undergo massive
+  refactors late in the cycle.
+\item
+  \textbf{Finalized RLS Policies:} The Postgres Row Level Security logic
+  implemented in our raw SQL migrations is considered structurally
+  finalized.
+\item
+  \textbf{Destructible Test Data:} Any data residing in the test
+  environment databases can be freely created, corrupted, and destroyed
+  by automated scripts without affecting stakeholders.
+\end{itemize}
+
+\subsection{Constraints}\label{constraints}
+
+The following limits impact the extent of our testing effort:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{No Dedicated QA Team:} Testing is performed entirely by the
+  development team (us).
+\item
+  \textbf{No Prod-Matching Environment:} Due to budget constraints, our
+  load testing environments (local Docker stacks) do not have the same
+  CPU/RAM specifications as a true production cloud cluster.
+\item
+  \textbf{Time-Boxed Schedule:} Comprehensive testing is strictly
+  time-boxed by our university project deadlines (M4, M5, M6).
+\end{itemize}
+
+\section{Target Test Items}\label{target-test-items}
+
+Rather than a simple list, we've broken down our target test items into
+a matrix that highlights the specific component and the main risk
+associated with it if testing fails.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Target Component
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Main Risk if untested/failed
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{User Interfaces (Mobile \& Web)} & The Next.js admin dashboard
+and React Native Expo scanning app. & The vendor cannot upload scans due
+to poor network logic, or the admin sees broken analytics charts. \\
+\textbf{Data Models \& Database (Postgres)} & The core relational schema
+and RLS policies (Postgres 16). & \textbf{Catastrophic cross-tenant data
+leakage.} A vendor sees another vendor's stock. \\
+\textbf{Functions (FastAPI \& ML Worker)} & The backend endpoints
+(\texttt{/api/v1/sales}) and the Celery ML tasks. & Race conditions lead
+to double stock deduction, or the ML model returns a false positive on
+rotten produce. \\
+\textbf{Event / Background Pipeline} & The Celery and Redis queuing
+system managing asynchronous jobs. & Tasks are dropped silently during a
+worker node crash, resulting in lost inventory scans. \\
+\textbf{Release / CI Pipeline} & The GitHub actions workflow itself that
+packages the builds. & A bad, failing build is accidentally shipped to
+the main branch or production. \\
+\end{longtable}
+}
+
+\section{Test Layering and Approach}\label{test-layering-and-approach}
+
+We utilize a layered approach to testing, ensuring that fast, cheap
+tests run frequently, while slower, expensive tests run at critical
+milestones.
+
+\subsection{Test Layering Table}\label{test-layering-table}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Test Layer
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Focus Area
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+CI Execution Timing
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Unit} & Individual functions, Pydantic schemas, UI utilities
+(e.g., chunked storage parser). & Every commit and PR. \\
+\textbf{Integration} & Database connections, FastAPI endpoint logic
+interacting with the database. & Every PR before merge. \\
+\textbf{API} & Contract testing (checking requests/responses against
+OpenAPI spec). & Every PR before merge. \\
+\textbf{Interface (UI)} & Component rendering and form state logic in
+React/React Native. & Every PR before merge. \\
+\textbf{Cross-device} & Mobile layout rendering on iOS vs Android
+(Expo). & Before major releases/milestones. \\
+\textbf{Non-functional} & Load testing, RLS isolation security checks,
+performance profiling. & RLS on every PR; Load testing before
+release. \\
+\textbf{Manual} & Camera access workflows, exploratory testing, UX
+evaluations. & Pre-deployment staging review. \\
+\end{longtable}
+}
+
+\subsection{Two-Dimensional Coverage
+Definition}\label{two-dimensional-coverage-definition}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Coverage Dimension
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Definition
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tracking Method
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Caveat
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Requirement Coverage} & Ensuring every business rule (like
+idempotent deductions) is explicitly validated by a test case. &
+Generated directly from the pytest suites matching function names to
+requirements. & Cannot guarantee a requirement is implemented
+\emph{efficiently}. \\
+\textbf{Code Coverage} & The percentage of lines of code executed during
+the automated test suites. & Reported per-service via
+\texttt{pytest-cov} and Jest coverage tools. & \textbf{100\% coverage
+does not guarantee correctness;} it only proves the line was
+executed. \\
+\end{longtable}
+}
+
+\section{Testing Techniques and
+Types}\label{testing-techniques-and-types}
+
+\subsubsection{Data and Database Integrity
+Testing}\label{data-and-database-integrity-testing}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Attribute
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Details
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Technique Objective:} & Our database creation is done using SQL
+migrations. We need to test this automatically by throwing incorrect
+data and unauthorized queries at it. \\
+\textbf{Technique:} & Invoke every entity using test scripts. Check that
+correct data is retrieved (e.g., Tenant A only sees Tenant A's data). \\
+\textbf{Oracles:} & Test access by injecting data through code, checking
+behavior, and asserting retrieved data isn't erroneous. \\
+\textbf{Required Tools:} & PostgreSQL 16, Pytest framework, custom SQL
+isolation scripts (\texttt{rls\_isolation.sql}). \\
+\textbf{Success Criteria:} & Every test is guaranteed to produce a
+reasonable outcome, proving RLS bounds are perfectly respected. \\
+\end{longtable}
+}
+
+\subsubsection{Function Testing}\label{function-testing}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Attribute
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Details
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Technique Objective:} & Exercise the target functionality,
+including data entry and processing, to log the behavior and check
+requirement fulfillment. \\
+\textbf{Technique:} & Execute each use-case scenario's individual flow
+using valid and invalid data via Pytest. Verify appropriate error
+messages and business rules. \\
+\textbf{Oracles:} & Create inputs, determine expected outputs based on
+OpenAPI specs, and assert the actual HTTP outcome. \\
+\textbf{Required Tools:} & Pytest framework, FastAPI TestClient. \\
+\textbf{Success Criteria:} & All tests execute properly without errors.
+201 Created and 409 Conflict logic works flawlessly. \\
+\end{longtable}
+}
+
+\subsubsection{User Interface Testing}\label{user-interface-testing}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Attribute
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Details
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Technique Objective:} & Observe rendering with minimum memory,
+high UX, platform independence, and smooth form submission workflows. \\
+\textbf{Technique:} & Check whether complex logic (like chunked storage
+uploads) works properly under throttled network settings. \\
+\textbf{Oracles:} & Automate testing for UI utilities
+(\texttt{claims.test.ts}), while relying on manual walkthroughs for
+complex gestures. \\
+\textbf{Required Tools:} & Jest for React testing, ESLint, browser dev
+tools. \\
+\textbf{Success Criteria:} & All routes resolve successfully, zero
+broken components, no memory leak warnings in console. \\
+\end{longtable}
+}
+
+\subsubsection{Load and Performance
+Testing}\label{load-and-performance-testing}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Attribute
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Details
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Technique Objective:} & Exercise transactions under normal,
+worst-case, and concurrent user workloads to observe system performance
+degradation. \\
+\textbf{Technique:} & Run loops in test scripts to simultaneously hit
+the API, increasing transaction volume to simulate spiky traffic. \\
+\textbf{Oracles:} & Code must be automated to apply the load, monitoring
+CPU and database connection pool saturation. \\
+\textbf{Required Tools:} & Custom async Python scripts and Pytest
+concurrency fixtures. \\
+\textbf{Success Criteria:} & The system gracefully degrades or queues
+requests rather than dropping them or returning 500 errors. \\
+\end{longtable}
+}
+
+\subsubsection{Security and Access Control
+Testing}\label{security-and-access-control-testing}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Attribute
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Details
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Technique Objective:} & Ensure an actor can access only
+functions they have permissions for, and unauthenticated users are
+entirely blocked. \\
+\textbf{Technique:} & Create tests for each user type (\texttt{vendor},
+\texttt{platform\_admin}). Verify forbidden messages when attempting
+unauthorized access. \\
+\textbf{Oracles:} & Fully automated testing using Pytest to assert HTTP
+401 Unauthorized and 403 Forbidden response codes. \\
+\textbf{Required Tools:} & Pytest, PyJWT for generating mock tokens. \\
+\textbf{Success Criteria:} & System rigidly enforces privileges; access
+denied messages are given strictly and correctly. \\
+\end{longtable}
+}
+
+\section{Evidence, Reporting, and
+Deliverables}\label{evidence-reporting-and-deliverables}
+
+We have established strict mechanics for how test evidence is captured
+and retained to ensure maximum transparency.
+
+\subsection{Evidence Retention
+Mechanics}\label{evidence-retention-mechanics}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Machine-Readable Result Files:} All test runs produce XML/JSON
+  output files (like JUnit XML) that are archived as artifacts in GitHub
+  Actions for historic trend analysis.
+\item
+  \textbf{Raw Request Logs:} During load testing, we do not simply
+  retain the ``summary'' report. Raw HTTP request logs (including
+  latency and status codes) are retained in storage to allow for
+  deep-dive debugging of latency spikes.
+\item
+  \textbf{UI Test Failures:} (Future implementation) If a UI test fails,
+  the CI pipeline will capture a screenshot/video of the headless
+  browser state to immediately highlight the visual error.
+\end{itemize}
+
+\subsection{Explicit Rules on
+Credentials}\label{explicit-rules-on-credentials}
+
+\textbf{Strict Rule:} No production or staging credentials, API keys, or
+raw passwords will ever be committed to the repository for testing
+purposes.
+
+\begin{itemize}
+\tightlist
+\item
+  All test suites must rely on mock generation, factory fakes, or rely
+  on \texttt{.env.test} templates with blank fields. Real secrets are
+  injected only at runtime by the CI/CD secure vault.
+\end{itemize}
+
+\subsection{Calling Out Weakest Areas}\label{calling-out-weakest-areas}
+
+Rather than hiding behind a blended coverage percentage (e.g., ``The
+project has 85\% coverage''), our test evaluation reports explicitly
+name the ``weakest areas'' that lack coverage. This ensures we are
+always aware of technical debt (for instance, calling out that mobile
+offline caching currently lacks automated coverage).
+
+\subsection{Test Evaluation Summaries}\label{test-evaluation-summaries}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Test Logs:} These are the detailed logs that give the outcome
+  of every test written for the functionalities. If even a single test
+  log gives an output as a failure in our GitHub Actions, that
+  functionality is recorrected and all tests are run again.
+\item
+  \textbf{Code Inspection Tool:} Code inspection details are gotten
+  after running ESLint and TypeScript checkers in the IDE. This notifies
+  us about spelling mistakes, empty tags, and unused items.
+\item
+  \textbf{Database Performance Statistics:} This is a very good method
+  to check database performance. It checks memory usage and size.
+\end{itemize}
+
+\section{Detailed Test Cases}\label{detailed-test-cases}
+
+To provide a much more thorough explanation of our testing workflow, we
+have detailed our most critical test cases below. Rather than a brief
+overview, these describe exactly why and how we test each functional
+component of the FreshLens system to ensure it holds up to real-world
+vendor usage.
+
+\subsection{Backend API Test Case: Scan Upload Workflow
+(API-01)}\label{backend-api-test-case-scan-upload-workflow-api-01}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Motivation:} Vendors operating in grocery stores often have
+  terrible Wi-Fi or cellular connections. If they upload a large image
+  of produce, it cannot time out and crash the application.
+\item
+  \textbf{Pre-conditions:} The mobile app is authenticated with a valid
+  \texttt{vendor} JWT token. The server is online and connected to the
+  Redis broker.
+\item
+  \textbf{Execution Steps:}
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    The vendor opens the camera within the Expo app.
+  \item
+    The vendor takes a high-resolution photo of a banana.
+  \item
+    The photo is chunked locally and transmitted via HTTP POST to
+    \texttt{/api/v1/scans}.
+  \end{enumerate}
+\item
+  \textbf{Expected System Behavior:} The FastAPI backend should
+  immediately capture the image byte chunks, save them to the R2 bucket,
+  and spawn an asynchronous Celery task. Critically, it must immediately
+  return a \texttt{202\ Accepted} status code to the mobile app so the
+  vendor isn't left waiting for the ML inference to finish.
+\item
+  \textbf{Status:} \textbf{PASS.} Verified via \texttt{test\_scans.py}.
+\end{itemize}
+
+\subsection{Backend API Test Case: Sales Idempotency
+(API-02)}\label{backend-api-test-case-sales-idempotency-api-02}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Motivation:} If a vendor hits the ``Submit Sale'' button twice
+  by accident, or if the network stutters and resends the request, we
+  absolutely cannot deduct stock twice. This would ruin the vendor's
+  inventory records.
+\item
+  \textbf{Pre-conditions:} The database has an existing inventory batch
+  of tomatoes with a quantity greater than zero.
+\item
+  \textbf{Execution Steps:}
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    A script generates a unique \texttt{Idempotency-Key} header.
+  \item
+    The script fires two completely identical POST requests
+    simultaneously to \texttt{/api/v1/sales}.
+  \end{enumerate}
+\item
+  \textbf{Expected System Behavior:} The backend must rely on a database
+  transaction lock or caching layer. The very first request processed
+  should succeed and return \texttt{201\ Created}, deducting the stock
+  exactly once. The second concurrent request should hit the idempotency
+  lock and gracefully return a \texttt{409\ Conflict}, without modifying
+  the database.
+\item
+  \textbf{Status:} \textbf{PASS.} Verified via \texttt{test\_sales.py}.
+\end{itemize}
+
+\subsection{Database Security Test Case: Tenant Boundary Isolation
+(SEC-01)}\label{database-security-test-case-tenant-boundary-isolation-sec-01}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Motivation:} Since this is a multi-tenant SaaS application,
+  multiple different grocery retailers are sharing the same database
+  tables. If Tenant A can somehow view or edit Tenant B's sales data,
+  the entire platform's security is compromised.
+\item
+  \textbf{Pre-conditions:} The Postgres 16 database is seeded with data
+  for both ``Tenant A'' and ``Tenant B''. Row Level Security (RLS) is
+  active.
+\item
+  \textbf{Execution Steps:}
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    An automated SQL script logs into the database using the restricted
+    \texttt{freshlens\_api\_runtime} role.
+  \item
+    The script sets the local transaction context to Tenant A.
+  \item
+    The script attempts to run
+    \texttt{SELECT\ *\ FROM\ scans\ WHERE\ tenant\_id\ =\ \textquotesingle{}Tenant\_B\_ID\textquotesingle{}}.
+  \end{enumerate}
+\item
+  \textbf{Expected System Behavior:} Instead of crashing, the Postgres
+  RLS engine silently filters out the unauthorized rows, returning an
+  empty list (0 rows) to Tenant A. The application backend is entirely
+  shielded from accidentally leaking data.
+\item
+  \textbf{Status:} \textbf{PASS.} Verified via
+  \texttt{infra/db/tests/rls\_isolation.sql}.
+\end{itemize}
+
+\subsection{ML Pipeline Test Case: Identity Confidence Threshold
+(ML-01)}\label{ml-pipeline-test-case-identity-confidence-threshold-ml-01}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Motivation:} The YOLO object detection model is incredibly
+  fast but can sometimes be overconfident when analyzing blurry images
+  or items it has never seen before. We cannot let it misclassify a
+  blurry eggplant as a cucumber and ruin inventory counts.
+\item
+  \textbf{Pre-conditions:} The \texttt{YOLO26n-cls} model is loaded into
+  the Celery worker memory.
+\item
+  \textbf{Execution Steps:}
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    A known ambiguous or blurry image is passed directly to the
+    inference pipeline via the testing framework.
+  \end{enumerate}
+\item
+  \textbf{Expected System Behavior:} The model evaluates the image. Even
+  if its top prediction is ``cucumber'', it must check the confidence
+  score. Because the confidence score is strictly enforced to be
+  \texttt{\textgreater{}=\ 0.75} for identity, the script must intercept
+  a lower score (e.g., 0.60) and override the prediction, safely
+  returning an \texttt{unknown} label instead of logging a false
+  positive.
+\item
+  \textbf{Status:} \textbf{PASS.} Verified via
+  \texttt{test\_identity.py}.
+\end{itemize}
+
+\subsection{UI Test Case: Admin Dashboard Analytics Rendering
+(UI-01)}\label{ui-test-case-admin-dashboard-analytics-rendering-ui-01}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Motivation:} The platform administrator needs to view
+  aggregate data. If the TypeScript data mapping logic fails when
+  receiving an unexpected payload from the API, the entire React screen
+  will crash (White Screen of Death).
+\item
+  \textbf{Pre-conditions:} The user is logged in via Supabase with the
+  \texttt{app\_role} explicitly set to \texttt{platform\_admin}.
+\item
+  \textbf{Execution Steps:}
+
+  \begin{enumerate}
+  \def\labelenumi{\arabic{enumi}.}
+  \tightlist
+  \item
+    The admin navigates to the core analytics dashboard URL.
+  \item
+    The page fires a fetch request for aggregate mapping data.
+  \end{enumerate}
+\item
+  \textbf{Expected System Behavior:} The Next.js frontend utilizes
+  \texttt{admin-map.test.ts} logic to parse the arrays. It should map
+  the data without throwing any TypeScript \texttt{undefined} errors and
+  cleanly render the visualization chart, displaying aggregated
+  cross-tenant metrics flawlessly.
+\item
+  \textbf{Status:} \textbf{PASS.} Verified via Jest UI suites.
+\end{itemize}
+
+\section{Appendix: Implemented Test
+Inventory}\label{appendix-implemented-test-inventory}
+
+Here is the exhaustive inventory of all test suites currently
+implemented in our project. We wrote these to make sure our system is as
+robust as possible.
+
+\subsection{\texorpdfstring{Backend API Tests
+(\texttt{apps/api/tests/})}{Backend API Tests (apps/api/tests/)}}\label{backend-api-tests-appsapitests}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{test\_admin.py}
+\item
+  \texttt{test\_scans.py}
+\item
+  \texttt{test\_auth.py}
+\item
+  \texttt{test\_storage.py}
+\item
+  \texttt{test\_authorization.py}
+\item
+  \texttt{test\_config.py}
+\item
+  \texttt{test\_health.py}
+\item
+  \texttt{test\_sales.py}
+\item
+  \texttt{test\_tenant\_context.py}
+\end{itemize}
+
+\subsection{\texorpdfstring{Machine Learning Worker Tests
+(\texttt{packages/ml/tests/})}{Machine Learning Worker Tests (packages/ml/tests/)}}\label{machine-learning-worker-tests-packagesmltests}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{test\_prepare\_identity\_dataset.py}
+\item
+  \texttt{test\_stub\_classifier.py}
+\item
+  \texttt{test\_evaluate\_freshness.py}
+\item
+  \texttt{test\_inventory\_batch.py}
+\item
+  \texttt{test\_imagenet\_produce.py}
+\item
+  \texttt{test\_prepare\_freshness\_dataset.py}
+\item
+  \texttt{test\_identity.py}
+\item
+  \texttt{test\_dataset\_snapstock.py}
+\end{itemize}
+
+\subsection{\texorpdfstring{Frontend \& Mobile Logic Tests
+(\texttt{apps/web/} \&
+\texttt{apps/mobile/})}{Frontend \& Mobile Logic Tests (apps/web/ \& apps/mobile/)}}\label{frontend-mobile-logic-tests-appsweb-appsmobile}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{claims.test.ts} (Web)
+\item
+  \texttt{admin-map.test.ts} (Web)
+\item
+  \texttt{claims.test.ts} (Mobile)
+\item
+  \texttt{chunked-storage.test.ts} (Mobile)
+\end{itemize}
+
+\subsection{\texorpdfstring{Database Security Tests
+(\texttt{infra/db/tests/})}{Database Security Tests (infra/db/tests/)}}\label{database-security-tests-infradbtests}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{rls\_isolation.sql}
+\item
+  \texttt{runtime\_role.sql}
+\end{itemize}
+
+\newpage\section{References}\label{references}
+
+\begin{itemize}
+\tightlist
+\item
+  FreshLens System Architecture Document
+  (\texttt{docs/design/FreshLens-SAD.md})
+\item
+  FreshLens API Contract (\texttt{docs/api/v1/openapi.yaml})
+\item
+  Pytest Testing Framework available at https://docs.pytest.org/
+\item
+  Jest Testing Framework available at https://jestjs.io/
+\item
+  Supabase Authentication Architecture available at
+  https://supabase.com/docs/guides/auth
+\end{itemize}
+
+\end{document}
