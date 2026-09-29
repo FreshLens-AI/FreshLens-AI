@@ -227,32 +227,7 @@ export function ScanStatusScreen({
                 <Text style={styles.detailLabel}>Scan ID</Text>
                 <Text style={styles.detailVal}>{scan.id.slice(0, 13)}…</Text>
               </View>
-              <View style={styles.detailDivider} />
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Identity Model</Text>
-                <Text style={styles.detailVal}>
-                  {scan.identity_model_version || 'Not available'}
-                </Text>
-              </View>
-              {freshnessIsDemo ? (
-                <>
-                  <View style={styles.detailDivider} />
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Freshness Model</Text>
-                    <Text style={styles.detailVal}>Demo only</Text>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View style={styles.detailDivider} />
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Freshness Model</Text>
-                    <Text style={styles.detailVal}>
-                      {freshnessModelVersion || 'Not run (identity rejected)'}
-                    </Text>
-                  </View>
-                </>
-              )}
+
               <View style={styles.detailDivider} />
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Timestamp</Text>

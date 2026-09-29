@@ -205,16 +205,7 @@ export function VendorHomeScreen({ navigation }: Props) {
           <Text style={styles.chevronSecondary}>›</Text>
         </Pressable>
 
-        {/* Security & Tenant Footer Notice */}
-        <View style={styles.footerCard}>
-          <Text style={styles.footerIcon}>🔒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.footerTitle}>Tenant Isolation Verified</Text>
-            <Text style={styles.footerCopy}>
-              Signed vendor session is scoped to Example Grocer database partition.
-            </Text>
-          </View>
-        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

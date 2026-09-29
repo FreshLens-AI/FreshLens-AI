@@ -1,5 +1,5 @@
 import { fetch as expoFetch } from 'expo/fetch';
-import { File as ExpoFile } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 
 import { reportSessionExpired } from './auth/session-events';
 import { getSupabaseClient } from './supabase';
@@ -94,22 +94,37 @@ export async function submitScan(
   photoUri: string,
   quantity: number,
 ): Promise<ScanAccepted> {
-  // Camera URIs are device-local files. Fetching a file:// URI on Android can
-  // return a successful-looking "File not found" response, which then gets
-  // uploaded as text. Expo's File implements Blob and streams the real bytes.
-  const image = new ExpoFile(photoUri);
-  if (!image.exists || image.size === 0) {
-    throw new ApiError(422, 'Captured photo is no longer available. Please retake it.');
+  const supabase = getSupabaseClient();
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) throw new Error('A valid vendor session is required.');
+
+  const uploadUrl = `${apiUrl?.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl || ''}/api/v1/scans`;
+  console.log('[submitScan] FileSystem.uploadAsync to', uploadUrl);
+
+  try {
+    const res = await FileSystem.uploadAsync(uploadUrl, photoUri, {
+      httpMethod: 'POST',
+      uploadType: 1, // FileSystemUploadType.MULTIPART
+      fieldName: 'image',
+      parameters: {
+        quantity: String(quantity),
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    console.log('[submitScan] FileSystem response status=', res.status);
+    if (res.status >= 200 && res.status < 300) {
+      return JSON.parse(res.body);
+    } else {
+      throw new ApiError(res.status, res.body || 'Request failed');
+    }
+  } catch (err) {
+    console.error('[submitScan] ERROR:', err);
+    throw err;
   }
-
-  const form = new FormData();
-  form.append('image', image, image.name || 'scan.jpg');
-  form.append('quantity', String(quantity));
-
-  console.log('[submitScan] uploading file size=', image.size, 'qty=', quantity);
-  const res = await apiFetch('api/v1/scans', { method: 'POST', body: form });
-  console.log('[submitScan] response status=', res.status);
-  return parseJsonOrThrow<ScanAccepted>(res);
 }
 
 export async function getScan(scanId: string): Promise<Scan> {

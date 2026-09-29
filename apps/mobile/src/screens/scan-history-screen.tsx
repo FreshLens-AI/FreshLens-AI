@@ -205,13 +205,7 @@ export function ScanHistoryScreen({ onDone }: { onDone: () => void }) {
                     </View>
                   </View>
 
-                  {item.model_version ? (
-                    <View style={styles.modelPill}>
-                      <Text style={styles.modelPillText}>
-                        Pipeline: {item.model_version}
-                      </Text>
-                    </View>
-                  ) : null}
+
                 </View>
               );
             })
