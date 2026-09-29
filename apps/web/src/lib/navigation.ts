@@ -4,7 +4,6 @@ import {
   Gauge,
   Leaf,
   ScanLine,
-  Settings2,
   Store,
 } from "lucide-react";
 
@@ -12,7 +11,6 @@ export const primaryNavigation = [
   { label: "Overview", href: "/dashboard", icon: Gauge },
   { label: "Tenants", href: "/tenants", icon: Store },
   { label: "Catalogue", href: "/catalogue", icon: Leaf },
-  { label: "Shelf-life rules", href: "/shelf-life", icon: Settings2 },
 ];
 
 export const insightNavigation = [

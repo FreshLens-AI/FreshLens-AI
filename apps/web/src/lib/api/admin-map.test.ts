@@ -30,8 +30,27 @@ describe("admin API mapping", () => {
       spoiled: 10,
     });
     assert.equal(mapped.spoilageRate, 10);
+    assert.equal(mapped.completedClassifications, 10);
     assert.equal(mapped.ownerName, "Example Vendor");
     assert.equal(mapped.lastActiveAt, "2026-08-03T00:00:00Z");
+  });
+
+  it("preserves missing contact and activity without inventing values", () => {
+    const mapped = mapAdminTenant({
+      ...tenant,
+      primary_contact_name: null,
+      primary_contact_email: null,
+      last_active_at: null,
+      scans_this_month: 0,
+      fresh_scans_this_month: 0,
+      medium_scans_this_month: 0,
+      spoiled_scans_this_month: 0,
+    });
+    assert.equal(mapped.ownerName, null);
+    assert.equal(mapped.email, null);
+    assert.equal(mapped.lastActiveAt, null);
+    assert.equal(mapped.completedClassifications, 0);
+    assert.deepEqual(mapped.classificationMix, { fresh: 0, medium: 0, spoiled: 0 });
   });
 
   it("builds the complete web snapshot from admin responses", () => {
@@ -81,7 +100,7 @@ describe("admin API mapping", () => {
     assert.equal(snapshot.tenants.length, 1);
     assert.equal(snapshot.products[0].tenantName, "Example Grocer");
     assert.equal(snapshot.alerts[0].title, "Shelf-life alert · Tomato");
-    assert.equal(snapshot.shelfLifeRules[0].defaultDays, 5);
+    assert.equal(snapshot.products[0].shelfLifeDays, 5);
     assert.equal(snapshot.trend[0].scans, 2);
     assert.equal(snapshot.pipelineSummary[0].helper, "Accepted and waiting for a worker");
   });

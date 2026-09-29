@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BellRing, Search } from "lucide-react";
+import { BellRing, Building2, Search, ShieldAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
 import { formatDateTime } from "@/lib/formatters";
 import { alertSeverityTone, titleCase } from "@/lib/presentation";
 import { useAdminData } from "@/store/admin-data-provider";
@@ -17,6 +19,7 @@ export function AlertsIndex() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState<AlertType | "all">("all");
   const [severity, setSeverity] = useState<AlertSeverity | "all">("all");
+  const hasFilters = Boolean(query.trim()) || type !== "all" || severity !== "all";
   const tenantById = useMemo(
     () => new Map(tenants.map((tenant) => [tenant.id, tenant])),
     [tenants],
@@ -42,14 +45,13 @@ export function AlertsIndex() {
       <PageHeader
         eyebrow="Platform operations"
         title="Alerts"
-        description="Live tenant alert signals from the API without scan images, quantities, or batch identifiers."
+        description="Operational signals across tenants, with severity and product context."
       />
 
-      <section className="stat-grid" aria-label="Alert summary">
-        <Card><CardHeader title="Active alerts" /><strong>{alerts.length}</strong><p>All persisted V1 alerts are active signals.</p></Card>
-        <Card><CardHeader title="Critical" /><strong>{alerts.filter((item) => item.severity === "critical").length}</strong><p>Critical signals requiring review.</p></Card>
-        <Card><CardHeader title="Aging" /><strong>{alerts.filter((item) => item.type === "aging").length}</strong><p>Static shelf-life alerts.</p></Card>
-        <Card><CardHeader title="Low stock" /><strong>{alerts.filter((item) => item.type === "low_stock").length}</strong><p>Vendor threshold signals.</p></Card>
+      <section className="stat-grid stat-grid--three" aria-label="Alert summary">
+        <StatCard label="Active alerts" value={`${alerts.length}`} helper="current signals" icon={<BellRing size={20} />} tone="amber" />
+        <StatCard label="Critical" value={`${alerts.filter((item) => item.severity === "critical").length}`} helper="highest priority" icon={<ShieldAlert size={20} />} tone="red" />
+        <StatCard label="Affected tenants" value={`${new Set(alerts.map((item) => item.tenantId)).size}`} helper="with an active signal" icon={<Building2 size={20} />} tone="blue" />
       </section>
 
       <Card>
@@ -57,6 +59,7 @@ export function AlertsIndex() {
           <label className="compact-select"><span>Search</span><span><Search size={15} aria-hidden="true" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Alert, tenant, or product" /></span></label>
           <label className="compact-select"><span>Type</span><select value={type} onChange={(event) => setType(event.target.value as AlertType | "all")}><option value="all">All types</option><option value="spoilage">Spoilage</option><option value="low_stock">Low stock</option><option value="aging">Aging</option><option value="other">Other</option></select></label>
           <label className="compact-select"><span>Severity</span><select value={severity} onChange={(event) => setSeverity(event.target.value as AlertSeverity | "all")}><option value="all">All severities</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="info">Info</option></select></label>
+          {hasFilters ? <Button variant="ghost" size="sm" onClick={() => { setQuery(""); setType("all"); setSeverity("all"); }}>Clear filters</Button> : null}
         </div>
 
         {filteredAlerts.length ? (
@@ -78,7 +81,7 @@ export function AlertsIndex() {
             </table>
           </div>
         ) : (
-          <EmptyState icon={<BellRing size={23} aria-hidden="true" />} title={alerts.length ? "No alerts match these filters" : "No alerts recorded"} description={alerts.length ? "Try a broader search or filter." : "Live alerts will appear here when vendors generate them."} />
+          <EmptyState icon={<BellRing size={23} aria-hidden="true" />} title={alerts.length ? "No alerts match these filters" : "No active alerts"} description={alerts.length ? "Try a broader search or clear the filters." : "New operational signals will appear here."} action={hasFilters ? <Button variant="secondary" onClick={() => { setQuery(""); setType("all"); setSeverity("all"); }}>Clear filters</Button> : undefined} />
         )}
       </Card>
     </div>

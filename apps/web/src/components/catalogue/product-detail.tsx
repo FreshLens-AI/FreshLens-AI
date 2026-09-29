@@ -5,13 +5,10 @@ import {
   BarChart3,
   CalendarClock,
   Clock3,
-  Layers3,
   PackageSearch,
-  Settings2,
   Store,
 } from "lucide-react";
 
-import { ProductStatusBadge } from "@/components/catalogue/product-status";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,7 +39,7 @@ export function ProductDetailScreen() {
       <PageHeader
         eyebrow="Catalogue product"
         title={product.name}
-        description={`Tenant product configuration for ${product.tenantName ?? "an unknown tenant"}.`}
+        description={`Product configuration for ${product.tenantName}.`}
         breadcrumbs={[
           { label: "Catalogue", href: "/catalogue" },
           { label: product.name },
@@ -56,7 +53,7 @@ export function ProductDetailScreen() {
         </Card>
         <Card className={styles.detailStat}>
           <span className={styles.detailStatIcon} aria-hidden="true"><Store size={20} /></span>
-          <div><small>Low-stock threshold</small><strong>{formatNumber(product.lowStockThreshold ?? 0)}</strong></div>
+          <div><small>Low-stock threshold</small><strong>{formatNumber(product.lowStockThreshold)}</strong></div>
         </Card>
         <Card className={styles.detailStat}>
           <span className={styles.detailStatIcon} aria-hidden="true"><BarChart3 size={20} /></span>
@@ -68,10 +65,8 @@ export function ProductDetailScreen() {
         <Card className={styles.detailCard}>
           <CardHeader title="Catalogue information" description="Core produce metadata used across the platform." />
           <dl className={styles.descriptionList}>
-            <div><dt>Status</dt><dd><ProductStatusBadge status={product.status} /></dd></div>
             <div><dt>Common name</dt><dd>{product.name}</dd></div>
-            <div><dt>Tenant</dt><dd>{product.tenantName ?? "Not recorded"}</dd></div>
-            <div><dt>Low-stock threshold</dt><dd>{formatNumber(product.lowStockThreshold ?? 0)}</dd></div>
+            <div><dt>Tenant</dt><dd>{product.tenantName}</dd></div>
             <div><dt>Last updated</dt><dd>{formatDate(product.updatedAt)}</dd></div>
             <div><dt>Catalogue ID</dt><dd><code>{product.id}</code></dd></div>
           </dl>
@@ -85,20 +80,13 @@ export function ProductDetailScreen() {
             <p>
               FreshLens uses configured shelf-life days as a lookup input when evaluating aging alerts. It does not predict a rot date or replace human inspection.
             </p>
-            <Button href="/shelf-life" variant="secondary" icon={<Settings2 size={16} aria-hidden="true" />}>
-              Manage category rules
+            <Button href="/catalogue" variant="secondary">
+              Back to catalogue
             </Button>
           </div>
         </Card>
       </div>
 
-      <Card className={styles.notesCard}>
-        <span className={styles.notesIcon} aria-hidden="true"><Layers3 size={19} /></span>
-        <div>
-          <h2>Operational note</h2>
-          <p>{product.note || "No operational note has been added for this catalogue product."}</p>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -114,4 +102,3 @@ export function ProductDetailSkeleton() {
     </div>
   );
 }
-

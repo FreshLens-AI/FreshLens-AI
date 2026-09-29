@@ -1,6 +1,7 @@
 "use client";
 
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import {
   BellRing,
   Boxes,
@@ -10,7 +11,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -31,10 +31,11 @@ export function TenantDetail({
 }: {
   tenantId: string;
 }) {
-  const { tenants } = useAdminData();
+  const { tenants, products } = useAdminData();
   const tenant = tenants.find((item) => item.id === tenantId);
 
   if (!tenant) notFound();
+  const tenantProducts = products.filter((product) => product.tenantId === tenantId);
 
   const classificationRows = [
     {
@@ -79,8 +80,8 @@ export function TenantDetail({
         />
         <StatCard
           label="Spoilage rate"
-          value={formatPercent(tenant.spoilageRate)}
-          helper="Completed classifications"
+          value={tenant.completedClassifications ? formatPercent(tenant.spoilageRate) : "—"}
+          helper={tenant.completedClassifications ? "Completed classifications" : "No classifications yet"}
           icon={<Boxes size={20} aria-hidden="true" />}
           tone={tenant.spoilageRate >= 9 ? "red" : "amber"}
         />
@@ -114,23 +115,11 @@ export function TenantDetail({
             </div>
             <div>
               <dt>Primary contact</dt>
-              <dd>{tenant.ownerName}</dd>
+              <dd>{tenant.ownerName ?? "—"}</dd>
             </div>
             <div>
               <dt>Email</dt>
-              <dd>{tenant.email === "Not recorded" ? tenant.email : <a href={`mailto:${tenant.email}`}>{tenant.email}</a>}</dd>
-            </div>
-            <div>
-              <dt>Phone</dt>
-              <dd>{tenant.phone === "Not recorded" ? tenant.phone : <a href={`tel:${tenant.phone.replace(/\s/g, "")}`}>{tenant.phone}</a>}</dd>
-            </div>
-            <div>
-              <dt>Location</dt>
-              <dd>{tenant.city}</dd>
-            </div>
-            <div>
-              <dt>Workspace plan</dt>
-              <dd><Badge tone="brand" dot={false}>{tenant.plan}</Badge></dd>
+              <dd>{tenant.email ? <a href={`mailto:${tenant.email}`}>{tenant.email}</a> : "—"}</dd>
             </div>
             <div>
               <dt>Team members</dt>
@@ -145,11 +134,7 @@ export function TenantDetail({
             </div>
             <div>
               <dt>Last active</dt>
-              <dd>{formatDateTime(tenant.lastActiveAt)}</dd>
-            </div>
-            <div className={styles.profileListWide}>
-              <dt>Tenant ID</dt>
-              <dd><code>{tenant.id}</code></dd>
+              <dd>{tenant.lastActiveAt ? formatDateTime(tenant.lastActiveAt) : "No activity yet"}</dd>
             </div>
           </dl>
         </Card>
@@ -159,7 +144,7 @@ export function TenantDetail({
             title="Freshness distribution"
             description="Aggregate share of this month's completed classifications."
           />
-          <div className={styles.classificationList}>
+          {tenant.completedClassifications ? <div className={styles.classificationList}>
             {classificationRows.map((row) => (
               <div className={styles.classificationRow} key={row.key}>
                 <div>
@@ -173,7 +158,7 @@ export function TenantDetail({
                 />
               </div>
             ))}
-          </div>
+          </div> : <p className={styles.aggregateNote}>No completed classifications this month.</p>}
           <div className={styles.aggregateNote}>
             <ShieldCheck size={19} aria-hidden="true" />
             <p>
@@ -184,6 +169,21 @@ export function TenantDetail({
           </div>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader title="Configured products" description={`${tenantProducts.length} product${tenantProducts.length === 1 ? "" : "s"} in this tenant's catalogue`} />
+        {tenantProducts.length ? <div className="table-wrap">
+          <table>
+            <thead><tr><th>Product</th><th>Shelf life</th><th>Low-stock threshold</th><th>Monthly scans</th></tr></thead>
+            <tbody>{tenantProducts.map((product) => <tr key={product.id}>
+              <td><Link href={`/catalogue/${product.id}`} className="text-link">{product.name}</Link></td>
+              <td>{product.shelfLifeDays} days</td>
+              <td>{formatNumber(product.lowStockThreshold)}</td>
+              <td>{formatNumber(product.scansThisMonth)}</td>
+            </tr>)}</tbody>
+          </table>
+        </div> : <p className={styles.aggregateNote}>No products configured for this tenant.</p>}
+      </Card>
     </div>
   );
 }

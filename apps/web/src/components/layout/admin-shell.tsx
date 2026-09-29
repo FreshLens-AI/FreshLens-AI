@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
-import { Bell, LogOut, Menu, Sprout, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useTransition, type ReactNode } from "react";
+import { Bell, LogOut, Menu, RefreshCw, Sprout, X } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { insightNavigation, primaryNavigation } from "@/lib/navigation";
@@ -57,9 +57,11 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { alerts } = useAdminData();
   const [open, setOpen] = useState(false);
-  const activeAlerts = alerts.filter((alert) => alert.status === "active").length;
+  const [refreshing, startRefresh] = useTransition();
+  const activeAlerts = alerts.length;
   const currentPage =
     pageNames.find(
       (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
@@ -87,7 +89,7 @@ export function AdminShell({
             </span>
             <span>
               <strong>FreshLens</strong>
-              <small>Platform admin</small>
+              <small>Admin workspace</small>
             </span>
           </Link>
           <button
@@ -107,25 +109,13 @@ export function AdminShell({
             onNavigate={() => setOpen(false)}
           />
           <NavigationGroup
-            label="Intelligence"
+            label="Monitoring"
             items={insightNavigation}
             pathname={pathname}
             onNavigate={() => setOpen(false)}
           />
         </nav>
 
-        <div className="sidebar__footer">
-          <div className="demo-card">
-            <span className="demo-card__icon" aria-hidden="true">
-              <Sprout size={17} />
-            </span>
-            <div>
-              <strong>API workspace</strong>
-              <p>Authenticated live aggregates</p>
-            </div>
-          </div>
-          <p className="sidebar__version">FreshLens V1 · Group 21</p>
-        </div>
       </aside>
 
       <div className="admin-shell__body">
@@ -140,15 +130,22 @@ export function AdminShell({
               <Menu size={21} />
             </button>
             <div>
-              <p className="topbar__context">Platform workspace</p>
+              <p className="topbar__context">Platform administration</p>
               <p className="topbar__title">{currentPage}</p>
             </div>
           </div>
           <div className="topbar__actions">
-            <span className="data-pill">
-              <span aria-hidden="true" />
-              Live API data
-            </span>
+            <span className="data-pill">Read-only insights</span>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={refreshing ? "Refreshing data" : "Refresh data"}
+              title="Refresh data"
+              disabled={refreshing}
+              onClick={() => startRefresh(() => router.refresh())}
+            >
+              <RefreshCw size={18} className={refreshing ? "is-spinning" : undefined} aria-hidden="true" />
+            </button>
             <Link href="/alerts" className="icon-button notification-button" aria-label={`${activeAlerts} active alerts`}>
               <Bell size={20} />
               {activeAlerts > 0 ? <span>{activeAlerts}</span> : null}

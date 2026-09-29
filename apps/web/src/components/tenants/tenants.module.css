@@ -38,8 +38,7 @@
 }
 
 .searchField input,
-.filterField select,
-.input {
+.filterField select {
   width: 100%;
   min-height: 2.75rem;
   border: 1px solid var(--border, #dce5dd);
@@ -72,8 +71,7 @@
 }
 
 .searchField input:focus,
-.filterField select:focus,
-.input:focus {
+.filterField select:focus {
   border-color: var(--brand, #167356);
   box-shadow: 0 0 0 3px rgb(22 115 86 / 14%);
 }
@@ -119,7 +117,7 @@
 .table th {
   color: #68736d;
   background: #f7f9f6;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.045em;
   text-transform: uppercase;
@@ -164,7 +162,7 @@
   border-radius: 0.65rem;
   color: #126447;
   background: #edf7f0;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -204,7 +202,14 @@
 
 .pagination > div {
   display: flex;
+  align-items: center;
   gap: 0.35rem;
+}
+
+.pageCount {
+  min-width: 7rem;
+  text-align: center;
+  font-weight: 650;
 }
 
 .pageButton {
@@ -222,8 +227,7 @@
   cursor: pointer;
 }
 
-.pageButton:hover:not(:disabled),
-.pageButtonActive {
+.pageButton:hover:not(:disabled) {
   border-color: #9ac8ac;
   color: #126447;
   background: #edf7f0;
@@ -239,8 +243,6 @@
   cursor: not-allowed;
 }
 
-.successBanner,
-.privacyPanel,
 .aggregateNote {
   display: flex;
   align-items: flex-start;
@@ -251,24 +253,6 @@
   background: #eef9f1;
 }
 
-.successBanner {
-  padding: 0.85rem 1rem;
-}
-
-.successBanner > span {
-  display: grid;
-  place-items: center;
-  flex: 0 0 1.4rem;
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 50%;
-  color: #fff;
-  background: #1b7a52;
-  font-weight: 900;
-}
-
-.successBanner p,
-.privacyPanel p,
 .aggregateNote p {
   margin-top: 0.18rem;
   color: #4d695b;
@@ -289,9 +273,7 @@
   align-items: start;
 }
 
-.detailCard,
-.formCard,
-.contextCard {
+.detailCard {
   padding: 1.25rem;
 }
 
@@ -324,18 +306,16 @@
   border-left: 0;
 }
 
-.profileList dt,
-.contextCard dt {
+.profileList dt {
   margin-bottom: 0.3rem;
   color: #718078;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.035em;
   text-transform: uppercase;
 }
 
-.profileList dd,
-.contextCard dd {
+.profileList dd {
   min-width: 0;
   color: var(--foreground, #17211d);
   font-size: 0.9rem;
@@ -377,65 +357,9 @@
   padding: 0.85rem;
 }
 
-.aggregateNote svg,
-.privacyPanel svg {
+.aggregateNote svg {
   flex: 0 0 auto;
   margin-top: 0.05rem;
-}
-
-.editLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.38fr);
-  gap: 1rem;
-  align-items: start;
-}
-
-.formFields {
-  display: grid;
-  gap: 1.15rem;
-  margin-top: 1.25rem;
-}
-
-.input {
-  padding: 0.7rem 0.8rem;
-}
-
-.input[aria-invalid="true"] {
-  border-color: #be4b49;
-}
-
-.formActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border, #e2e9e3);
-}
-
-.editAside {
-  display: grid;
-  gap: 1rem;
-}
-
-.contextCard dl {
-  display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
-}
-
-.contextCard dl > div {
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid var(--border, #e3e9e4);
-}
-
-.contextCard dl > div:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.privacyPanel {
-  padding: 1rem;
 }
 
 @media (max-width: 1100px) {
@@ -451,8 +375,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .detailGrid,
-  .editLayout {
+  .detailGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -496,14 +419,7 @@
     border-left: 0;
   }
 
-  .detailCard,
-  .formCard,
-  .contextCard {
+  .detailCard {
     padding: 1rem;
-  }
-
-  .formActions {
-    align-items: stretch;
-    flex-direction: column-reverse;
   }
 }

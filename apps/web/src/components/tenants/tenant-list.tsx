@@ -28,7 +28,7 @@ import type { TenantStatus } from "@/types/domain";
 import styles from "./tenants.module.css";
 import { TenantStatusBadge } from "./tenant-status-badge";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 8;
 
 type StatusFilter = "all" | TenantStatus;
 
@@ -52,7 +52,6 @@ export function TenantList() {
         tenant.name,
         tenant.ownerName,
         tenant.email,
-        tenant.city,
       ]
         .join(" ")
         .toLocaleLowerCase();
@@ -94,7 +93,7 @@ export function TenantList() {
             id="tenant-search"
             type="search"
             value={query}
-            placeholder="Search name, owner, email or city"
+            placeholder="Search tenant or contact"
             onChange={(event) => {
               setQuery(event.target.value);
               setPage(1);
@@ -132,18 +131,16 @@ export function TenantList() {
           {filteredTenants.length === 1 ? "tenant" : "tenants"}
           {hasFilters ? " match the current filters" : " from the API"}
         </p>
-        <p>Profile and aggregate data only</p>
+        <p>Aggregate activity only</p>
       </div>
 
       {visibleTenants.length === 0 ? (
         <EmptyState
           icon={<Store size={24} aria-hidden="true" />}
-          title="No tenants match these filters"
-          description="Try another search term or clear the selected status and plan filters."
+          title={tenants.length ? "No tenants match these filters" : "No tenants yet"}
+          description={tenants.length ? "Try another search term or clear the status filter." : "Tenant profiles will appear here once they are provisioned."}
           action={
-            <Button variant="secondary" onClick={resetFilters}>
-              Clear filters
-            </Button>
+            hasFilters ? <Button variant="secondary" onClick={resetFilters}>Clear filters</Button> : undefined
           }
         />
       ) : (
@@ -156,7 +153,6 @@ export function TenantList() {
               <thead>
                 <tr>
                   <th scope="col">Tenant</th>
-                  <th scope="col">Location</th>
                   <th scope="col">Last active</th>
                   <th scope="col">Scans this month</th>
                   <th scope="col">Spoilage rate</th>
@@ -180,21 +176,16 @@ export function TenantList() {
                           >
                             {tenant.name}
                           </Link>
-                          <small>{tenant.ownerName} · {tenant.email}</small>
+                          <small>{[tenant.ownerName, tenant.email].filter(Boolean).join(" · ") || "No contact listed"}</small>
                         </span>
                       </div>
                     </td>
-                    <td>{tenant.city}</td>
                     <td>
-                      <span title={formatDateTime(tenant.lastActiveAt)}>
-                        {formatDate(tenant.lastActiveAt)}
-                      </span>
+                      {tenant.lastActiveAt ? <span title={formatDateTime(tenant.lastActiveAt)}>{formatDate(tenant.lastActiveAt)}</span> : "—"}
                     </td>
                     <td>{formatNumber(tenant.scansThisMonth)}</td>
                     <td>
-                      <Badge tone={spoilageTone(tenant.spoilageRate)}>
-                        {formatPercent(tenant.spoilageRate)}
-                      </Badge>
+                      {tenant.completedClassifications ? <Badge tone={spoilageTone(tenant.spoilageRate)}>{formatPercent(tenant.spoilageRate)}</Badge> : "—"}
                     </td>
                     <td>{tenant.activeAlerts}</td>
                     <td><TenantStatusBadge status={tenant.status} /></td>
@@ -214,7 +205,7 @@ export function TenantList() {
             </table>
           </div>
 
-          <nav className={styles.pagination} aria-label="Tenant list pagination">
+          {totalPages > 1 ? <nav className={styles.pagination} aria-label="Tenant list pagination">
             <p>
               Showing {pageStart + 1}–
               {Math.min(pageStart + PAGE_SIZE, filteredTenants.length)} of{" "}
@@ -230,22 +221,7 @@ export function TenantList() {
               >
                 <ArrowLeft size={17} aria-hidden="true" />
               </button>
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-                (pageNumber) => (
-                  <button
-                    type="button"
-                    key={pageNumber}
-                    className={`${styles.pageButton}${
-                      pageNumber === currentPage ? ` ${styles.pageButtonActive}` : ""
-                    }`}
-                    aria-current={pageNumber === currentPage ? "page" : undefined}
-                    aria-label={`Page ${pageNumber}`}
-                    onClick={() => setPage(pageNumber)}
-                  >
-                    {pageNumber}
-                  </button>
-                ),
-              )}
+              <span className={styles.pageCount}>Page {currentPage} of {totalPages}</span>
               <button
                 type="button"
                 className={styles.pageButton}
@@ -256,7 +232,7 @@ export function TenantList() {
                 <ArrowRight size={17} aria-hidden="true" />
               </button>
             </div>
-          </nav>
+          </nav> : null}
         </Card>
       )}
     </div>

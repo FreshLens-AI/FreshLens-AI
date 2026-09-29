@@ -4,7 +4,6 @@ import type {
   Classification,
   PipelineSummary,
   Product,
-  ShelfLifeRule,
   Tenant,
   TrendPoint,
 } from "@/types/domain";
@@ -85,17 +84,20 @@ export function mapAdminTenant(row: AdminTenantResponse): Tenant {
   return {
     id: row.id,
     name: row.name,
-    ownerName: row.primary_contact_name ?? "Not recorded",
-    email: row.primary_contact_email ?? "Not recorded",
-    phone: "Not recorded",
-    city: "Not recorded",
+    ownerName: row.primary_contact_name,
+    email: row.primary_contact_email,
     status: row.status,
-    plan: "Not configured",
     createdAt: row.created_at,
-    lastActiveAt: row.last_active_at ?? row.updated_at ?? row.created_at,
+    lastActiveAt: row.last_active_at,
     memberCount: row.member_count,
     catalogueCoverage: row.catalogue_coverage,
     scansThisMonth: row.scans_this_month,
+    completedClassifications: completed,
+    classificationCounts: {
+      fresh: row.fresh_scans_this_month,
+      medium: row.medium_scans_this_month,
+      spoiled: row.spoiled_scans_this_month,
+    },
     spoilageRate:
       completed > 0
         ? Math.round((row.spoiled_scans_this_month / completed) * 1000) / 10
@@ -111,14 +113,10 @@ export function mapAdminProduct(row: AdminProductResponse): Product {
     tenantId: row.tenant_id,
     tenantName: row.tenant_name,
     name: row.name,
-    category: row.tenant_name,
     shelfLifeDays: row.shelf_life_days,
-    status: "active",
-    tenantCoverage: 1,
     scansThisMonth: row.scans_this_month,
     lowStockThreshold: row.low_stock_threshold,
     updatedAt: row.updated_at,
-    note: `Tenant product configuration for ${row.tenant_name}.`,
   };
 }
 
@@ -135,7 +133,6 @@ export function mapAdminAlert(row: AdminAlertResponse): Alert {
     tenantId: row.tenant_id,
     type: row.type,
     severity: row.severity,
-    status: "active",
     title: row.product_name
       ? `${alertTitles[row.type]} · ${row.product_name}`
       : alertTitles[row.type],
@@ -168,13 +165,6 @@ export function mapAdminData(
   analytics: AdminAnalyticsResponse,
 ): AdminDataSnapshot {
   const products = productRows.map(mapAdminProduct);
-  const shelfLifeRules: ShelfLifeRule[] = products.map((product) => ({
-    id: `rule-${product.id}`,
-    category: `${product.name} · ${product.tenantName}`,
-    defaultDays: product.shelfLifeDays,
-    productCount: 1,
-    updatedAt: product.updatedAt,
-  }));
   const trend: TrendPoint[] = analytics.trend.map((point) => ({
     label: trendLabel(point.date),
     scans: point.scans,
@@ -187,7 +177,6 @@ export function mapAdminData(
     tenants: tenantRows.map(mapAdminTenant),
     products,
     alerts: alertRows.map(mapAdminAlert),
-    shelfLifeRules,
     trend,
     pipelineSummary: analytics.pipeline.map((item) => ({
       ...item,

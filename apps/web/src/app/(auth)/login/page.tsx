@@ -38,8 +38,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <p className={styles.eyebrow}>Platform administration</p>
           <h1>Clear oversight for fresher decisions.</h1>
           <p>
-            Manage tenant operations, catalogue standards, shelf-life rules, and
-            privacy-safe platform intelligence from one focused workspace.
+            Review tenant activity, product settings, alerts, and privacy-safe
+            trends from one focused workspace.
           </p>
         </div>
 

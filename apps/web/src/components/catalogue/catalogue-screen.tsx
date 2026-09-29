@@ -10,31 +10,25 @@ import {
   X,
 } from "lucide-react";
 
-import { ProductStatusBadge } from "@/components/catalogue/product-status";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { formatDate, formatNumber } from "@/lib/formatters";
 import { useAdminData } from "@/store/admin-data-provider";
-import type { ProductStatus } from "@/types/domain";
 
 import styles from "./catalogue.module.css";
-
-type StatusFilter = "all" | ProductStatus;
 
 export function CatalogueScreen() {
   const { products } = useAdminData();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
-  const [status, setStatus] = useState<StatusFilter>("all");
+  const [tenantId, setTenantId] = useState("all");
   const deferredQuery = useDeferredValue(query.trim().toLocaleLowerCase());
 
-  const categories = useMemo(
+  const tenants = useMemo(
     () =>
-      [...new Set(products.map((product) => product.category))].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      [...new Map(products.map((product) => [product.tenantId, product.tenantName])).entries()]
+        .sort((a, b) => a[1].localeCompare(b[1])),
     [products],
   );
 
@@ -43,19 +37,15 @@ export function CatalogueScreen() {
       products.filter((product) => {
         const matchesQuery =
           !deferredQuery ||
-          [product.name, product.scientificName, product.category].some((value) =>
+          [product.name, product.tenantName].some((value) =>
             value?.toLocaleLowerCase().includes(deferredQuery),
           );
-        const matchesCategory =
-          category === "all" || product.category === category;
-        const matchesStatus = status === "all" || product.status === status;
-        return matchesQuery && matchesCategory && matchesStatus;
+        return matchesQuery && (tenantId === "all" || product.tenantId === tenantId);
       }),
-    [category, deferredQuery, products, status],
+    [deferredQuery, products, tenantId],
   );
 
-  const activeFilters = query.length > 0 || category !== "all" || status !== "all";
-  const activeCount = products.filter((product) => product.status === "active").length;
+  const activeFilters = query.length > 0 || tenantId !== "all";
   const monthlyScans = products.reduce(
     (sum, product) => sum + product.scansThisMonth,
     0,
@@ -63,8 +53,7 @@ export function CatalogueScreen() {
 
   function clearFilters() {
     setQuery("");
-    setCategory("all");
-    setStatus("all");
+    setTenantId("all");
   }
 
   return (
@@ -72,7 +61,7 @@ export function CatalogueScreen() {
       <PageHeader
         eyebrow="Catalogue operations"
         title="Product catalogue"
-        description="Live tenant product configurations used for identification, inventory, and static aging rules."
+        description="Tenant product settings and shelf-life values from the live API."
       />
 
       <section className={styles.summaryGrid} aria-label="Catalogue summary">
@@ -82,9 +71,9 @@ export function CatalogueScreen() {
           <small>Tenant product configurations</small>
         </Card>
         <Card className={styles.summaryCard}>
-          <span>Active configurations</span>
-          <strong>{formatNumber(activeCount)}</strong>
-          <small>Available to vendor inventory workflows</small>
+          <span>Tenants represented</span>
+          <strong>{formatNumber(tenants.length)}</strong>
+          <small>With configured products</small>
         </Card>
         <Card className={styles.summaryCard}>
           <span>Monthly scans</span>
@@ -103,39 +92,25 @@ export function CatalogueScreen() {
                 id="catalogue-search"
                 type="search"
                 value={query}
-                placeholder="Product, scientific name, or category"
+                placeholder="Search product or tenant"
                 onChange={(event) => setQuery(event.target.value)}
               />
             </div>
           </div>
 
           <div className={styles.filterField}>
-            <label htmlFor="catalogue-category">Tenant</label>
+            <label htmlFor="catalogue-tenant">Tenant</label>
             <select
-              id="catalogue-category"
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
+              id="catalogue-tenant"
+              value={tenantId}
+              onChange={(event) => setTenantId(event.target.value)}
             >
               <option value="all">All tenants</option>
-              {categories.map((item) => (
-                <option value={item} key={item}>
-                  {item}
+              {tenants.map(([id, name]) => (
+                <option value={id} key={id}>
+                  {name}
                 </option>
               ))}
-            </select>
-          </div>
-
-          <div className={styles.filterField}>
-            <label htmlFor="catalogue-status">Status</label>
-            <select
-              id="catalogue-status"
-              value={status}
-              onChange={(event) => setStatus(event.target.value as StatusFilter)}
-            >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="draft">Draft</option>
-              <option value="archived">Archived</option>
             </select>
           </div>
 
@@ -165,7 +140,6 @@ export function CatalogueScreen() {
                   <th scope="col">Shelf life</th>
                   <th scope="col" className={styles.optionalColumn}>Low-stock threshold</th>
                   <th scope="col" className={styles.optionalColumn}>Monthly scans</th>
-                  <th scope="col">Status</th>
                   <th scope="col" className={styles.optionalColumn}>Updated</th>
                   <th scope="col"><span className={styles.srOnly}>Actions</span></th>
                 </tr>
@@ -180,15 +154,13 @@ export function CatalogueScreen() {
                         </span>
                         <span>
                           <strong>{product.name}</strong>
-                          <small>{product.scientificName || "Scientific name not set"}</small>
                         </span>
                       </Link>
                     </td>
-                    <td>{product.tenantName ?? product.category}</td>
+                    <td>{product.tenantName}</td>
                     <td><strong>{product.shelfLifeDays}</strong> days</td>
                     <td className={styles.optionalColumn}>{formatNumber(product.lowStockThreshold ?? 0)}</td>
                     <td className={styles.optionalColumn}>{formatNumber(product.scansThisMonth)}</td>
-                    <td><ProductStatusBadge status={product.status} /></td>
                     <td className={styles.optionalColumn}>{formatDate(product.updatedAt)}</td>
                     <td>
                       <div className={styles.rowActions}>
@@ -213,7 +185,7 @@ export function CatalogueScreen() {
               title={activeFilters ? "No products match these filters" : "No catalogue products yet"}
               description={
                 activeFilters
-                  ? "Try a different search term or reset the category and status filters."
+                  ? "Try another product or tenant, or clear the filters."
                   : "Products will appear after vendors configure their catalogues."
               }
               action={
@@ -228,4 +200,3 @@ export function CatalogueScreen() {
     </div>
   );
 }
-
