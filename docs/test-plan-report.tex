@@ -1,28 +1,13 @@
 % Options for packages loaded elsewhere
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
-\documentclass[11pt,
+\documentclass[
+  11pt,
 ]{article}
-
-\usepackage[margin=1in]{geometry}
-\usepackage{setspace}
-\setstretch{1.1}
-\usepackage{parskip}
-
-% Strict Widow and Club Penalties
-\widowpenalty=10000
-\clubpenalty=10000
-\displaywidowpenalty=10000
-\interlinepenalty=500
-\brokenpenalty=10000
-
-% Section Numbering
-\setcounter{secnumdepth}{3}
-\setcounter{tocdepth}{3}
-
 \usepackage{xcolor}
+\usepackage[margin=20mm]{geometry}
 \usepackage{amsmath,amssymb}
- % remove section numbering
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
@@ -53,9 +38,45 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
 \usepackage{longtable,booktabs,array}
-\usepackage{caption}
-\captionsetup[table]{skip=6pt}
 \newcounter{none} % for unnumbered tables
 \usepackage{calc} % for calculating minipage widths
 % Correct order of tables after \paragraph or \subparagraph
@@ -69,269 +90,47 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{pdflscape}
+\usepackage{graphicx}
+\usepackage{xurl}
+\setlength{\emergencystretch}{3em}
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
-% fallback for those not using the hyperref driver hyperxmp:
-\makeatletter
-\@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
-\makeatother
 \hypersetup{
+  pdftitle={FreshLens: Test Plan Report},
+  pdfauthor={CS3203 Group 21 --- PID 5},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
-
-
-
+\title{FreshLens: Test Plan Report}
+\author{CS3203 Group 21 --- PID 5}
+\date{27 September 2026}
 
 \begin{document}
-\begin{titlepage}
-    \vspace*{2cm}
-    \begin{center}
-        {\Huge \textbf{FreshLens}} \\[1cm]
-        {\LARGE AI Powered Freshness Monitoring System for Small Scale Retailers} \\[1.5cm]
-        {\Large \textbf{Test Plan Report}} \\[3cm]
-        {\Large Group 21} \\[0.5cm]
-        {\Large PID 5}
-    \end{center}
-    \vfill
-    \thispagestyle{empty}
-\end{titlepage}
-\newpage
-
+\maketitle
 
 {
-\setcounter{tocdepth}{3}
-\tableofcontents\newpage
+\setcounter{tocdepth}{1}
+\tableofcontents
 }
-\section{Evaluation Mission and Test
-Motivation}\label{evaluation-mission-and-test-motivation}
+\section{1. Evaluation mission and
+results}\label{evaluation-mission-and-results}
 
-Hey everyone! This Master Test Plan report covers our overall approach
-to testing the FreshLens system. Since FreshLens is our core SaaS
-platform for grocery retailers (and our main project for CS3203), we
-really needed to make sure it works as expected under real-world
-conditions. The main mission here is to provide a reliable, easy-to-use,
-and highly secure online app for tracking inventory scans and freshness.
-To give our end-users the best experience, we realized we had to design
-and test this system pretty thoroughly across the board.
+FreshLens is an AI-powered freshness monitoring system for small-scale
+grocery retailers. This report records the test plan, execution results
+and screenshot evidence for \textbf{CS3203, Group 21, PID 5}, on
+\textbf{27 September 2026}. The system combines a FastAPI service,
+PostgreSQL tenant isolation, Redis/Celery background processing, a
+Next.js administration interface and an Expo mobile application.
 
-Since this is a web and mobile application handling people's business
-data, it needs to be spot on. Even a single bug or a small security
-loophole in the database could be a disaster for a vendor's inventory.
-Our user interfaces and the backend logic have to be solid to deliver
-exactly what the vendors expect. Since our requirements explicitly
-outline multi-tenant data isolation, we had to put together a
-well-organized testing process to verify that the system actually does
-what it's supposed to do.
+The evaluation targets the highest-impact risks: cross-tenant data
+access, duplicate or excessive stock deductions, failed scan
+orchestration, incorrect confidence-gate logic and unusable
+authentication screens. Functional correctness, browser behaviour and
+performance are reported separately.
 
-Our system is built using a modern architecture---mostly FastAPI for the
-backend, Next.js for the web admin, and Expo for the mobile side. So our
-testing plan has to cover all these different moving parts.
-
-The main objectives of our testing process are:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Finding bugs:} We want to catch as many bugs as possible and
-  fix them before we actually deploy this to our test users. We're doing
-  a special search specifically for data leaks to make sure vendor CVs
-  (like their company details) and inventory are completely
-  confidential.
-\item
-  \textbf{Fixing design problems:} We need to find important problems in
-  our design and implementation that might pose a threat to the quality
-  of the system. For example, if our YOLO models are too slow, that's a
-  problem we need to correct before the final delivery.
-\item
-  \textbf{Risk mitigation:} We're identifying risks associated with the
-  project implementation. Things like failing user acceptance because
-  the mobile camera lags. We test and refactor these before they happen
-  by getting feedback early on.
-\item
-  \textbf{Quality standards:} The system has to keep up with existing
-  standards. To achieve this, we're doing performance testing along with
-  user acceptance testing to check if we're hitting our goals.
-\item
-  \textbf{Requirements check:} The system simply has to meet its
-  requirements. A proper testing process helps us verify that we are
-  actually building the functional and non-functional requirements we
-  agreed upon, rather than wasting time on useless features.
-\item
-  \textbf{Legal/Process mandates:} We have to make sure we aren't
-  violating any data privacy rules, so we're testing the system's legal
-  and security boundaries. Every violation needs to be fixed before
-  deployment.
-\end{itemize}
-
-\subsection{Out of Scope}\label{out-of-scope}
-
-To keep our testing efforts focused on code our team actually wrote, the
-following areas are explicitly \textbf{out of scope} for this test plan:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Supabase Authentication Infrastructure:} We test our parsing
-  of JWTs, but we do not test the internal uptime, password hashing
-  algorithms, or email delivery systems of Supabase itself.
-\item
-  \textbf{R2 / Cloud Storage Provider Internals:} We mock storage
-  interactions or assume the bucket is available. The internal
-  durability and replication of Cloudflare R2 are not tested by us.
-\item
-  \textbf{GitHub Actions Engine:} We rely on GitHub Actions for our CI
-  pipeline, but we assume the underlying runner infrastructure is
-  stable.
-\end{itemize}
-
-\subsection{Dependencies}\label{dependencies}
-
-Our testing relies heavily on the following external and internal
-dependencies to function correctly:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Working Test Accounts:} We require pre-seeded, active test
-  accounts mapped to specific roles (\texttt{vendor},
-  \texttt{platform\_admin}) and tenants to perform access control
-  testing.
-\item
-  \textbf{CI Pipeline Uptime:} Automated tests require GitHub Actions to
-  remain online.
-\item
-  \textbf{External Services:} Supabase endpoints (for JWKS retrieval)
-  must stay reachable during integration test runs.
-\end{itemize}
-
-\subsection{Assumptions}\label{assumptions}
-
-We are taking the following conditions as given during this testing
-phase:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Stable Requirements:} The core functional requirements for ML
-  inference and tenant isolation are stable and won't undergo massive
-  refactors late in the cycle.
-\item
-  \textbf{Finalized RLS Policies:} The Postgres Row Level Security logic
-  implemented in our raw SQL migrations is considered structurally
-  finalized.
-\item
-  \textbf{Destructible Test Data:} Any data residing in the test
-  environment databases can be freely created, corrupted, and destroyed
-  by automated scripts without affecting stakeholders.
-\end{itemize}
-
-\subsection{Constraints}\label{constraints}
-
-The following limits impact the extent of our testing effort:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{No Dedicated QA Team:} Testing is performed entirely by the
-  development team (us).
-\item
-  \textbf{No Prod-Matching Environment:} Due to budget constraints, our
-  load testing environments (local Docker stacks) do not have the same
-  CPU/RAM specifications as a true production cloud cluster.
-\item
-  \textbf{Time-Boxed Schedule:} Comprehensive testing is strictly
-  time-boxed by our university project deadlines (M4, M5, M6).
-\end{itemize}
-
-\section{Target Test Items}\label{target-test-items}
-
-Rather than a simple list, we've broken down our target test items into
-a matrix that highlights the specific component and the main risk
-associated with it if testing fails.
-
-{\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Target Component
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Description
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Main Risk if untested/failed
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{User Interfaces (Mobile \& Web)} & The Next.js admin dashboard
-and React Native Expo scanning app. & The vendor cannot upload scans due
-to poor network logic, or the admin sees broken analytics charts. \\
-\textbf{Data Models \& Database (Postgres)} & The core relational schema
-and RLS policies (Postgres 16). & \textbf{Catastrophic cross-tenant data
-leakage.} A vendor sees another vendor's stock. \\
-\textbf{Functions (FastAPI \& ML Worker)} & The backend endpoints
-(\texttt{/api/v1/sales}) and the Celery ML tasks. & Race conditions lead
-to double stock deduction, or the ML model returns a false positive on
-rotten produce. \\
-\textbf{Event / Background Pipeline} & The Celery and Redis queuing
-system managing asynchronous jobs. & Tasks are dropped silently during a
-worker node crash, resulting in lost inventory scans. \\
-\textbf{Release / CI Pipeline} & The GitHub actions workflow itself that
-packages the builds. & A bad, failing build is accidentally shipped to
-the main branch or production. \\
-\end{longtable}
-}
-
-\section{Test Layering and Approach}\label{test-layering-and-approach}
-
-We utilize a layered approach to testing, ensuring that fast, cheap
-tests run frequently, while slower, expensive tests run at critical
-milestones.
-
-\subsection{Test Layering Table}\label{test-layering-table}
-
-{\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Test Layer
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Focus Area
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-CI Execution Timing
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Unit} & Individual functions, Pydantic schemas, UI utilities
-(e.g., chunked storage parser). & Every commit and PR. \\
-\textbf{Integration} & Database connections, FastAPI endpoint logic
-interacting with the database. & Every PR before merge. \\
-\textbf{API} & Contract testing (checking requests/responses against
-OpenAPI spec). & Every PR before merge. \\
-\textbf{Interface (UI)} & Component rendering and form state logic in
-React/React Native. & Every PR before merge. \\
-\textbf{Cross-device} & Mobile layout rendering on iOS vs Android
-(Expo). & Before major releases/milestones. \\
-\textbf{Non-functional} & Load testing, RLS isolation security checks,
-performance profiling. & RLS on every PR; Load testing before
-release. \\
-\textbf{Manual} & Camera access workflows, exploratory testing, UX
-evaluations. & Pre-deployment staging review. \\
-\end{longtable}
-}
-
-\subsection{Two-Dimensional Coverage
-Definition}\label{two-dimensional-coverage-definition}
+\subsection{1.1 Execution summary}\label{execution-summary}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -341,36 +140,103 @@ Definition}\label{two-dimensional-coverage-definition}
   >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
-Coverage Dimension
+Test group
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Definition
+Type
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Tracking Method
+Recorded outcome
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Caveat
+Evidence
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Requirement Coverage} & Ensuring every business rule (like
-idempotent deductions) is explicitly validated by a test case. &
-Generated directly from the pytest suites matching function names to
-requirements. & Cannot guarantee a requirement is implemented
-\emph{efficiently}. \\
-\textbf{Code Coverage} & The percentage of lines of code executed during
-the automated test suites. & Reported per-service via
-\texttt{pytest-cov} and Jest coverage tools. & \textbf{100\% coverage
-does not guarantee correctness;} it only proves the line was
-executed. \\
+API suite & Unit and API/component functional & \textbf{68 passed}; 1
+dependency warning & E07; detail E01--E02 \\
+ML suite & Unit and worker/data utility & \textbf{28 passed} & E08;
+detail E04 \\
+Web utilities & Frontend unit & \textbf{8 passed} & E05 \\
+Mobile utilities & Frontend unit & \textbf{9 passed} & E06 \\
+PostgreSQL security & Database integration/security & \textbf{2 SQL
+suites passed} & E03 \\
+Live service integration & HTTP, database and queue integration &
+\textbf{14 passed} in 2.49 s & E10 \\
+Playwright UI & Browser functional smoke & \textbf{8 passed} in 12.79 s
+& E20--E21; JUnit/log \\
+Static analysis & ESLint and TypeScript & \textbf{3 commands passed} &
+E09 \\
+k6 smoke / load & Local API performance & \textbf{PASS / PASS} &
+E11--E16 \\
+k6 spike & Local API performance & \textbf{FAIL: read and write p95} &
+E17--E19 \\
 \end{longtable}
 }
 
-\section{Testing Techniques and
-Types}\label{testing-techniques-and-types}
+There are \textbf{135 passing automated test cases} across the API, ML,
+web, mobile, integration and Playwright suites. SQL suites, static
+checks and k6 assertions are reported separately. The selected API-01,
+API-02 and ML-01 screenshots show subsets of the full suites and are not
+added again to the total.
 
-\subsubsection{Data and Database Integrity
-Testing}\label{data-and-database-integrity-testing}
+\textbf{Evaluation outcome:} the recorded functional cases pass. The
+short 25-user spike fails the proposed local latency criteria despite
+zero HTTP failures and correct stock balances. Performance acceptance is
+therefore incomplete. These results support the tested local scope; they
+do not establish production readiness or complete requirements coverage.
+
+\subsection{1.2 Revision and provenance}\label{revision-and-provenance}
+
+The terminal captures identify branch \texttt{test-plan-report} and base
+commit \texttt{2d9e4b1}. The later integration and performance
+executions include an \textbf{uncommitted sales concurrency fix} and
+newly added test files. The commit shown in their headers is a base
+revision, not a claim that the working tree was clean. Playwright was
+run separately during report completion against the same local checkout.
+All dates and screenshot filenames use Sri Lanka time (UTC+05:30),
+unless an artifact explicitly records UTC.
+
+\section{2. Scope, dependencies and
+environment}\label{scope-dependencies-and-environment}
+
+\subsection{2.1 Target items and risks}\label{target-items-and-risks}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Target
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tested behaviour
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Main risk addressed
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+FastAPI scans and sales & Validation, roles, asynchronous acceptance,
+sale replay and rollback & Invalid requests or duplicate stock
+deduction \\
+PostgreSQL & RLS, restricted login, tenant-scoped reads/writes,
+transaction integrity & Data leakage and inconsistent inventory \\
+Redis/Celery pipeline & Real scan delivery, worker completion and result
+persistence & Scans accepted but never completed \\
+ML decision utilities & Label mapping, confidence gates, dataset and
+batch utilities & Incorrect handling of uncertain predictions \\
+Web and mobile utilities & Claims, aggregate mapping and session storage
+& Incorrect role/tenant handling or corrupt sessions \\
+Next.js browser UI & Login controls, validation, redirects and narrow
+layout & Inaccessible or broken authentication flow \\
+Local API under load & Read/write latency, HTTP failures and post-run
+stock & Degradation during concurrent activity \\
+\end{longtable}
+}
+
+\subsection{2.2 Execution environment}\label{execution-environment}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -378,29 +244,222 @@ Testing}\label{data-and-database-integrity-testing}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
-Attribute
+Item
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Details
+Configuration used for this evidence
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Technique Objective:} & Our database creation is done using SQL
-migrations. We need to test this automatically by throwing incorrect
-data and unauthorized queries at it. \\
-\textbf{Technique:} & Invoke every entity using test scripts. Check that
-correct data is retrieved (e.g., Tenant A only sees Tenant A's data). \\
-\textbf{Oracles:} & Test access by injecting data through code, checking
-behavior, and asserting retrieved data isn't erroneous. \\
-\textbf{Required Tools:} & PostgreSQL 16, Pytest framework, custom SQL
-isolation scripts (\texttt{rls\_isolation.sql}). \\
-\textbf{Success Criteria:} & Every test is guaranteed to produce a
-reasonable outcome, proving RLS bounds are perfectly respected. \\
+Host & Linux development laptop; shared with other local applications \\
+Python / test runner & Python 3.12.3; pytest 8.4.1;
+\texttt{.venv-test-report} \\
+JavaScript & Node.js 22.23.2; \texttt{node:test} through \texttt{tsx} \\
+Live integration stack & One Uvicorn worker; PostgreSQL 16.14-alpine;
+Redis 7.4-alpine; Celery \\
+Authentication fixture & Temporary local RS256/JWKS issuer; normal
+application signature/claim verification \\
+Scan implementation & Local file storage; asynchronous Celery worker
+using \texttt{stub-v0} classification \\
+Performance & Grafana k6 2.3.0; isolated loopback HTTP target \\
+Browser UI & Playwright Python 1.63.0; headless Google Chrome
+153.0.8010.47; Next.js 16.2.12 dev server \\
+Browser viewports & Desktop 1440 × 900; narrow viewport 390 × 844 \\
 \end{longtable}
 }
 
-\subsubsection{Function Testing}\label{function-testing}
+\subsection{2.3 Dependencies, assumptions and
+exclusions}\label{dependencies-assumptions-and-exclusions}
+
+Tests use disposable local data and synthetic tenant identities. Live
+stack scripts require Docker and the Python dependencies; browser checks
+require the web app, configured public Supabase settings and Chrome. The
+browser checks use no authenticated account. Invalid form submissions
+are rejected before authentication, and no real password is entered.
+
+\section{3. Test layering and
+techniques}\label{test-layering-and-techniques}
+
+\subsection{3.1 Classification and
+execution}\label{classification-and-execution}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Layer
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Technique and tools
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Execution represented here
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Unit & Controlled inputs and assertions; pytest or
+\texttt{node:test}/\texttt{tsx} & API business logic, ML utilities,
+web/mobile utilities \\
+API/component & FastAPI TestClient with substituted database, storage or
+queue dependencies & Request/response and orchestration checks \\
+Database integration & Real PostgreSQL migrations, RLS and
+restricted-role SQL & Two security suites with
+\texttt{ON\_ERROR\_STOP=1} \\
+Service integration & Live HTTP plus real PostgreSQL, Redis and Celery &
+14 local cases; local issuer and stub classifier \\
+Browser UI & Playwright interacts with the real rendered Next.js app &
+Eight local browser smoke cases \\
+Performance & k6 virtual users and explicit pass/fail thresholds &
+Smoke, load and spike profiles \\
+Static analysis & ESLint and TypeScript compilation checks & Web lint;
+web and mobile typechecks \\
+\end{longtable}
+}
+
+The existing GitHub Actions workflow runs repository structure, API, ML,
+web, mobile and RLS jobs on pull requests and pushes to \texttt{main}.
+The new live integration, k6 and Playwright evidence was collected
+locally; this report does not claim that those suites already run in CI
+or that these artifacts were uploaded by CI.
+
+\subsection{3.2 Test design and success
+criteria}\label{test-design-and-success-criteria}
+
+Positive cases exercise valid requests and expected state changes.
+Negative cases exercise missing/malformed identity, unauthorized roles,
+invalid uploads, cross-tenant access, overselling and conflicting
+idempotency payloads. Boundary cases exercise confidence cutoffs and
+depleted stock. Concurrency cases overlap transactions against the real
+database. Browser cases assert visible state and navigation after user
+actions.
+
+Functional tests pass when every assertion succeeds and the command
+exits successfully. SQL execution stops on the first error. Performance
+profiles must satisfy \textbf{all} configured thresholds; passing
+HTTP-status checks alone is insufficient. Static analysis is supporting
+quality evidence, not a runtime functional test.
+
+\subsection{3.3 Coverage interpretation}\label{coverage-interpretation}
+
+Requirement traceability is provided by the cases and evidence
+references below. Test counts represent executed examples, not the
+percentage of requirements verified. No line/branch coverage instrument
+was enabled for these runs. Frontend utility tests cannot establish
+React rendering, and ML unit tests with controlled predictions cannot
+establish model accuracy.
+
+This submission does not measure trained YOLO accuracy, real inference
+latency, phone camera capture, offline behaviour, iOS/Android device
+compatibility, full authenticated dashboard journeys, accessibility
+conformance, hosted Supabase availability, R2 behaviour or disaster
+recovery. Storage in the live scan test is local disk. Short laptop runs
+are not production capacity or endurance benchmarks. No user acceptance
+study or code-coverage percentage is claimed.
+
+\section{4. Detailed functional test
+cases}\label{detailed-functional-test-cases}
+
+\subsection{4.1 API-01 --- Scan upload and
+orchestration}\label{api-01-scan-upload-and-orchestration}
+
+\textbf{Purpose:} validate scan inputs and asynchronous processing.
+\textbf{Setup:} FastAPI TestClient with controlled roles and substituted
+dependencies. \textbf{Procedure:} submit valid/invalid images and
+quantities; exercise retrieval, listing, publication failure and Redis
+keys. \textbf{Expected:} valid creation returns HTTP 202 without inline
+inference; invalid inputs and forbidden roles are rejected; enqueue
+failures mark the scan failed; keys carry a tenant namespace.
+\textbf{Result:} 10 passed (E01), included in the API total. Camera and
+cloud storage are excluded; INT-01 covers the live pipeline.
+
+\subsection{4.2 API-02 --- Sales integrity and
+idempotency}\label{api-02-sales-integrity-and-idempotency}
+
+\textbf{Purpose:} prevent overselling and duplicate deductions.
+\textbf{Setup:} controlled inventory and a fake database.
+\textbf{Procedure:} create valid/excessive sales, mismatch product and
+batch, omit the key, repeat identical payloads and reuse a key with
+changed data. \textbf{Expected:} valid sales deduct stock and emit
+applicable alerts; identical replay returns the existing sale without
+another deduction; changed payloads conflict; forbidden roles are
+rejected. \textbf{Result:} 9 passed (E02), included in the API total.
+The live contract returns HTTP 201 for original/identical replay and 409
+for changed-payload reuse. INT-01 verifies concurrency.
+
+\subsection{4.3 SEC-01 --- Tenant isolation and restricted runtime
+access}\label{sec-01-tenant-isolation-and-restricted-runtime-access}
+
+\textbf{Purpose:} prevent access outside the tenant context.
+\textbf{Setup:} disposable PostgreSQL 16, migrations, synthetic tenants
+and restricted login \texttt{freshlens\_api\_local}. \textbf{Procedure:}
+run \texttt{rls\_isolation.sql} and \texttt{runtime\_role.sql},
+including restricted login over TCP. \textbf{Expected:} tenant
+boundaries and auth-hook rules hold; runtime privileges exclude
+superuser and BYPASSRLS while permitting authorized operations.
+\textbf{Result:} both suites passed, exit 0 (E03). Coverage is limited
+to the exercised policies and operations.
+
+\subsection{4.4 ML-01 --- Identity and freshness confidence
+gates}\label{ml-01-identity-and-freshness-confidence-gates}
+
+\textbf{Purpose:} prevent uncertain classification results from being
+accepted. \textbf{Setup:} controlled fake model outputs in
+\texttt{test\_identity.py}. \textbf{Procedure:} map supported labels,
+reject unknown labels, accept identity 0.91 and freshness 0.84, reject
+identity 0.70 under the 0.75 cutoff, and reject freshness 0.49 under the
+0.50 cutoff. \textbf{Expected:} low identity confidence leaves
+identity/freshness labels absent and skips the freshness model; low
+freshness confidence raises the expected error. \textbf{Result:} 5
+passed (E04), included in the 28-case ML total. Actual image quality,
+checkpoints and model accuracy were not evaluated by these cases.
+
+\subsection{4.5 UI-01 --- Web mapping and claims unit
+tests}\label{ui-01-web-mapping-and-claims-unit-tests}
+
+\textbf{Purpose:} validate aggregate data transformations and trusted
+authentication claims. \textbf{Procedure:} construct admin API responses
+and claim objects, then assert percentages, snapshot mapping,
+role/tenant validation and treatment of user metadata.
+\textbf{Expected:} valid identities map correctly; malformed or
+incompatible role/tenant combinations are rejected; user metadata is
+presentation-only. \textbf{Result:} 8 passed using \texttt{node:test}
+through \texttt{tsx} (E05). The historical terminal label ``UI-01''
+refers to utility unit tests; it is not evidence that browser charts
+rendered. Playwright browser coverage is UI-02 in Section 7.
+
+\subsection{4.6 MOB-01 and supporting regression
+checks}\label{mob-01-and-supporting-regression-checks}
+
+Mobile tests exercise UTF-8 chunk-size limits, session round trips,
+atomic replacement/removal of storage chunks and vendor claim
+validation. \textbf{Result: 9 passed} (E06). The complete API and ML
+suites passed \textbf{68 and 28 cases}, respectively (E07--E08). Web
+lint, web typecheck and mobile typecheck all exited successfully (E09).
+The API suite reported one Starlette/AnyIO deprecation warning; it did
+not fail the suite.
+
+\section{5. INT-01 --- Live service
+integration}\label{int-01-live-service-integration}
+
+\subsection{5.1 Setup and method}\label{setup-and-method}
+
+\texttt{tests/system/test\_live\_api.py} exercises the running
+application over HTTP, with a real PostgreSQL database, Redis and Celery
+worker. Services bind locally and are discarded after the run. JWT
+verification uses the normal application implementation with a local
+RS256/JWKS fixture. The API and worker use the restricted database role.
+No FastAPI dependency overrides are used in this suite.
+
+The scan test sends a multipart upload, verifies queue/worker completion
+and persisted inventory, and checks that another tenant cannot retrieve
+the scan. The classifier is \texttt{stub-v0}; this establishes
+integration of the services while excluding trained-model behaviour.
+
+\subsection{5.2 Executed scenarios}\label{executed-scenarios}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -408,29 +467,267 @@ reasonable outcome, proving RLS bounds are perfectly respected. \\
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
-Attribute
+Area
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Details
+Assertions exercised
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Technique Objective:} & Exercise the target functionality,
-including data entry and processing, to log the behavior and check
-requirement fulfillment. \\
-\textbf{Technique:} & Execute each use-case scenario's individual flow
-using valid and invalid data via Pytest. Verify appropriate error
-messages and business rules. \\
-\textbf{Oracles:} & Create inputs, determine expected outputs based on
-OpenAPI specs, and assert the actual HTTP outcome. \\
-\textbf{Required Tools:} & Pytest framework, FastAPI TestClient. \\
-\textbf{Success Criteria:} & All tests execute properly without errors.
-201 Created and 409 Conflict logic works flawlessly. \\
+Authentication and roles & Missing, malformed and tampered token
+rejection; vendor/admin endpoint permissions \\
+Database boundary & Restricted connection privileges; tenant catalogue
+isolation over HTTP \\
+Sales and replay & Persistence, identical replay and changed-payload
+conflict without extra deduction \\
+Atomicity & Cross-tenant write rejection; multi-item oversell rolls back
+the complete sale \\
+Concurrency & Two sales cannot oversell the last item; concurrent
+identical requests return one sale for initial stock 1 and 10;
+conflicting payloads return 409 \\
+Key scope and alerts & The same key remains independent between tenants;
+low-stock alerts persist and can be read \\
+Scan workflow & Upload → local storage → Redis → Celery → database
+completion; tenant isolation \\
 \end{longtable}
 }
 
-\subsubsection{User Interface Testing}\label{user-interface-testing}
+\textbf{Result: 14 passed in 2.49 seconds, exit 0} (E10). The total
+includes two parameterized stock cases for concurrent identical retries.
+
+\subsection{5.3 Defect discovered and
+resolved}\label{defect-discovered-and-resolved}
+
+Concurrent identical sale requests initially reproduced a failure: one
+request returned HTTP 500 after a database uniqueness conflict left its
+transaction aborted. The sales service now takes a PostgreSQL
+transaction advisory lock scoped to tenant and idempotency key before
+checking for an existing sale and validating stock.
+
+The regression test deliberately overlaps the requests using a real
+database row lock, then verifies both responses identify the same sale
+and stock is deducted once. All 14 integration cases and the existing 68
+API cases passed after the change. The source fix remains local and
+uncommitted in this evidence revision.
+
+\section{6. Performance testing with Grafana
+k6}\label{performance-testing-with-grafana-k6}
+
+\subsection{6.1 Workload and acceptance
+criteria}\label{workload-and-acceptance-criteria}
+
+Each profile starts a new isolated local stack. Each of two tenants has
+one product, one batch containing 1,000,000 stock units, 20 completed
+scan records and five alerts. Every iteration reads products, batches,
+alerts and scans. Every fifth iteration creates a sale and immediately
+repeats it with the same idempotency key. Each virtual user pauses 250
+ms per iteration.
+
+Checks assert successful statuses, nonempty lists, tenant ownership and
+identical sale IDs on replay. A post-run database assertion verifies
+remaining inventory equals starting stock minus persisted sales. k6 uses
+sequential requests within each virtual user; VU count is not a fixed
+request-rate target. The one-VU smoke profile exercises tenant A's HTTP
+workload; tenant B remains a seeded control for its post-run stock
+check. The load and spike profiles exercise both tenants.
+
+The following \textbf{local acceptance criteria were chosen before
+execution}: read-request p95 below \textbf{500 ms}; sale/replay p95
+below \textbf{1,000 ms}; HTTP failure rate below \textbf{1\%}; and
+\textbf{100\%} functional checks passing. p95 is the 95th percentile of
+measured request duration. These criteria are test targets, not a
+contractual production SLA. k6 treats a failed threshold as a failed run
+{[}R4{]}.
+
+\subsection{6.2 Profiles and measured
+results}\label{profiles-and-measured-results}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+ID / profile
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Virtual-user schedule
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Configured duration
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+PERF-01 / smoke & 1 VU & 10 s \\
+PERF-02 / load & 10 s to 5 VUs; 10 s to 10; hold 30 s; ramp to 0 in 10 s
+& 60 s \\
+PERF-03 / spike & 10 s to 2; 2 s to 25; hold 15 s; 2 s to 2; hold 10 s;
+5 s to 0 & 44 s \\
+\end{longtable}
+}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Smoke
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Load
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Spike
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+HTTP requests & 84 & 1,754 & 1,032 \\
+Completed iterations & 19 & 397 & 227 \\
+Functional checks passed & 240 / 240 & 5,013 / 5,013 & 2,910 / 2,910 \\
+Read p95 (ms) & 77.50 & 308.80 & \textbf{668.52} \\
+Write/replay p95 (ms) & 110.91 & 499.62 & \textbf{1,192.94} \\
+HTTP failure rate & 0\% & 0\% & 0\% \\
+Post-run stock checks & Both tenants pass & Both tenants pass & Both
+tenants pass \\
+Process exit code & 0 & 0 & \textbf{99} \\
+Overall profile verdict & \textbf{PASS} & \textbf{PASS} & \textbf{FAIL
+--- latency} \\
+\end{longtable}
+}
+
+Values are rounded from the retained k6 JSON summaries. Terminal
+formatting truncates some displayed values, including load write p95 at
+499.61 ms. Evidence E11--E19 records setup, thresholds and completion
+for each run.
+
+\subsection{6.3 Interpretation and
+limitations}\label{interpretation-and-limitations}
+
+The spike exceeds the read p95 target by \textbf{168.52 ms} and write
+p95 target by \textbf{192.94 ms}. All functional assertions still pass
+and no HTTP requests fail, but the performance verdict remains
+\textbf{FAIL}. The observed throughput and latency describe this
+particular short local workload; they do not identify a production user
+limit or prove the cause of the degradation. Bottleneck profiling,
+optimization and another measured run remain follow-up work.
+
+The screenshots show an ``unknown field gracefulStop'' warning. k6
+ignored the attempted top-level setting and used its \textbf{default
+30-second graceful-stop period}, as printed in the scenario output. All
+iterations completed with zero interruptions. The warning is preserved
+in the evidence; the report records the effective configuration rather
+than the ignored setting.
+
+The API, database, load generator and other applications shared the
+laptop. There was one API worker and a small synthetic dataset. No CPU,
+memory or database-pool profiling was recorded. The k6 workload does not
+upload scan images, run real ML inference, measure browser rendering or
+establish soak/endurance behaviour. The aggregate spike summary also
+does not independently prove how quickly latency recovered after the
+peak.
+
+\section{7. UI-02 --- Browser testing with
+Playwright}\label{ui-02-browser-testing-with-playwright}
+
+\textbf{Playwright was used for UI testing} of the real Next.js
+administration sign-in interface. Python Playwright drove headless
+Chrome against the local development server; pytest recorded the
+assertions and JUnit results. Each case used a new browser context. No
+authenticated user or mocked API response was needed for this smoke
+scope.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Browser case
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Expected behaviour
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Result
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Login page and controls & Correct title/heading; labelled email/password
+controls; enabled submit; password masked & PASS \\
+Empty submission & Both field errors visible;
+\texttt{aria-invalid=true}; remains on login & PASS \\
+Malformed email & Email error appears before authentication; password is
+not marked invalid & PASS \\
+Password visibility & Show/hide changes input type and preserves the
+entered synthetic value & PASS \\
+Protected dashboard & Unauthenticated navigation redirects to login &
+PASS \\
+Session-expired route & Redirects to login with the session-expiry alert
+& PASS \\
+Narrow layout & At 390 × 844, submit remains reachable and inside
+viewport width; no horizontal overflow & PASS \\
+Access-denied navigation & Required-role heading renders; return link
+opens login & PASS \\
+\end{longtable}
+}
+
+\textbf{Recorded result: 8 passed in 12.79 seconds.} Test source:
+\texttt{tests/ui/test\_web\_ui.py}. Evidence E20 shows the desktop
+validation state after an empty submission; E21 shows the narrow layout.
+Screenshots are supplementary visual evidence; the result log and JUnit
+XML record the actual assertions.
+
+The browser was Chrome 153.0.8010.47, controlled by Playwright 1.63.0,
+at desktop 1440 × 900 and narrow 390 × 844 viewports. The run does not
+establish authenticated dashboard/chart behaviour, full accessibility
+compliance, cross-browser compatibility or native Expo device behaviour.
+The narrow viewport is not an iOS/Android device test. The entered
+example values are synthetic and contain no real credentials.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Playwright / pytest execution, 27 September 2026}
+\NormalTok{Collected: 8 browser cases}
+\NormalTok{Result:    8 passed in 12.79s}
+\NormalTok{JUnit:     docs/test{-}report{-}assets/playwright{-}results.xml}
+\NormalTok{Log:       docs/test{-}report{-}assets/playwright{-}results.log}
+\end{Highlighting}
+\end{Shaded}
+
+\section{8. Evidence, findings and
+reproducibility}\label{evidence-findings-and-reproducibility}
+
+\subsection{8.1 Evidence handling}\label{evidence-handling}
+
+The appendix contains \textbf{19 distinct user-captured terminal
+screenshots}, followed by two genuine Playwright browser screenshots.
+Repeated attachments have been included once. Original PNG content is
+preserved; images are only scaled to fit report pages. Each figure has
+an evidence ID, source filename, scope and result caption.
+\texttt{docs/test-report-assets/manifest.json} records SHA-256 hashes
+for all 21 images.
+
+Original terminal results are retained under
+\texttt{runs/test-evidence/terminal-20260927-185722/}. Integration/k6
+evidence is under \texttt{runs/test-evidence/terminal-20260927-212122/},
+with per-profile summaries, JUnit where applicable, compressed raw
+metric samples and command logs/exit codes. Samples are timing/status
+metrics, not a full HTTP header/body capture. Playwright artifacts are
+retained under \texttt{runs/test-evidence/playwright-ui/}; its log and
+JUnit are also copied beside the report assets. Temporary local tokens
+and database connection configuration are excluded from the submission
+bundle.
+
+\subsection{8.2 Findings and remaining
+work}\label{findings-and-remaining-work}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -438,30 +735,53 @@ OpenAPI specs, and assert the actual HTTP outcome. \\
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
-Attribute
+Finding
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Details
+Status and required follow-up
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Technique Objective:} & Observe rendering with minimum memory,
-high UX, platform independence, and smooth form submission workflows. \\
-\textbf{Technique:} & Check whether complex logic (like chunked storage
-uploads) works properly under throttled network settings. \\
-\textbf{Oracles:} & Automate testing for UI utilities
-(\texttt{claims.test.ts}), while relying on manual walkthroughs for
-complex gestures. \\
-\textbf{Required Tools:} & Jest for React testing, ESLint, browser dev
-tools. \\
-\textbf{Success Criteria:} & All routes resolve successfully, zero
-broken components, no memory leak warnings in console. \\
+Concurrent identical sales could return HTTP 500 & Fixed locally with a
+tenant/key advisory lock; integration and API regression tests pass \\
+Spike read and write p95 exceed local limits & Open performance finding;
+profile resource/connection contention, optimize and rerun \\
+k6 graceful-stop configuration warning & Recorded run used the default
+30 s; correct configuration placement before future runs \\
+Starlette/AnyIO deprecation warning & Non-failing dependency warning;
+review compatibility during dependency maintenance \\
+Coverage gaps & Authenticated browser flows, native mobile/device
+behaviour, trained-model evaluation and production-scale testing remain
+outside this evidence \\
 \end{longtable}
 }
 
-\subsubsection{Load and Performance
-Testing}\label{load-and-performance-testing}
+\subsection{8.3 Reproduction commands}\label{reproduction-commands}
+
+Run from the repository root after installing the API/ML requirements in
+the Python 3.12 test environment and installing web/mobile npm
+dependencies:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Original suites and SQL checks in screenshot{-}ready terminal tabs}
+\ExtensionTok{python3}\NormalTok{ scripts/test{-}evidence{-}terminal.py}
+\CommentTok{\# Live integration, k6 smoke, load and spike, sequentially}
+\ExtensionTok{python3}\NormalTok{ scripts/test{-}evidence{-}terminal.py }\AttributeTok{{-}{-}system}
+\CommentTok{\# Browser tests: start the local Next.js app in another terminal}
+\ExtensionTok{npm} \AttributeTok{{-}{-}prefix}\NormalTok{ apps/web run dev }\AttributeTok{{-}{-}} \AttributeTok{{-}{-}hostname}\NormalTok{ 127.0.0.1 }\AttributeTok{{-}{-}port}\NormalTok{ 3107}
+\ExtensionTok{.venv{-}test{-}report/bin/python} \AttributeTok{{-}m}\NormalTok{ pytest tests/ui/test\_web\_ui.py }\AttributeTok{{-}v} \DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}junitxml}\OperatorTok{=}\NormalTok{runs/test{-}evidence/playwright{-}ui/results.xml}
+\CommentTok{\# Rebuild this report from Markdown and the evidence manifest}
+\ExtensionTok{.venv{-}test{-}report/bin/python}\NormalTok{ scripts/build{-}test{-}report.py}
+\end{Highlighting}
+\end{Shaded}
+
+\section{9. Implemented inventory and
+references}\label{implemented-inventory-and-references}
+
+\subsection{9.1 Test inventory}\label{test-inventory}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -469,414 +789,365 @@ Testing}\label{load-and-performance-testing}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
-Attribute
+Location
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Details
+Files / scope
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Technique Objective:} & Exercise transactions under normal,
-worst-case, and concurrent user workloads to observe system performance
-degradation. \\
-\textbf{Technique:} & Run loops in test scripts to simultaneously hit
-the API, increasing transaction volume to simulate spiky traffic. \\
-\textbf{Oracles:} & Code must be automated to apply the load, monitoring
-CPU and database connection pool saturation. \\
-\textbf{Required Tools:} & Custom async Python scripts and Pytest
-concurrency fixtures. \\
-\textbf{Success Criteria:} & The system gracefully degrades or queues
-requests rather than dropping them or returning 500 errors. \\
+\texttt{apps/api/tests/} & \texttt{test\_admin.py},
+\texttt{test\_auth.py}, \texttt{test\_authorization.py},
+\texttt{test\_config.py}, \texttt{test\_health.py},
+\texttt{test\_sales.py}, \texttt{test\_scans.py},
+\texttt{test\_storage.py}, \texttt{test\_tenant\_context.py} \\
+\texttt{packages/ml/tests/} & \texttt{test\_dataset\_snapstock.py},
+\texttt{test\_evaluate\_freshness.py}, \texttt{test\_identity.py},
+\texttt{test\_imagenet\_produce.py}, \texttt{test\_inventory\_batch.py},
+\texttt{test\_prepare\_freshness\_dataset.py},
+\texttt{test\_prepare\_identity\_dataset.py},
+\texttt{test\_stub\_classifier.py} \\
+Web unit tests & \texttt{src/lib/auth/claims.test.ts},
+\texttt{src/lib/api/admin-map.test.ts} under \texttt{apps/web/} \\
+Mobile unit tests & \texttt{src/lib/auth/claims.test.ts},
+\texttt{src/lib/auth/chunked-storage.test.ts} under
+\texttt{apps/mobile/} \\
+\texttt{infra/db/tests/} & \texttt{rls\_isolation.sql},
+\texttt{runtime\_role.sql} \\
+\texttt{tests/system/} & \texttt{test\_live\_api.py},
+\texttt{conftest.py}, \texttt{local\_stack.py} \\
+\texttt{tests/performance/} & \texttt{api.k6.js} --- all three
+performance profiles \\
+\texttt{tests/ui/} & \texttt{test\_web\_ui.py} --- eight Playwright
+browser cases \\
 \end{longtable}
 }
 
-\subsubsection{Security and Access Control
-Testing}\label{security-and-access-control-testing}
+\subsection{9.2 References}\label{references}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{R1.} FreshLens API contract:
+  \texttt{docs/api/v1/openapi.yaml}.
+\item
+  \textbf{R2.} FreshLens architecture and authentication:
+  \texttt{docs/design/FreshLens-SAD.md} and
+  \texttt{docs/authentication.md}.
+\item
+  \textbf{R3.} Local execution records: original terminal run
+  \texttt{terminal-20260927-185722}; integration/k6 run
+  \texttt{terminal-20260927-212122}; Playwright \texttt{results.xml} and
+  \texttt{results.log}. These records support the measured outcomes in
+  this report.
+\item
+  \textbf{R4.} Grafana,
+  \href{https://grafana.com/docs/k6/latest/using-k6/thresholds/}{k6
+  thresholds}. Defines threshold-based performance verdicts; accessed 27
+  September 2026.
+\item
+  \textbf{R5.} Microsoft,
+  \href{https://playwright.dev/python/docs/intro}{Playwright for
+  Python}. Browser automation and Python testing documentation; accessed
+  27 September 2026.
+\end{itemize}
+
+\section{Appendix A. Screenshot
+evidence}\label{appendix-a.-screenshot-evidence}
+
+Figures E01--E19 are the supplied terminal captures in test order.
+Figures E20--E21 are the additional Playwright browser captures. The
+appendix uses full-size landscape pages for terminal readability and a
+portrait page for the narrow browser capture. Figure captions describe
+the scope and do not change the recorded results.
 
 {\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\begin{longtable}[]{@{}ll@{}}
 \toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Attribute
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Details
-\end{minipage} \\
+Figure & Test / evidence \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Technique Objective:} & Ensure an actor can access only
-functions they have permissions for, and unauthenticated users are
-entirely blocked. \\
-\textbf{Technique:} & Create tests for each user type (\texttt{vendor},
-\texttt{platform\_admin}). Verify forbidden messages when attempting
-unauthorized access. \\
-\textbf{Oracles:} & Fully automated testing using Pytest to assert HTTP
-401 Unauthorized and 403 Forbidden response codes. \\
-\textbf{Required Tools:} & Pytest, PyJWT for generating mock tokens. \\
-\textbf{Success Criteria:} & System rigidly enforces privileges; access
-denied messages are given strictly and correctly. \\
+E01 & API-01: scan request and orchestration tests \\
+E02 & API-02: sales business rules \\
+E03 & SEC-01: PostgreSQL isolation and restricted role \\
+E04 & ML-01: identity and freshness confidence gates \\
+E05 & UI-01: web utility unit tests \\
+E06 & MOB-01: mobile authentication and session storage \\
+E07 & Complete API regression suite \\
+E08 & Complete ML utility and worker-logic suite \\
+E09 & Static analysis: lint and TypeScript \\
+E10 & INT-01: live service integration \\
+E11 & PERF-01: k6 smoke configuration \\
+E12 & PERF-01: smoke thresholds and checks \\
+E13 & PERF-01: smoke metrics and completion \\
+E14 & PERF-02: k6 load configuration \\
+E15 & PERF-02: load thresholds and checks \\
+E16 & PERF-02: load metrics and completion \\
+E17 & PERF-03: k6 spike configuration \\
+E18 & PERF-03: spike latency threshold failures \\
+E19 & PERF-03: spike metrics and failed completion \\
+E20 & UI-02: Playwright desktop form validation \\
+E21 & UI-02: Playwright mobile-width layout \\
 \end{longtable}
 }
 
-\section{Evidence, Reporting, and
-Deliverables}\label{evidence-reporting-and-deliverables}
+\clearpage
+\begin{landscape}
+\subsection*{E01 --- API-01: scan request and orchestration tests}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E01-api-scans.png}
+\end{center}
+10 passed; multipart input validation, asynchronous acceptance and
+tenant-namespaced publishing. Component tests use substituted
+dependencies.
 
-We have established strict mechanics for how test evidence is captured
-and retained to ensure maximum transparency.
+{\small Source: Screenshot from 2026-09-27 18-58-00.png}
+\end{landscape}
 
-\subsection{Evidence Retention
-Mechanics}\label{evidence-retention-mechanics}
+\clearpage
+\begin{landscape}
+\subsection*{E02 --- API-02: sales business rules}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E02-api-sales.png}
+\end{center}
+9 passed; stock rules and sequential idempotency checks with a fake
+database. Live concurrency is covered separately by INT-01.
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Machine-Readable Result Files:} All test runs produce XML/JSON
-  output files (like JUnit XML) that are archived as artifacts in GitHub
-  Actions for historic trend analysis.
-\item
-  \textbf{Raw Request Logs:} During load testing, we do not simply
-  retain the ``summary'' report. Raw HTTP request logs (including
-  latency and status codes) are retained in storage to allow for
-  deep-dive debugging of latency spikes.
-\item
-  \textbf{UI Test Failures:} (Future implementation) If a UI test fails,
-  the CI pipeline will capture a screenshot/video of the headless
-  browser state to immediately highlight the visual error.
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 18-58-05.png}
+\end{landscape}
 
-\subsection{Explicit Rules on
-Credentials}\label{explicit-rules-on-credentials}
+\clearpage
+\begin{landscape}
+\subsection*{E03 --- SEC-01: PostgreSQL isolation and restricted role}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E03-database-security.png}
+\end{center}
+Both SQL suites passed with ON\_ERROR\_STOP=1; the final command exit
+code is 0.
 
-\textbf{Strict Rule:} No production or staging credentials, API keys, or
-raw passwords will ever be committed to the repository for testing
-purposes.
+{\small Source: Screenshot from 2026-09-27 18-58-10.png}
+\end{landscape}
 
-\begin{itemize}
-\tightlist
-\item
-  All test suites must rely on mock generation, factory fakes, or rely
-  on \texttt{.env.test} templates with blank fields. Real secrets are
-  injected only at runtime by the CI/CD secure vault.
-\end{itemize}
+\clearpage
+\begin{landscape}
+\subsection*{E04 --- ML-01: identity and freshness confidence gates}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E04-ml-confidence.png}
+\end{center}
+5 passed using controlled model predictions. This verifies decision
+logic, not trained-model accuracy.
 
-\subsection{Calling Out Weakest Areas}\label{calling-out-weakest-areas}
+{\small Source: Screenshot from 2026-09-27 18-58-13.png}
+\end{landscape}
 
-Rather than hiding behind a blended coverage percentage (e.g., ``The
-project has 85\% coverage''), our test evaluation reports explicitly
-name the ``weakest areas'' that lack coverage. This ensures we are
-always aware of technical debt (for instance, calling out that mobile
-offline caching currently lacks automated coverage).
+\clearpage
+\begin{landscape}
+\subsection*{E05 --- UI-01: web utility unit tests}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E05-web-unit.png}
+\end{center}
+8 passed using node:test through tsx. These tests cover mappings and
+authentication claims; browser UI testing is recorded as UI-02.
 
-\subsection{Test Evaluation Summaries}\label{test-evaluation-summaries}
+{\small Source: Screenshot from 2026-09-27 18-58-20.png}
+\end{landscape}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Test Logs:} These are the detailed logs that give the outcome
-  of every test written for the functionalities. If even a single test
-  log gives an output as a failure in our GitHub Actions, that
-  functionality is recorrected and all tests are run again.
-\item
-  \textbf{Code Inspection Tool:} Code inspection details are gotten
-  after running ESLint and TypeScript checkers in the IDE. This notifies
-  us about spelling mistakes, empty tags, and unused items.
-\item
-  \textbf{Database Performance Statistics:} This is a very good method
-  to check database performance. It checks memory usage and size.
-\end{itemize}
+\clearpage
+\begin{landscape}
+\subsection*{E06 --- MOB-01: mobile authentication and session storage}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E06-mobile-unit.png}
+\end{center}
+9 passed; signed-claim validation and chunked storage logic. This is not
+phone-device UI automation.
 
-\section{Detailed Test Cases}\label{detailed-test-cases}
+{\small Source: Screenshot from 2026-09-27 18-58-27.png}
+\end{landscape}
 
-To provide a much more thorough explanation of our testing workflow, we
-have detailed our most critical test cases below. Rather than a brief
-overview, these describe exactly why and how we test each functional
-component of the FreshLens system to ensure it holds up to real-world
-vendor usage.
+\clearpage
+\begin{landscape}
+\subsection*{E07 --- Complete API regression suite}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E07-api-suite.png}
+\end{center}
+68 passed, with one third-party Starlette/AnyIO deprecation warning;
+exit code 0. API-01 and API-02 are subsets of this total.
 
-\subsection{Backend API Test Case: Scan Upload Workflow
-(API-01)}\label{backend-api-test-case-scan-upload-workflow-api-01}
+{\small Source: Screenshot from 2026-09-27 18-58-30.png}
+\end{landscape}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Motivation:} Vendors operating in grocery stores often have
-  terrible Wi-Fi or cellular connections. If they upload a large image
-  of produce, it cannot time out and crash the application.
-\item
-  \textbf{Pre-conditions:} The mobile app is authenticated with a valid
-  \texttt{vendor} JWT token. The server is online and connected to the
-  Redis broker.
-\item
-  \textbf{Execution Steps:}
+\clearpage
+\begin{landscape}
+\subsection*{E08 --- Complete ML utility and worker-logic suite}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E08-ml-suite.png}
+\end{center}
+28 passed; dataset preparation, confidence logic and inventory/stub
+utilities. ML-01 is a subset of this total.
 
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    The vendor opens the camera within the Expo app.
-  \item
-    The vendor takes a high-resolution photo of a banana.
-  \item
-    The photo is chunked locally and transmitted via HTTP POST to
-    \texttt{/api/v1/scans}.
-  \end{enumerate}
-\item
-  \textbf{Expected System Behavior:} The FastAPI backend should
-  immediately capture the image byte chunks, save them to the R2 bucket,
-  and spawn an asynchronous Celery task. Critically, it must immediately
-  return a \texttt{202\ Accepted} status code to the mobile app so the
-  vendor isn't left waiting for the ML inference to finish.
-\item
-  \textbf{Status:} \textbf{PASS.} Verified via \texttt{test\_scans.py}.
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 18-58-33.png}
+\end{landscape}
 
-\subsection{Backend API Test Case: Sales Idempotency
-(API-02)}\label{backend-api-test-case-sales-idempotency-api-02}
+\clearpage
+\begin{landscape}
+\subsection*{E09 --- Static analysis: lint and TypeScript}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E09-static-checks.png}
+\end{center}
+Web ESLint, web typecheck and mobile typecheck completed successfully;
+exit code 0. These are static checks rather than runtime tests.
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Motivation:} If a vendor hits the ``Submit Sale'' button twice
-  by accident, or if the network stutters and resends the request, we
-  absolutely cannot deduct stock twice. This would ruin the vendor's
-  inventory records.
-\item
-  \textbf{Pre-conditions:} The database has an existing inventory batch
-  of tomatoes with a quantity greater than zero.
-\item
-  \textbf{Execution Steps:}
+{\small Source: Screenshot from 2026-09-27 18-58-38.png}
+\end{landscape}
 
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    A script generates a unique \texttt{Idempotency-Key} header.
-  \item
-    The script fires two completely identical POST requests
-    simultaneously to \texttt{/api/v1/sales}.
-  \end{enumerate}
-\item
-  \textbf{Expected System Behavior:} The backend must rely on a database
-  transaction lock or caching layer. The very first request processed
-  should succeed and return \texttt{201\ Created}, deducting the stock
-  exactly once. The second concurrent request should hit the idempotency
-  lock and gracefully return a \texttt{409\ Conflict}, without modifying
-  the database.
-\item
-  \textbf{Status:} \textbf{PASS.} Verified via \texttt{test\_sales.py}.
-\end{itemize}
+\clearpage
+\begin{landscape}
+\subsection*{E10 --- INT-01: live service integration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E10-integration.png}
+\end{center}
+14 passed in 2.49 seconds. Real HTTP, PostgreSQL, Redis and Celery;
+local JWKS issuer and stub-v0 classifier. Includes the sales concurrency
+fix.
 
-\subsection{Database Security Test Case: Tenant Boundary Isolation
-(SEC-01)}\label{database-security-test-case-tenant-boundary-isolation-sec-01}
+{\small Source: Screenshot from 2026-09-27 21-35-40.png}
+\end{landscape}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Motivation:} Since this is a multi-tenant SaaS application,
-  multiple different grocery retailers are sharing the same database
-  tables. If Tenant A can somehow view or edit Tenant B's sales data,
-  the entire platform's security is compromised.
-\item
-  \textbf{Pre-conditions:} The Postgres 16 database is seeded with data
-  for both ``Tenant A'' and ``Tenant B''. Row Level Security (RLS) is
-  active.
-\item
-  \textbf{Execution Steps:}
+\clearpage
+\begin{landscape}
+\subsection*{E11 --- PERF-01: k6 smoke configuration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E11-smoke-setup.png}
+\end{center}
+1 virtual user for 10 seconds; local fixtures and thresholds shown. The
+gracefulStop warning caused the default 30-second grace period to apply.
 
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    An automated SQL script logs into the database using the restricted
-    \texttt{freshlens\_api\_runtime} role.
-  \item
-    The script sets the local transaction context to Tenant A.
-  \item
-    The script attempts to run
-    \texttt{SELECT\ *\ FROM\ scans\ WHERE\ tenant\_id\ =\ \textquotesingle{}Tenant\_B\_ID\textquotesingle{}}.
-  \end{enumerate}
-\item
-  \textbf{Expected System Behavior:} Instead of crashing, the Postgres
-  RLS engine silently filters out the unauthorized rows, returning an
-  empty list (0 rows) to Tenant A. The application backend is entirely
-  shielded from accidentally leaking data.
-\item
-  \textbf{Status:} \textbf{PASS.} Verified via
-  \texttt{infra/db/tests/rls\_isolation.sql}.
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 21-35-52.png}
+\end{landscape}
 
-\subsection{ML Pipeline Test Case: Identity Confidence Threshold
-(ML-01)}\label{ml-pipeline-test-case-identity-confidence-threshold-ml-01}
+\clearpage
+\begin{landscape}
+\subsection*{E12 --- PERF-01: smoke thresholds and checks}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E12-smoke-thresholds.png}
+\end{center}
+All four thresholds passed; 240 of 240 functional checks passed.
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Motivation:} The YOLO object detection model is incredibly
-  fast but can sometimes be overconfident when analyzing blurry images
-  or items it has never seen before. We cannot let it misclassify a
-  blurry eggplant as a cucumber and ruin inventory counts.
-\item
-  \textbf{Pre-conditions:} The \texttt{YOLO26n-cls} model is loaded into
-  the Celery worker memory.
-\item
-  \textbf{Execution Steps:}
+{\small Source: Screenshot from 2026-09-27 21-35-57.png}
+\end{landscape}
 
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    A known ambiguous or blurry image is passed directly to the
-    inference pipeline via the testing framework.
-  \end{enumerate}
-\item
-  \textbf{Expected System Behavior:} The model evaluates the image. Even
-  if its top prediction is ``cucumber'', it must check the confidence
-  score. Because the confidence score is strictly enforced to be
-  \texttt{\textgreater{}=\ 0.75} for identity, the script must intercept
-  a lower score (e.g., 0.60) and override the prediction, safely
-  returning an \texttt{unknown} label instead of logging a false
-  positive.
-\item
-  \textbf{Status:} \textbf{PASS.} Verified via
-  \texttt{test\_identity.py}.
-\end{itemize}
+\clearpage
+\begin{landscape}
+\subsection*{E13 --- PERF-01: smoke metrics and completion}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E13-smoke-results.png}
+\end{center}
+84 HTTP requests; read p95 77.50 ms, write p95 110.91 ms; 0\% HTTP
+failures; both stock checks passed; exit 0.
 
-\subsection{UI Test Case: Admin Dashboard Analytics Rendering
-(UI-01)}\label{ui-test-case-admin-dashboard-analytics-rendering-ui-01}
+{\small Source: Screenshot from 2026-09-27 21-36-02.png}
+\end{landscape}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Motivation:} The platform administrator needs to view
-  aggregate data. If the TypeScript data mapping logic fails when
-  receiving an unexpected payload from the API, the entire React screen
-  will crash (White Screen of Death).
-\item
-  \textbf{Pre-conditions:} The user is logged in via Supabase with the
-  \texttt{app\_role} explicitly set to \texttt{platform\_admin}.
-\item
-  \textbf{Execution Steps:}
+\clearpage
+\begin{landscape}
+\subsection*{E14 --- PERF-02: k6 load configuration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E14-load-setup.png}
+\end{center}
+Gradual ramp to 10 virtual users over a 60-second profile; same
+populated fixtures and thresholds as smoke and spike.
 
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    The admin navigates to the core analytics dashboard URL.
-  \item
-    The page fires a fetch request for aggregate mapping data.
-  \end{enumerate}
-\item
-  \textbf{Expected System Behavior:} The Next.js frontend utilizes
-  \texttt{admin-map.test.ts} logic to parse the arrays. It should map
-  the data without throwing any TypeScript \texttt{undefined} errors and
-  cleanly render the visualization chart, displaying aggregated
-  cross-tenant metrics flawlessly.
-\item
-  \textbf{Status:} \textbf{PASS.} Verified via Jest UI suites.
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 21-38-33.png}
+\end{landscape}
 
-\section{Appendix: Implemented Test
-Inventory}\label{appendix-implemented-test-inventory}
+\clearpage
+\begin{landscape}
+\subsection*{E15 --- PERF-02: load thresholds and checks}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E15-load-thresholds.png}
+\end{center}
+All four thresholds passed; 5,013 of 5,013 functional checks passed.
 
-Here is the exhaustive inventory of all test suites currently
-implemented in our project. We wrote these to make sure our system is as
-robust as possible.
+{\small Source: Screenshot from 2026-09-27 21-38-39.png}
+\end{landscape}
 
-\subsection{\texorpdfstring{Backend API Tests
-(\texttt{apps/api/tests/})}{Backend API Tests (apps/api/tests/)}}\label{backend-api-tests-appsapitests}
+\clearpage
+\begin{landscape}
+\subsection*{E16 --- PERF-02: load metrics and completion}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E16-load-results.png}
+\end{center}
+1,754 HTTP requests; read p95 308.80 ms, write p95 499.62 ms (rounded
+from JSON); 0\% HTTP failures; stock checks passed; exit 0.
 
-\begin{itemize}
-\tightlist
-\item
-  \texttt{test\_admin.py}
-\item
-  \texttt{test\_scans.py}
-\item
-  \texttt{test\_auth.py}
-\item
-  \texttt{test\_storage.py}
-\item
-  \texttt{test\_authorization.py}
-\item
-  \texttt{test\_config.py}
-\item
-  \texttt{test\_health.py}
-\item
-  \texttt{test\_sales.py}
-\item
-  \texttt{test\_tenant\_context.py}
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 21-38-41.png}
+\end{landscape}
 
-\subsection{\texorpdfstring{Machine Learning Worker Tests
-(\texttt{packages/ml/tests/})}{Machine Learning Worker Tests (packages/ml/tests/)}}\label{machine-learning-worker-tests-packagesmltests}
+\clearpage
+\begin{landscape}
+\subsection*{E17 --- PERF-03: k6 spike configuration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E17-spike-setup.png}
+\end{center}
+Short spike to 25 virtual users over a 44-second profile; setup, actual
+grace period and acceptance thresholds shown.
 
-\begin{itemize}
-\tightlist
-\item
-  \texttt{test\_prepare\_identity\_dataset.py}
-\item
-  \texttt{test\_stub\_classifier.py}
-\item
-  \texttt{test\_evaluate\_freshness.py}
-\item
-  \texttt{test\_inventory\_batch.py}
-\item
-  \texttt{test\_imagenet\_produce.py}
-\item
-  \texttt{test\_prepare\_freshness\_dataset.py}
-\item
-  \texttt{test\_identity.py}
-\item
-  \texttt{test\_dataset\_snapstock.py}
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 21-38-46.png}
+\end{landscape}
 
-\subsection{\texorpdfstring{Frontend \& Mobile Logic Tests
-(\texttt{apps/web/} \&
-\texttt{apps/mobile/})}{Frontend \& Mobile Logic Tests (apps/web/ \& apps/mobile/)}}\label{frontend-mobile-logic-tests-appsweb-appsmobile}
+\clearpage
+\begin{landscape}
+\subsection*{E18 --- PERF-03: spike latency threshold failures}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E18-spike-thresholds.png}
+\end{center}
+Read p95 668.52 ms exceeds 500 ms; write p95 1,192.94 ms exceeds 1,000
+ms. All 2,910 functional checks passed, but the performance verdict is
+FAIL.
 
-\begin{itemize}
-\tightlist
-\item
-  \texttt{claims.test.ts} (Web)
-\item
-  \texttt{admin-map.test.ts} (Web)
-\item
-  \texttt{claims.test.ts} (Mobile)
-\item
-  \texttt{chunked-storage.test.ts} (Mobile)
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 21-38-50.png}
+\end{landscape}
 
-\subsection{\texorpdfstring{Database Security Tests
-(\texttt{infra/db/tests/})}{Database Security Tests (infra/db/tests/)}}\label{database-security-tests-infradbtests}
+\clearpage
+\begin{landscape}
+\subsection*{E19 --- PERF-03: spike metrics and failed completion}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E19-spike-results.png}
+\end{center}
+1,032 HTTP requests; 0\% HTTP failures; stock checks passed for both
+tenants. Exit code 99 records the two failed latency thresholds.
 
-\begin{itemize}
-\tightlist
-\item
-  \texttt{rls\_isolation.sql}
-\item
-  \texttt{runtime\_role.sql}
-\end{itemize}
+{\small Source: Screenshot from 2026-09-27 21-38-53.png}
+\end{landscape}
 
-\newpage\section{References}\label{references}
+\clearpage
+\begin{landscape}
+\subsection*{E20 --- UI-02: Playwright desktop form validation}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E20-playwright.png}
+\end{center}
+Actual Next.js sign-in page after Playwright submitted an empty form.
+Both validation messages and invalid-field states were asserted at 1440
+x 900.
 
-\begin{itemize}
-\tightlist
-\item
-  FreshLens System Architecture Document
-  (\texttt{docs/design/FreshLens-SAD.md})
-\item
-  FreshLens API Contract (\texttt{docs/api/v1/openapi.yaml})
-\item
-  Pytest Testing Framework available at https://docs.pytest.org/
-\item
-  Jest Testing Framework available at https://jestjs.io/
-\item
-  Supabase Authentication Architecture available at
-  https://supabase.com/docs/guides/auth
-\end{itemize}
+{\small Source: test\_empty\_submission\_shows\_field\_errors.png}
+\end{landscape}
+
+\clearpage
+\subsection*{E21 --- UI-02: Playwright mobile-width layout}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{test-report-assets/E21-playwright.png}
+\end{center}
+
+Actual browser capture at a 390 x 844 viewport (full page). Playwright
+verified the submit control was visible and inside the viewport width,
+with no horizontal overflow. This is browser viewport testing, not
+native mobile testing.
+
+\{\small Source:
+test\_mobile\_width\_login\_has\_no\_horizontal\_overflow.png\}
 
 \end{document}

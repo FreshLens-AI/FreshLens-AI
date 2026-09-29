@@ -34,6 +34,14 @@ class SalesService:
         idempotency_key: str,
         request: CreateSaleRequest,
     ) -> Sale:
+        # Serialize retries before reading stock or the existing sale. A unique
+        # violation aborts a PostgreSQL transaction, so querying after catching
+        # that exception cannot safely recover a concurrent request. Scope the
+        # transaction lock to the tenant and key; release it at commit/rollback.
+        await self.connection.execute(
+            "select pg_advisory_xact_lock(hashtextextended($1, 0))",
+            f"{tenant_id}:{idempotency_key}",
+        )
         existing = await self._load_by_idempotency_key(idempotency_key)
         if existing is not None:
             if self._payload_matches(existing, request):
