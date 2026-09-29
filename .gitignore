@@ -26,9 +26,6 @@ dist/
 *.tsbuildinfo
 
 # ML
-*.pt
-*.pth
-*.onnx
 runs/
 wandb/
 
