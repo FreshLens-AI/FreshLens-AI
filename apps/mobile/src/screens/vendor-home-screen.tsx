@@ -93,7 +93,7 @@ export function VendorHomeScreen({ navigation }: Props) {
               <View style={styles.onlineDot} />
               <Text style={styles.onlineText}>Connected</Text>
             </View>
-            <Text style={styles.tenantPill}>Example Grocer</Text>
+
           </View>
           <Text style={styles.heroTitle}>Produce Dashboard</Text>
           <Text style={styles.heroCopy}>
