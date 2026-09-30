@@ -104,7 +104,10 @@ def _ensure_inventory_batch(
     return product_id, batch["id"] if batch is not None else None
 
 
-def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None:
+def complete(
+    tenant_id: str, scan_id: str, result: ClassificationResult
+) -> str | None:
+    """Persist a completed scan; return the id of a newly raised spoilage alert."""
     with _connect() as connection:
         _with_vendor_tenant(connection, tenant_id)
         product_id, batch_id = _ensure_inventory_batch(connection, scan_id, result)
@@ -146,7 +149,7 @@ def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None
                 f"{product} batch was classified as spoiled "
                 f"({confidence} confidence)."
             )
-            connection.execute(
+            alert = connection.execute(
                 """
                 insert into public.alerts (
                   tenant_id, type, severity, message, product_id, batch_id
@@ -159,9 +162,42 @@ def complete(tenant_id: str, scan_id: str, result: ClassificationResult) -> None
                   where type = 'spoilage'
                     and batch_id = %s
                 )
+                returning id
                 """,
                 (tenant_id, message, product_id, batch_id, batch_id),
-            )
+            ).fetchone()
+            if alert is not None:
+                return str(alert["id"])
+    return None
+
+
+def active_push_tokens(tenant_id: str) -> list[str]:
+    with _connect() as connection:
+        _with_vendor_tenant(connection, tenant_id)
+        rows = connection.execute(
+            """
+            select token
+            from public.device_tokens
+            where active
+            order by updated_at desc
+            """
+        ).fetchall()
+    return [row["token"] for row in rows]
+
+
+def deactivate_push_tokens(tenant_id: str, tokens: list[str]) -> None:
+    if not tokens:
+        return
+    with _connect() as connection:
+        _with_vendor_tenant(connection, tenant_id)
+        connection.execute(
+            """
+            update public.device_tokens
+            set active = false, updated_at = now()
+            where token = any(%s)
+            """,
+            (tokens,),
+        )
 
 
 def read_image(image_path: str) -> bytes:
