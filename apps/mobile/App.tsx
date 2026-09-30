@@ -3,8 +3,11 @@ import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-n
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from './src/auth/auth-provider';
+import { configureNotificationHandler } from './src/lib/push/register';
 import { VendorNavigator } from './src/navigation/vendor-navigator';
 import { VendorLoginScreen } from './src/screens/vendor-login-screen';
+
+configureNotificationHandler();
 
 export default function App() {
   return (

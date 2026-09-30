@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "FreshLens",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -33,6 +33,21 @@
         "expo-camera",
         {
           "cameraPermission": "FreshLens needs camera access to scan produce freshness."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0d3427",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ]
     ],

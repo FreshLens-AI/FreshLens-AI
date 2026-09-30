@@ -32,6 +32,29 @@ development machine's LAN address. See
 [`../../docs/authentication.md`](../../docs/authentication.md) for project and
 account provisioning.
 
+## Push notifications and EAS builds
+
+After sign-in, the app registers its Expo push token with `POST /api/v1/devices`. The worker then pushes, through Expo Push and FCM, when a scan completes or fails and when a spoilage alert is raised. Tapping a push opens History or Alerts, and the screen then refetches from the API. Remote push does not work in Expo Go, so use an EAS or dev build.
+
+- EAS project: `1397c863-…` (`extra.eas.projectId` in `app.json`). Android package: `com.sathurshnau.mobile`.
+- Firebase project: `freshlense-dc779`. Android app ID: `1:1052849430249:android:754cca2b042ba8dd205a78`.
+
+`google-services.json` is gitignored. To set up a machine or EAS project once:
+
+```bash
+firebase apps:sdkconfig ANDROID 1:1052849430249:android:754cca2b042ba8dd205a78 \
+  --project freshlense-dc779 -o google-services.json
+eas env:set --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json \
+  --environment preview --environment development --visibility secret
+eas credentials -p android   # upload the Google Service Account key for FCM V1 (Firebase console → Service accounts)
+```
+
+To build an installable APK (the `preview` profile points at the demo VPS API):
+
+```bash
+eas build -p android --profile preview
+```
+
 ## Checks
 
 ```bash
