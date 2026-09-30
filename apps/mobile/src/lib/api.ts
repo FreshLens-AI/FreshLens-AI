@@ -55,6 +55,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
 
   const headers = new Headers(init.headers);
   headers.set('Authorization', `Bearer ${accessToken}`);
+  headers.set('Bypass-Tunnel-Reminder', 'true');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
