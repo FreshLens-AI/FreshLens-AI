@@ -1,7 +1,7 @@
 :root {
-  --canvas: #f7f9f7;
+  --canvas: #f4f7f4;
   --surface: #ffffff;
-  --surface-subtle: #f9fbf9;
+  --surface-subtle: #f8faf8;
   --surface-muted: #eef3ef;
   --ink: #17221c;
   --ink-soft: #536158;
@@ -25,7 +25,7 @@
   --red-700: #a83f35;
   --red-100: #f8d9d5;
   --red-50: #fff3f1;
-  --shadow-sm: 0 1px 3px rgba(18, 62, 47, 0.035);
+  --shadow-sm: 0 1px 2px rgba(18, 62, 47, 0.04), 0 5px 16px rgba(18, 62, 47, 0.035);
   --shadow-md: 0 16px 38px rgba(18, 62, 47, 0.1);
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -209,9 +209,11 @@ svg {
   display: flex;
   width: var(--sidebar-width);
   flex-direction: column;
-  color: var(--ink);
-  background: #fff;
-  border-right: 1px solid var(--line);
+  color: #eaf5ef;
+  background:
+    radial-gradient(circle at 0 0, rgba(67, 147, 104, 0.2), transparent 34%),
+    linear-gradient(180deg, var(--brand-950), #0f3025 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sidebar__brand-row {
@@ -220,7 +222,7 @@ svg {
   align-items: center;
   justify-content: space-between;
   padding: 0 19px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .brand {
@@ -234,10 +236,11 @@ svg {
   width: 38px;
   height: 38px;
   place-items: center;
-  border: 1px solid var(--brand-700);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 11px;
-  color: #fff;
-  background: var(--brand-700);
+  color: #e5ffef;
+  background: linear-gradient(145deg, #2b8d62, #1c6c4d);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .brand strong,
@@ -246,14 +249,14 @@ svg {
 }
 
 .brand strong {
-  color: var(--ink);
+  color: #fff;
   font-size: 17px;
   letter-spacing: -0.02em;
 }
 
 .brand small {
   margin-top: -1px;
-  color: var(--ink-muted);
+  color: #acc8b8;
   font-size: 12px;
   letter-spacing: 0.02em;
 }
@@ -270,7 +273,7 @@ svg {
 
 .sidebar__label {
   margin: 0 12px 8px;
-  color: var(--ink-muted);
+  color: #94b5a4;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -290,20 +293,21 @@ svg {
   gap: 12px;
   padding: 0 12px;
   border-radius: 9px;
-  color: var(--ink-soft);
+  color: #c2d6ca;
   font-size: 13px;
   font-weight: 590;
   transition: color 140ms ease, background 140ms ease, transform 140ms ease;
 }
 
 .sidebar__link:hover {
-  color: var(--brand-800);
-  background: var(--brand-50);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .sidebar__link--active {
-  color: var(--brand-800);
-  background: var(--brand-50);
+  color: #fff;
+  background: linear-gradient(90deg, rgba(49, 148, 99, 0.36), rgba(49, 148, 99, 0.16));
+  box-shadow: inset 0 0 0 1px rgba(106, 204, 151, 0.15);
   font-weight: 750;
 }
 
@@ -313,13 +317,24 @@ svg {
   width: 3px;
   height: 22px;
   border-radius: 0 4px 4px 0;
-  background: var(--brand-600);
+  background: #5bc98f;
   content: "";
 }
 
 .sidebar__close,
 .topbar__menu {
   display: none !important;
+}
+
+.sidebar__close {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #eaf5ef;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar__close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .admin-shell__body {
@@ -375,12 +390,20 @@ svg {
   align-items: center;
   gap: 7px;
   padding: 0 10px;
-  border: 1px solid var(--line);
+  border: 1px solid #c9e6d5;
   border-radius: 999px;
-  color: var(--ink-soft);
-  background: var(--surface-subtle);
+  color: var(--brand-800);
+  background: var(--brand-50);
   font-size: 12px;
   font-weight: 650;
+}
+
+.data-pill::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brand-500);
+  content: "";
 }
 
 .icon-button {
