@@ -7,9 +7,15 @@ import { requirePlatformAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 function getApiUrl() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  // Prefer direct upstream on the server to avoid a self-proxy hop when
+  // NEXT_PUBLIC_API_URL points at this Vercel app (rewrite front door).
+  const apiUrl =
+    process.env.API_UPSTREAM_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_URL?.trim();
   if (!apiUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured for the admin app.");
+    throw new Error(
+      "API_UPSTREAM_URL or NEXT_PUBLIC_API_URL must be configured for the admin app.",
+    );
   }
   return apiUrl.replace(/\/$/, "");
 }

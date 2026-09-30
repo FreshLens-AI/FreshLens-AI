@@ -1,0 +1,1153 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  11pt,
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=20mm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{pdflscape}
+\usepackage{graphicx}
+\usepackage{xurl}
+\setlength{\emergencystretch}{3em}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={FreshLens: Test Plan Report},
+  pdfauthor={CS3203 Group 21 --- PID 5},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{FreshLens: Test Plan Report}
+\author{CS3203 Group 21 --- PID 5}
+\date{27 September 2026}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{1}
+\tableofcontents
+}
+\section{1. Evaluation mission and
+results}\label{evaluation-mission-and-results}
+
+FreshLens is an AI-powered freshness monitoring system for small-scale
+grocery retailers. This report records the test plan, execution results
+and screenshot evidence for \textbf{CS3203, Group 21, PID 5}, on
+\textbf{27 September 2026}. The system combines a FastAPI service,
+PostgreSQL tenant isolation, Redis/Celery background processing, a
+Next.js administration interface and an Expo mobile application.
+
+The evaluation targets the highest-impact risks: cross-tenant data
+access, duplicate or excessive stock deductions, failed scan
+orchestration, incorrect confidence-gate logic and unusable
+authentication screens. Functional correctness, browser behaviour and
+performance are reported separately.
+
+\subsection{1.1 Execution summary}\label{execution-summary}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Test group
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Recorded outcome
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Evidence
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+API suite & Unit and API/component functional & \textbf{68 passed}; 1
+dependency warning & E07; detail E01--E02 \\
+ML suite & Unit and worker/data utility & \textbf{28 passed} & E08;
+detail E04 \\
+Web utilities & Frontend unit & \textbf{8 passed} & E05 \\
+Mobile utilities & Frontend unit & \textbf{9 passed} & E06 \\
+PostgreSQL security & Database integration/security & \textbf{2 SQL
+suites passed} & E03 \\
+Live service integration & HTTP, database and queue integration &
+\textbf{14 passed} in 2.49 s & E10 \\
+Playwright UI & Browser functional smoke & \textbf{8 passed} in 12.79 s
+& E20--E21; JUnit/log \\
+Static analysis & ESLint and TypeScript & \textbf{3 commands passed} &
+E09 \\
+k6 smoke / load & Local API performance & \textbf{PASS / PASS} &
+E11--E16 \\
+k6 spike & Local API performance & \textbf{FAIL: read and write p95} &
+E17--E19 \\
+\end{longtable}
+}
+
+There are \textbf{135 passing automated test cases} across the API, ML,
+web, mobile, integration and Playwright suites. SQL suites, static
+checks and k6 assertions are reported separately. The selected API-01,
+API-02 and ML-01 screenshots show subsets of the full suites and are not
+added again to the total.
+
+\textbf{Evaluation outcome:} the recorded functional cases pass. The
+short 25-user spike fails the proposed local latency criteria despite
+zero HTTP failures and correct stock balances. Performance acceptance is
+therefore incomplete. These results support the tested local scope; they
+do not establish production readiness or complete requirements coverage.
+
+\subsection{1.2 Revision and provenance}\label{revision-and-provenance}
+
+The terminal captures identify branch \texttt{test-plan-report} and base
+commit \texttt{2d9e4b1}. The later integration and performance
+executions include an \textbf{uncommitted sales concurrency fix} and
+newly added test files. The commit shown in their headers is a base
+revision, not a claim that the working tree was clean. Playwright was
+run separately during report completion against the same local checkout.
+All dates and screenshot filenames use Sri Lanka time (UTC+05:30),
+unless an artifact explicitly records UTC.
+
+\section{2. Scope, dependencies and
+environment}\label{scope-dependencies-and-environment}
+
+\subsection{2.1 Target items and risks}\label{target-items-and-risks}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Target
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tested behaviour
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Main risk addressed
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+FastAPI scans and sales & Validation, roles, asynchronous acceptance,
+sale replay and rollback & Invalid requests or duplicate stock
+deduction \\
+PostgreSQL & RLS, restricted login, tenant-scoped reads/writes,
+transaction integrity & Data leakage and inconsistent inventory \\
+Redis/Celery pipeline & Real scan delivery, worker completion and result
+persistence & Scans accepted but never completed \\
+ML decision utilities & Label mapping, confidence gates, dataset and
+batch utilities & Incorrect handling of uncertain predictions \\
+Web and mobile utilities & Claims, aggregate mapping and session storage
+& Incorrect role/tenant handling or corrupt sessions \\
+Next.js browser UI & Login controls, validation, redirects and narrow
+layout & Inaccessible or broken authentication flow \\
+Local API under load & Read/write latency, HTTP failures and post-run
+stock & Degradation during concurrent activity \\
+\end{longtable}
+}
+
+\subsection{2.2 Execution environment}\label{execution-environment}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Item
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Configuration used for this evidence
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Host & Linux development laptop; shared with other local applications \\
+Python / test runner & Python 3.12.3; pytest 8.4.1;
+\texttt{.venv-test-report} \\
+JavaScript & Node.js 22.23.2; \texttt{node:test} through \texttt{tsx} \\
+Live integration stack & One Uvicorn worker; PostgreSQL 16.14-alpine;
+Redis 7.4-alpine; Celery \\
+Authentication fixture & Temporary local RS256/JWKS issuer; normal
+application signature/claim verification \\
+Scan implementation & Local file storage; asynchronous Celery worker
+using \texttt{stub-v0} classification \\
+Performance & Grafana k6 2.3.0; isolated loopback HTTP target \\
+Browser UI & Playwright Python 1.63.0; headless Google Chrome
+153.0.8010.47; Next.js 16.2.12 dev server \\
+Browser viewports & Desktop 1440 × 900; narrow viewport 390 × 844 \\
+\end{longtable}
+}
+
+\subsection{2.3 Dependencies, assumptions and
+exclusions}\label{dependencies-assumptions-and-exclusions}
+
+Tests use disposable local data and synthetic tenant identities. Live
+stack scripts require Docker and the Python dependencies; browser checks
+require the web app, configured public Supabase settings and Chrome. The
+browser checks use no authenticated account. Invalid form submissions
+are rejected before authentication, and no real password is entered.
+
+\section{3. Test layering and
+techniques}\label{test-layering-and-techniques}
+
+\subsection{3.1 Classification and
+execution}\label{classification-and-execution}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Layer
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Technique and tools
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Execution represented here
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Unit & Controlled inputs and assertions; pytest or
+\texttt{node:test}/\texttt{tsx} & API business logic, ML utilities,
+web/mobile utilities \\
+API/component & FastAPI TestClient with substituted database, storage or
+queue dependencies & Request/response and orchestration checks \\
+Database integration & Real PostgreSQL migrations, RLS and
+restricted-role SQL & Two security suites with
+\texttt{ON\_ERROR\_STOP=1} \\
+Service integration & Live HTTP plus real PostgreSQL, Redis and Celery &
+14 local cases; local issuer and stub classifier \\
+Browser UI & Playwright interacts with the real rendered Next.js app &
+Eight local browser smoke cases \\
+Performance & k6 virtual users and explicit pass/fail thresholds &
+Smoke, load and spike profiles \\
+Static analysis & ESLint and TypeScript compilation checks & Web lint;
+web and mobile typechecks \\
+\end{longtable}
+}
+
+The existing GitHub Actions workflow runs repository structure, API, ML,
+web, mobile and RLS jobs on pull requests and pushes to \texttt{main}.
+The new live integration, k6 and Playwright evidence was collected
+locally; this report does not claim that those suites already run in CI
+or that these artifacts were uploaded by CI.
+
+\subsection{3.2 Test design and success
+criteria}\label{test-design-and-success-criteria}
+
+Positive cases exercise valid requests and expected state changes.
+Negative cases exercise missing/malformed identity, unauthorized roles,
+invalid uploads, cross-tenant access, overselling and conflicting
+idempotency payloads. Boundary cases exercise confidence cutoffs and
+depleted stock. Concurrency cases overlap transactions against the real
+database. Browser cases assert visible state and navigation after user
+actions.
+
+Functional tests pass when every assertion succeeds and the command
+exits successfully. SQL execution stops on the first error. Performance
+profiles must satisfy \textbf{all} configured thresholds; passing
+HTTP-status checks alone is insufficient. Static analysis is supporting
+quality evidence, not a runtime functional test.
+
+\subsection{3.3 Coverage interpretation}\label{coverage-interpretation}
+
+Requirement traceability is provided by the cases and evidence
+references below. Test counts represent executed examples, not the
+percentage of requirements verified. No line/branch coverage instrument
+was enabled for these runs. Frontend utility tests cannot establish
+React rendering, and ML unit tests with controlled predictions cannot
+establish model accuracy.
+
+This submission does not measure trained YOLO accuracy, real inference
+latency, phone camera capture, offline behaviour, iOS/Android device
+compatibility, full authenticated dashboard journeys, accessibility
+conformance, hosted Supabase availability, R2 behaviour or disaster
+recovery. Storage in the live scan test is local disk. Short laptop runs
+are not production capacity or endurance benchmarks. No user acceptance
+study or code-coverage percentage is claimed.
+
+\section{4. Detailed functional test
+cases}\label{detailed-functional-test-cases}
+
+\subsection{4.1 API-01 --- Scan upload and
+orchestration}\label{api-01-scan-upload-and-orchestration}
+
+\textbf{Purpose:} validate scan inputs and asynchronous processing.
+\textbf{Setup:} FastAPI TestClient with controlled roles and substituted
+dependencies. \textbf{Procedure:} submit valid/invalid images and
+quantities; exercise retrieval, listing, publication failure and Redis
+keys. \textbf{Expected:} valid creation returns HTTP 202 without inline
+inference; invalid inputs and forbidden roles are rejected; enqueue
+failures mark the scan failed; keys carry a tenant namespace.
+\textbf{Result:} 10 passed (E01), included in the API total. Camera and
+cloud storage are excluded; INT-01 covers the live pipeline.
+
+\subsection{4.2 API-02 --- Sales integrity and
+idempotency}\label{api-02-sales-integrity-and-idempotency}
+
+\textbf{Purpose:} prevent overselling and duplicate deductions.
+\textbf{Setup:} controlled inventory and a fake database.
+\textbf{Procedure:} create valid/excessive sales, mismatch product and
+batch, omit the key, repeat identical payloads and reuse a key with
+changed data. \textbf{Expected:} valid sales deduct stock and emit
+applicable alerts; identical replay returns the existing sale without
+another deduction; changed payloads conflict; forbidden roles are
+rejected. \textbf{Result:} 9 passed (E02), included in the API total.
+The live contract returns HTTP 201 for original/identical replay and 409
+for changed-payload reuse. INT-01 verifies concurrency.
+
+\subsection{4.3 SEC-01 --- Tenant isolation and restricted runtime
+access}\label{sec-01-tenant-isolation-and-restricted-runtime-access}
+
+\textbf{Purpose:} prevent access outside the tenant context.
+\textbf{Setup:} disposable PostgreSQL 16, migrations, synthetic tenants
+and restricted login \texttt{freshlens\_api\_local}. \textbf{Procedure:}
+run \texttt{rls\_isolation.sql} and \texttt{runtime\_role.sql},
+including restricted login over TCP. \textbf{Expected:} tenant
+boundaries and auth-hook rules hold; runtime privileges exclude
+superuser and BYPASSRLS while permitting authorized operations.
+\textbf{Result:} both suites passed, exit 0 (E03). Coverage is limited
+to the exercised policies and operations.
+
+\subsection{4.4 ML-01 --- Identity and freshness confidence
+gates}\label{ml-01-identity-and-freshness-confidence-gates}
+
+\textbf{Purpose:} prevent uncertain classification results from being
+accepted. \textbf{Setup:} controlled fake model outputs in
+\texttt{test\_identity.py}. \textbf{Procedure:} map supported labels,
+reject unknown labels, accept identity 0.91 and freshness 0.84, reject
+identity 0.70 under the 0.75 cutoff, and reject freshness 0.49 under the
+0.50 cutoff. \textbf{Expected:} low identity confidence leaves
+identity/freshness labels absent and skips the freshness model; low
+freshness confidence raises the expected error. \textbf{Result:} 5
+passed (E04), included in the 28-case ML total. Actual image quality,
+checkpoints and model accuracy were not evaluated by these cases.
+
+\subsection{4.5 UI-01 --- Web mapping and claims unit
+tests}\label{ui-01-web-mapping-and-claims-unit-tests}
+
+\textbf{Purpose:} validate aggregate data transformations and trusted
+authentication claims. \textbf{Procedure:} construct admin API responses
+and claim objects, then assert percentages, snapshot mapping,
+role/tenant validation and treatment of user metadata.
+\textbf{Expected:} valid identities map correctly; malformed or
+incompatible role/tenant combinations are rejected; user metadata is
+presentation-only. \textbf{Result:} 8 passed using \texttt{node:test}
+through \texttt{tsx} (E05). The historical terminal label ``UI-01''
+refers to utility unit tests; it is not evidence that browser charts
+rendered. Playwright browser coverage is UI-02 in Section 7.
+
+\subsection{4.6 MOB-01 and supporting regression
+checks}\label{mob-01-and-supporting-regression-checks}
+
+Mobile tests exercise UTF-8 chunk-size limits, session round trips,
+atomic replacement/removal of storage chunks and vendor claim
+validation. \textbf{Result: 9 passed} (E06). The complete API and ML
+suites passed \textbf{68 and 28 cases}, respectively (E07--E08). Web
+lint, web typecheck and mobile typecheck all exited successfully (E09).
+The API suite reported one Starlette/AnyIO deprecation warning; it did
+not fail the suite.
+
+\section{5. INT-01 --- Live service
+integration}\label{int-01-live-service-integration}
+
+\subsection{5.1 Setup and method}\label{setup-and-method}
+
+\texttt{tests/system/test\_live\_api.py} exercises the running
+application over HTTP, with a real PostgreSQL database, Redis and Celery
+worker. Services bind locally and are discarded after the run. JWT
+verification uses the normal application implementation with a local
+RS256/JWKS fixture. The API and worker use the restricted database role.
+No FastAPI dependency overrides are used in this suite.
+
+The scan test sends a multipart upload, verifies queue/worker completion
+and persisted inventory, and checks that another tenant cannot retrieve
+the scan. The classifier is \texttt{stub-v0}; this establishes
+integration of the services while excluding trained-model behaviour.
+
+\subsection{5.2 Executed scenarios}\label{executed-scenarios}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Area
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Assertions exercised
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Authentication and roles & Missing, malformed and tampered token
+rejection; vendor/admin endpoint permissions \\
+Database boundary & Restricted connection privileges; tenant catalogue
+isolation over HTTP \\
+Sales and replay & Persistence, identical replay and changed-payload
+conflict without extra deduction \\
+Atomicity & Cross-tenant write rejection; multi-item oversell rolls back
+the complete sale \\
+Concurrency & Two sales cannot oversell the last item; concurrent
+identical requests return one sale for initial stock 1 and 10;
+conflicting payloads return 409 \\
+Key scope and alerts & The same key remains independent between tenants;
+low-stock alerts persist and can be read \\
+Scan workflow & Upload → local storage → Redis → Celery → database
+completion; tenant isolation \\
+\end{longtable}
+}
+
+\textbf{Result: 14 passed in 2.49 seconds, exit 0} (E10). The total
+includes two parameterized stock cases for concurrent identical retries.
+
+\subsection{5.3 Defect discovered and
+resolved}\label{defect-discovered-and-resolved}
+
+Concurrent identical sale requests initially reproduced a failure: one
+request returned HTTP 500 after a database uniqueness conflict left its
+transaction aborted. The sales service now takes a PostgreSQL
+transaction advisory lock scoped to tenant and idempotency key before
+checking for an existing sale and validating stock.
+
+The regression test deliberately overlaps the requests using a real
+database row lock, then verifies both responses identify the same sale
+and stock is deducted once. All 14 integration cases and the existing 68
+API cases passed after the change. The source fix remains local and
+uncommitted in this evidence revision.
+
+\section{6. Performance testing with Grafana
+k6}\label{performance-testing-with-grafana-k6}
+
+\subsection{6.1 Workload and acceptance
+criteria}\label{workload-and-acceptance-criteria}
+
+Each profile starts a new isolated local stack. Each of two tenants has
+one product, one batch containing 1,000,000 stock units, 20 completed
+scan records and five alerts. Every iteration reads products, batches,
+alerts and scans. Every fifth iteration creates a sale and immediately
+repeats it with the same idempotency key. Each virtual user pauses 250
+ms per iteration.
+
+Checks assert successful statuses, nonempty lists, tenant ownership and
+identical sale IDs on replay. A post-run database assertion verifies
+remaining inventory equals starting stock minus persisted sales. k6 uses
+sequential requests within each virtual user; VU count is not a fixed
+request-rate target. The one-VU smoke profile exercises tenant A's HTTP
+workload; tenant B remains a seeded control for its post-run stock
+check. The load and spike profiles exercise both tenants.
+
+The following \textbf{local acceptance criteria were chosen before
+execution}: read-request p95 below \textbf{500 ms}; sale/replay p95
+below \textbf{1,000 ms}; HTTP failure rate below \textbf{1\%}; and
+\textbf{100\%} functional checks passing. p95 is the 95th percentile of
+measured request duration. These criteria are test targets, not a
+contractual production SLA. k6 treats a failed threshold as a failed run
+{[}R4{]}.
+
+\subsection{6.2 Profiles and measured
+results}\label{profiles-and-measured-results}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+ID / profile
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Virtual-user schedule
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Configured duration
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+PERF-01 / smoke & 1 VU & 10 s \\
+PERF-02 / load & 10 s to 5 VUs; 10 s to 10; hold 30 s; ramp to 0 in 10 s
+& 60 s \\
+PERF-03 / spike & 10 s to 2; 2 s to 25; hold 15 s; 2 s to 2; hold 10 s;
+5 s to 0 & 44 s \\
+\end{longtable}
+}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Smoke
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Load
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Spike
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+HTTP requests & 84 & 1,754 & 1,032 \\
+Completed iterations & 19 & 397 & 227 \\
+Functional checks passed & 240 / 240 & 5,013 / 5,013 & 2,910 / 2,910 \\
+Read p95 (ms) & 77.50 & 308.80 & \textbf{668.52} \\
+Write/replay p95 (ms) & 110.91 & 499.62 & \textbf{1,192.94} \\
+HTTP failure rate & 0\% & 0\% & 0\% \\
+Post-run stock checks & Both tenants pass & Both tenants pass & Both
+tenants pass \\
+Process exit code & 0 & 0 & \textbf{99} \\
+Overall profile verdict & \textbf{PASS} & \textbf{PASS} & \textbf{FAIL
+--- latency} \\
+\end{longtable}
+}
+
+Values are rounded from the retained k6 JSON summaries. Terminal
+formatting truncates some displayed values, including load write p95 at
+499.61 ms. Evidence E11--E19 records setup, thresholds and completion
+for each run.
+
+\subsection{6.3 Interpretation and
+limitations}\label{interpretation-and-limitations}
+
+The spike exceeds the read p95 target by \textbf{168.52 ms} and write
+p95 target by \textbf{192.94 ms}. All functional assertions still pass
+and no HTTP requests fail, but the performance verdict remains
+\textbf{FAIL}. The observed throughput and latency describe this
+particular short local workload; they do not identify a production user
+limit or prove the cause of the degradation. Bottleneck profiling,
+optimization and another measured run remain follow-up work.
+
+The screenshots show an ``unknown field gracefulStop'' warning. k6
+ignored the attempted top-level setting and used its \textbf{default
+30-second graceful-stop period}, as printed in the scenario output. All
+iterations completed with zero interruptions. The warning is preserved
+in the evidence; the report records the effective configuration rather
+than the ignored setting.
+
+The API, database, load generator and other applications shared the
+laptop. There was one API worker and a small synthetic dataset. No CPU,
+memory or database-pool profiling was recorded. The k6 workload does not
+upload scan images, run real ML inference, measure browser rendering or
+establish soak/endurance behaviour. The aggregate spike summary also
+does not independently prove how quickly latency recovered after the
+peak.
+
+\section{7. UI-02 --- Browser testing with
+Playwright}\label{ui-02-browser-testing-with-playwright}
+
+\textbf{Playwright was used for UI testing} of the real Next.js
+administration sign-in interface. Python Playwright drove headless
+Chrome against the local development server; pytest recorded the
+assertions and JUnit results. Each case used a new browser context. No
+authenticated user or mocked API response was needed for this smoke
+scope.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Browser case
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Expected behaviour
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Result
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Login page and controls & Correct title/heading; labelled email/password
+controls; enabled submit; password masked & PASS \\
+Empty submission & Both field errors visible;
+\texttt{aria-invalid=true}; remains on login & PASS \\
+Malformed email & Email error appears before authentication; password is
+not marked invalid & PASS \\
+Password visibility & Show/hide changes input type and preserves the
+entered synthetic value & PASS \\
+Protected dashboard & Unauthenticated navigation redirects to login &
+PASS \\
+Session-expired route & Redirects to login with the session-expiry alert
+& PASS \\
+Narrow layout & At 390 × 844, submit remains reachable and inside
+viewport width; no horizontal overflow & PASS \\
+Access-denied navigation & Required-role heading renders; return link
+opens login & PASS \\
+\end{longtable}
+}
+
+\textbf{Recorded result: 8 passed in 12.79 seconds.} Test source:
+\texttt{tests/ui/test\_web\_ui.py}. Evidence E20 shows the desktop
+validation state after an empty submission; E21 shows the narrow layout.
+Screenshots are supplementary visual evidence; the result log and JUnit
+XML record the actual assertions.
+
+The browser was Chrome 153.0.8010.47, controlled by Playwright 1.63.0,
+at desktop 1440 × 900 and narrow 390 × 844 viewports. The run does not
+establish authenticated dashboard/chart behaviour, full accessibility
+compliance, cross-browser compatibility or native Expo device behaviour.
+The narrow viewport is not an iOS/Android device test. The entered
+example values are synthetic and contain no real credentials.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Playwright / pytest execution, 27 September 2026}
+\NormalTok{Collected: 8 browser cases}
+\NormalTok{Result:    8 passed in 12.79s}
+\NormalTok{JUnit:     docs/test{-}report{-}assets/playwright{-}results.xml}
+\NormalTok{Log:       docs/test{-}report{-}assets/playwright{-}results.log}
+\end{Highlighting}
+\end{Shaded}
+
+\section{8. Evidence, findings and
+reproducibility}\label{evidence-findings-and-reproducibility}
+
+\subsection{8.1 Evidence handling}\label{evidence-handling}
+
+The appendix contains \textbf{19 distinct user-captured terminal
+screenshots}, followed by two genuine Playwright browser screenshots.
+Repeated attachments have been included once. Original PNG content is
+preserved; images are only scaled to fit report pages. Each figure has
+an evidence ID, source filename, scope and result caption.
+\texttt{docs/test-report-assets/manifest.json} records SHA-256 hashes
+for all 21 images.
+
+Original terminal results are retained under
+\texttt{runs/test-evidence/terminal-20260927-185722/}. Integration/k6
+evidence is under \texttt{runs/test-evidence/terminal-20260927-212122/},
+with per-profile summaries, JUnit where applicable, compressed raw
+metric samples and command logs/exit codes. Samples are timing/status
+metrics, not a full HTTP header/body capture. Playwright artifacts are
+retained under \texttt{runs/test-evidence/playwright-ui/}; its log and
+JUnit are also copied beside the report assets. Temporary local tokens
+and database connection configuration are excluded from the submission
+bundle.
+
+\subsection{8.2 Findings and remaining
+work}\label{findings-and-remaining-work}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Finding
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Status and required follow-up
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Concurrent identical sales could return HTTP 500 & Fixed locally with a
+tenant/key advisory lock; integration and API regression tests pass \\
+Spike read and write p95 exceed local limits & Open performance finding;
+profile resource/connection contention, optimize and rerun \\
+k6 graceful-stop configuration warning & Recorded run used the default
+30 s; correct configuration placement before future runs \\
+Starlette/AnyIO deprecation warning & Non-failing dependency warning;
+review compatibility during dependency maintenance \\
+Coverage gaps & Authenticated browser flows, native mobile/device
+behaviour, trained-model evaluation and production-scale testing remain
+outside this evidence \\
+\end{longtable}
+}
+
+\subsection{8.3 Reproduction commands}\label{reproduction-commands}
+
+Run from the repository root after installing the API/ML requirements in
+the Python 3.12 test environment and installing web/mobile npm
+dependencies:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Original suites and SQL checks in screenshot{-}ready terminal tabs}
+\ExtensionTok{python3}\NormalTok{ scripts/test{-}evidence{-}terminal.py}
+\CommentTok{\# Live integration, k6 smoke, load and spike, sequentially}
+\ExtensionTok{python3}\NormalTok{ scripts/test{-}evidence{-}terminal.py }\AttributeTok{{-}{-}system}
+\CommentTok{\# Browser tests: start the local Next.js app in another terminal}
+\ExtensionTok{npm} \AttributeTok{{-}{-}prefix}\NormalTok{ apps/web run dev }\AttributeTok{{-}{-}} \AttributeTok{{-}{-}hostname}\NormalTok{ 127.0.0.1 }\AttributeTok{{-}{-}port}\NormalTok{ 3107}
+\ExtensionTok{.venv{-}test{-}report/bin/python} \AttributeTok{{-}m}\NormalTok{ pytest tests/ui/test\_web\_ui.py }\AttributeTok{{-}v} \DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}junitxml}\OperatorTok{=}\NormalTok{runs/test{-}evidence/playwright{-}ui/results.xml}
+\CommentTok{\# Rebuild this report from Markdown and the evidence manifest}
+\ExtensionTok{.venv{-}test{-}report/bin/python}\NormalTok{ scripts/build{-}test{-}report.py}
+\end{Highlighting}
+\end{Shaded}
+
+\section{9. Implemented inventory and
+references}\label{implemented-inventory-and-references}
+
+\subsection{9.1 Test inventory}\label{test-inventory}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Location
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Files / scope
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{apps/api/tests/} & \texttt{test\_admin.py},
+\texttt{test\_auth.py}, \texttt{test\_authorization.py},
+\texttt{test\_config.py}, \texttt{test\_health.py},
+\texttt{test\_sales.py}, \texttt{test\_scans.py},
+\texttt{test\_storage.py}, \texttt{test\_tenant\_context.py} \\
+\texttt{packages/ml/tests/} & \texttt{test\_dataset\_snapstock.py},
+\texttt{test\_evaluate\_freshness.py}, \texttt{test\_identity.py},
+\texttt{test\_imagenet\_produce.py}, \texttt{test\_inventory\_batch.py},
+\texttt{test\_prepare\_freshness\_dataset.py},
+\texttt{test\_prepare\_identity\_dataset.py},
+\texttt{test\_stub\_classifier.py} \\
+Web unit tests & \texttt{src/lib/auth/claims.test.ts},
+\texttt{src/lib/api/admin-map.test.ts} under \texttt{apps/web/} \\
+Mobile unit tests & \texttt{src/lib/auth/claims.test.ts},
+\texttt{src/lib/auth/chunked-storage.test.ts} under
+\texttt{apps/mobile/} \\
+\texttt{infra/db/tests/} & \texttt{rls\_isolation.sql},
+\texttt{runtime\_role.sql} \\
+\texttt{tests/system/} & \texttt{test\_live\_api.py},
+\texttt{conftest.py}, \texttt{local\_stack.py} \\
+\texttt{tests/performance/} & \texttt{api.k6.js} --- all three
+performance profiles \\
+\texttt{tests/ui/} & \texttt{test\_web\_ui.py} --- eight Playwright
+browser cases \\
+\end{longtable}
+}
+
+\subsection{9.2 References}\label{references}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{R1.} FreshLens API contract:
+  \texttt{docs/api/v1/openapi.yaml}.
+\item
+  \textbf{R2.} FreshLens architecture and authentication:
+  \texttt{docs/design/FreshLens-SAD.md} and
+  \texttt{docs/authentication.md}.
+\item
+  \textbf{R3.} Local execution records: original terminal run
+  \texttt{terminal-20260927-185722}; integration/k6 run
+  \texttt{terminal-20260927-212122}; Playwright \texttt{results.xml} and
+  \texttt{results.log}. These records support the measured outcomes in
+  this report.
+\item
+  \textbf{R4.} Grafana,
+  \href{https://grafana.com/docs/k6/latest/using-k6/thresholds/}{k6
+  thresholds}. Defines threshold-based performance verdicts; accessed 27
+  September 2026.
+\item
+  \textbf{R5.} Microsoft,
+  \href{https://playwright.dev/python/docs/intro}{Playwright for
+  Python}. Browser automation and Python testing documentation; accessed
+  27 September 2026.
+\end{itemize}
+
+\section{Appendix A. Screenshot
+evidence}\label{appendix-a.-screenshot-evidence}
+
+Figures E01--E19 are the supplied terminal captures in test order.
+Figures E20--E21 are the additional Playwright browser captures. The
+appendix uses full-size landscape pages for terminal readability and a
+portrait page for the narrow browser capture. Figure captions describe
+the scope and do not change the recorded results.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Figure & Test / evidence \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+E01 & API-01: scan request and orchestration tests \\
+E02 & API-02: sales business rules \\
+E03 & SEC-01: PostgreSQL isolation and restricted role \\
+E04 & ML-01: identity and freshness confidence gates \\
+E05 & UI-01: web utility unit tests \\
+E06 & MOB-01: mobile authentication and session storage \\
+E07 & Complete API regression suite \\
+E08 & Complete ML utility and worker-logic suite \\
+E09 & Static analysis: lint and TypeScript \\
+E10 & INT-01: live service integration \\
+E11 & PERF-01: k6 smoke configuration \\
+E12 & PERF-01: smoke thresholds and checks \\
+E13 & PERF-01: smoke metrics and completion \\
+E14 & PERF-02: k6 load configuration \\
+E15 & PERF-02: load thresholds and checks \\
+E16 & PERF-02: load metrics and completion \\
+E17 & PERF-03: k6 spike configuration \\
+E18 & PERF-03: spike latency threshold failures \\
+E19 & PERF-03: spike metrics and failed completion \\
+E20 & UI-02: Playwright desktop form validation \\
+E21 & UI-02: Playwright mobile-width layout \\
+\end{longtable}
+}
+
+\clearpage
+\begin{landscape}
+\subsection*{E01 --- API-01: scan request and orchestration tests}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E01-api-scans.png}
+\end{center}
+10 passed; multipart input validation, asynchronous acceptance and
+tenant-namespaced publishing. Component tests use substituted
+dependencies.
+
+{\small Source: Screenshot from 2026-09-27 18-58-00.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E02 --- API-02: sales business rules}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E02-api-sales.png}
+\end{center}
+9 passed; stock rules and sequential idempotency checks with a fake
+database. Live concurrency is covered separately by INT-01.
+
+{\small Source: Screenshot from 2026-09-27 18-58-05.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E03 --- SEC-01: PostgreSQL isolation and restricted role}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E03-database-security.png}
+\end{center}
+Both SQL suites passed with ON\_ERROR\_STOP=1; the final command exit
+code is 0.
+
+{\small Source: Screenshot from 2026-09-27 18-58-10.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E04 --- ML-01: identity and freshness confidence gates}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E04-ml-confidence.png}
+\end{center}
+5 passed using controlled model predictions. This verifies decision
+logic, not trained-model accuracy.
+
+{\small Source: Screenshot from 2026-09-27 18-58-13.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E05 --- UI-01: web utility unit tests}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E05-web-unit.png}
+\end{center}
+8 passed using node:test through tsx. These tests cover mappings and
+authentication claims; browser UI testing is recorded as UI-02.
+
+{\small Source: Screenshot from 2026-09-27 18-58-20.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E06 --- MOB-01: mobile authentication and session storage}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E06-mobile-unit.png}
+\end{center}
+9 passed; signed-claim validation and chunked storage logic. This is not
+phone-device UI automation.
+
+{\small Source: Screenshot from 2026-09-27 18-58-27.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E07 --- Complete API regression suite}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E07-api-suite.png}
+\end{center}
+68 passed, with one third-party Starlette/AnyIO deprecation warning;
+exit code 0. API-01 and API-02 are subsets of this total.
+
+{\small Source: Screenshot from 2026-09-27 18-58-30.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E08 --- Complete ML utility and worker-logic suite}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E08-ml-suite.png}
+\end{center}
+28 passed; dataset preparation, confidence logic and inventory/stub
+utilities. ML-01 is a subset of this total.
+
+{\small Source: Screenshot from 2026-09-27 18-58-33.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E09 --- Static analysis: lint and TypeScript}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E09-static-checks.png}
+\end{center}
+Web ESLint, web typecheck and mobile typecheck completed successfully;
+exit code 0. These are static checks rather than runtime tests.
+
+{\small Source: Screenshot from 2026-09-27 18-58-38.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E10 --- INT-01: live service integration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E10-integration.png}
+\end{center}
+14 passed in 2.49 seconds. Real HTTP, PostgreSQL, Redis and Celery;
+local JWKS issuer and stub-v0 classifier. Includes the sales concurrency
+fix.
+
+{\small Source: Screenshot from 2026-09-27 21-35-40.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E11 --- PERF-01: k6 smoke configuration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E11-smoke-setup.png}
+\end{center}
+1 virtual user for 10 seconds; local fixtures and thresholds shown. The
+gracefulStop warning caused the default 30-second grace period to apply.
+
+{\small Source: Screenshot from 2026-09-27 21-35-52.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E12 --- PERF-01: smoke thresholds and checks}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E12-smoke-thresholds.png}
+\end{center}
+All four thresholds passed; 240 of 240 functional checks passed.
+
+{\small Source: Screenshot from 2026-09-27 21-35-57.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E13 --- PERF-01: smoke metrics and completion}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E13-smoke-results.png}
+\end{center}
+84 HTTP requests; read p95 77.50 ms, write p95 110.91 ms; 0\% HTTP
+failures; both stock checks passed; exit 0.
+
+{\small Source: Screenshot from 2026-09-27 21-36-02.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E14 --- PERF-02: k6 load configuration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E14-load-setup.png}
+\end{center}
+Gradual ramp to 10 virtual users over a 60-second profile; same
+populated fixtures and thresholds as smoke and spike.
+
+{\small Source: Screenshot from 2026-09-27 21-38-33.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E15 --- PERF-02: load thresholds and checks}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E15-load-thresholds.png}
+\end{center}
+All four thresholds passed; 5,013 of 5,013 functional checks passed.
+
+{\small Source: Screenshot from 2026-09-27 21-38-39.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E16 --- PERF-02: load metrics and completion}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E16-load-results.png}
+\end{center}
+1,754 HTTP requests; read p95 308.80 ms, write p95 499.62 ms (rounded
+from JSON); 0\% HTTP failures; stock checks passed; exit 0.
+
+{\small Source: Screenshot from 2026-09-27 21-38-41.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E17 --- PERF-03: k6 spike configuration}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E17-spike-setup.png}
+\end{center}
+Short spike to 25 virtual users over a 44-second profile; setup, actual
+grace period and acceptance thresholds shown.
+
+{\small Source: Screenshot from 2026-09-27 21-38-46.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E18 --- PERF-03: spike latency threshold failures}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E18-spike-thresholds.png}
+\end{center}
+Read p95 668.52 ms exceeds 500 ms; write p95 1,192.94 ms exceeds 1,000
+ms. All 2,910 functional checks passed, but the performance verdict is
+FAIL.
+
+{\small Source: Screenshot from 2026-09-27 21-38-50.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E19 --- PERF-03: spike metrics and failed completion}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E19-spike-results.png}
+\end{center}
+1,032 HTTP requests; 0\% HTTP failures; stock checks passed for both
+tenants. Exit code 99 records the two failed latency thresholds.
+
+{\small Source: Screenshot from 2026-09-27 21-38-53.png}
+\end{landscape}
+
+\clearpage
+\begin{landscape}
+\subsection*{E20 --- UI-02: Playwright desktop form validation}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{test-report-assets/E20-playwright.png}
+\end{center}
+Actual Next.js sign-in page after Playwright submitted an empty form.
+Both validation messages and invalid-field states were asserted at 1440
+x 900.
+
+{\small Source: test\_empty\_submission\_shows\_field\_errors.png}
+\end{landscape}
+
+\clearpage
+\subsection*{E21 --- UI-02: Playwright mobile-width layout}
+\begin{center}
+\includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{test-report-assets/E21-playwright.png}
+\end{center}
+
+Actual browser capture at a 390 x 844 viewport (full page). Playwright
+verified the submit control was visible and inside the viewport width,
+with no horizontal overflow. This is browser viewport testing, not
+native mobile testing.
+
+\{\small Source:
+test\_mobile\_width\_login\_has\_no\_horizontal\_overflow.png\}
+
+\end{document}
