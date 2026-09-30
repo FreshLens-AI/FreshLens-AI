@@ -138,9 +138,6 @@ export function VendorHomeScreen({ navigation }: Props) {
           <View style={styles.actionTextCol}>
             <View style={styles.actionTitleRow}>
               <Text style={styles.primaryActionTitle}>Scan Produce</Text>
-              <View style={styles.aiTag}>
-                <Text style={styles.aiTagText}>YOLO AI</Text>
-              </View>
             </View>
             <Text style={styles.primaryActionSubtitle}>
               Photograph produce to inspect freshness score & classification

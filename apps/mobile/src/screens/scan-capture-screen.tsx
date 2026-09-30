@@ -105,7 +105,7 @@ export function ScanCaptureScreen({
         <SafeAreaView style={styles.topHud}>
           <View style={styles.hudBadge}>
             <View style={styles.aiLiveDot} />
-            <Text style={styles.hudBadgeText}>YOLO AI Viewfinder</Text>
+            <Text style={styles.hudBadgeText}>AI Scanner</Text>
           </View>
           <Text style={styles.hudHint}>Frame 1 product in the center box</Text>
         </SafeAreaView>

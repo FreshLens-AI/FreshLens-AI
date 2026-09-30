@@ -153,8 +153,9 @@ export function getIdentifiedProduce(
 }
 
 export function getProduceEmoji(name?: string | null): string {
-  if (!name) return '🥬';
+  if (!name) return '❓';
   const n = name.toLowerCase();
+  if (n.includes('unknown')) return '❓';
   if (n.includes('apple')) return '🍎';
   if (n.includes('banana')) return '🍌';
   if (n.includes('tomato')) return '🍅';
@@ -169,7 +170,8 @@ export function getProduceEmoji(name?: string | null): string {
   if (n.includes('mango')) return '🥭';
   if (n.includes('avocado')) return '🥑';
   if (n.includes('lemon')) return '🍋';
-  return '🥬';
+  if (n.includes('eggplant') || n.includes('brinjal')) return '🍆';
+  return '❓';
 }
 
 export function getFreshnessBadge(classification: Classification | null | undefined): {
