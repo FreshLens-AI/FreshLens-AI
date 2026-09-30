@@ -43,9 +43,12 @@ alerts use that combined duration. These rules contain
 no tenant data; tenant products retain their RLS policies. Initial durations
 are unset so the migration does not invent transition times.
 
+`0005_tenant_onboarding.sql` grants admin-only RLS inserts for tenant and vendor
+identity rows.
+
 After applying `0001`, enable `public.custom_access_token_hook` under
 **Authentication → Hooks → Custom Access Token**. Existing sessions must sign in
-again before the new claims appear. Apply `0002`, `0003`, and `0004` in order after `0001` on
+again before the new claims appear. Apply `0002` through `0005` in order after `0001` on
 hosted Supabase.
 
 Do not connect FastAPI with `postgres`, a table owner, or `service_role` for
@@ -65,7 +68,8 @@ Docker Compose initializes a new disposable development volume in this order:
    with RLS in the same migration.
 4. `migrations/0003_scan_identity.sql` adds Tier-1 identity result fields.
 5. `migrations/0004_category_shelf_life.sql` adds shared shelf-life rules.
-6. `local/0020_runtime_login.sql` creates the development-only
+6. `migrations/0005_tenant_onboarding.sql` permits admin provisioning.
+7. `local/0020_runtime_login.sql` creates the development-only
    `freshlens_api_local` login and grants it `freshlens_api`.
 
 The API container connects as `freshlens_api_local`, never as the database owner.

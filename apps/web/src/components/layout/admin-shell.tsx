@@ -132,7 +132,7 @@ export function AdminShell({
             </div>
           </div>
           <div className="topbar__actions">
-            <span className="data-pill">Read-only insights</span>
+            <span className="data-pill">Admin workspace</span>
             <button
               type="button"
               className="icon-button"

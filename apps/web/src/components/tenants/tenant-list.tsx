@@ -26,6 +26,7 @@ import type { ListPage } from "@/lib/api/admin-data";
 import type { Tenant, TenantStatus } from "@/types/domain";
 import styles from "./tenants.module.css";
 import { TenantStatusBadge } from "./tenant-status-badge";
+import { CreateTenantForm } from "./create-tenant-form";
 
 type StatusFilter = "all" | TenantStatus;
 
@@ -58,6 +59,8 @@ export function TenantList({ result, search, status }: {
         title="Tenants"
         description="Live tenant profiles and privacy-safe aggregate activity from the FreshLens API."
       />
+
+      <CreateTenantForm />
 
       <form action="/tenants" method="get" className={`${styles.filtersCard} card`}>
         <div className={styles.searchField}>

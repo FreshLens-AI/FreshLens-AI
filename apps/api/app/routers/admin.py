@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import Literal
 
 import asyncpg
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.database import get_admin_connection
 from app.dependencies.auth import require_platform_admin
@@ -14,6 +14,8 @@ from app.schemas.admin import (
     CategoryShelfLife,
     CategoryShelfLifeUpdate,
     ProductCategory,
+    TenantCreate,
+    TenantCreated,
     TenantList,
 )
 from app.schemas.auth import AuthPrincipal
@@ -26,6 +28,7 @@ from app.services.admin import (
     AdminOverviewService,
 )
 from app.services.tenants import TenantService
+from app.services.tenant_invites import InviteError, SupabaseInviter, get_inviter
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 
@@ -46,6 +49,19 @@ async def update_shelf_life_rule(
     connection: asyncpg.Connection = Depends(get_admin_connection),
 ) -> CategoryShelfLife:
     return await CategoryShelfLifeService(connection).update(category, values)
+
+
+@router.post("/tenants", response_model=TenantCreated, status_code=status.HTTP_201_CREATED)
+async def create_tenant(
+    values: TenantCreate,
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+    inviter: SupabaseInviter = Depends(get_inviter),
+) -> TenantCreated:
+    try:
+        return await TenantService(connection).create(values, inviter)
+    except InviteError as exc:
+        raise HTTPException(exc.status_code, str(exc)) from exc
 
 
 @router.get("/tenants", response_model=TenantList)

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Literal
 
 from app.schemas.alerts import AlertSeverity, AlertType
@@ -33,6 +33,27 @@ class TenantList(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class TenantCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    vendor_name: str = Field(min_length=1, max_length=120)
+    vendor_email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=254)
+
+    @field_validator("name", "vendor_name", "vendor_email")
+    @classmethod
+    def normalize(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Value must not be blank")
+        return normalized
+
+
+class TenantCreated(BaseModel):
+    id: UUID
+    name: str
+    vendor_email: str
+    invitation_sent: bool
 
 
 class AdminProduct(BaseModel):

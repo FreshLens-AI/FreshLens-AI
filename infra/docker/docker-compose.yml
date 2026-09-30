@@ -15,6 +15,7 @@ services:
       - ../db/migrations/0002_business_tables.sql:/docker-entrypoint-initdb.d/0015_business_tables.sql:ro
       - ../db/migrations/0003_scan_identity.sql:/docker-entrypoint-initdb.d/0016_scan_identity.sql:ro
       - ../db/migrations/0004_category_shelf_life.sql:/docker-entrypoint-initdb.d/0017_category_shelf_life.sql:ro
+      - ../db/migrations/0005_tenant_onboarding.sql:/docker-entrypoint-initdb.d/0018_tenant_onboarding.sql:ro
       - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
       - ../db/local/0030_demo_catalogue.sql:/docker-entrypoint-initdb.d/0030_demo_catalogue.sql:ro
     healthcheck:
@@ -52,6 +53,7 @@ services:
       DATABASE_SSL_MODE: ${COMPOSE_DATABASE_SSL_MODE:-disable}
       SUPABASE_JWT_AUDIENCE: ${SUPABASE_JWT_AUDIENCE:-authenticated}
       SUPABASE_JWT_CLOCK_SKEW_SECONDS: ${SUPABASE_JWT_CLOCK_SKEW_SECONDS:-30}
+      LOCAL_AUTH_SHADOW: ${LOCAL_AUTH_SHADOW:-true}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002}
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0

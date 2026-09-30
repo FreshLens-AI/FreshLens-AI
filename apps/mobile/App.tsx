@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './src/auth/auth-provider';
 import { configureNotificationHandler } from './src/lib/push/register';
 import { VendorNavigator } from './src/navigation/vendor-navigator';
 import { VendorLoginScreen } from './src/screens/vendor-login-screen';
+import { PasswordSetupScreen } from './src/screens/password-setup-screen';
 
 configureNotificationHandler();
 
@@ -44,6 +45,7 @@ function AuthGate() {
     );
   }
 
+  if (status === 'password-setup') return <PasswordSetupScreen />;
   if (status === 'authenticated') return <VendorNavigator />;
   return <VendorLoginScreen />;
 }
