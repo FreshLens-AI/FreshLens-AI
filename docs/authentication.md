@@ -3,10 +3,19 @@
 FreshLens uses Supabase Auth for identity, FastAPI for API authorization, and
 PostgreSQL RLS as the authoritative tenant boundary.
 
+Supabase Auth is the identity provider only. Roles, tenants and all business
+data live in the application database, which is the Compose `postgres`
+container on the VPS. The Supabase project's own database holds no FreshLens
+tables.
+
 ## Identity contract
 
-Supabase access tokens retain the standard `role: authenticated` claim. The
-database custom access-token hook adds these server-controlled FreshLens claims:
+Supabase access tokens retain the standard `role: authenticated` claim. On
+every sign-in and refresh, Supabase calls the API's HTTP access-token hook
+(`POST /api/v1/auth/hooks/access-token`). The API verifies the Standard
+Webhooks signature, resolves the account in the application database through
+`public.resolve_access_token_claims` (migration 0006), and returns these
+server-controlled FreshLens claims:
 
 | Claim | Vendor | Platform admin |
 |---|---|---|
@@ -27,8 +36,13 @@ claims before accepting the application role.
    manually by a project owner.
 3. Apply `infra/db/migrations/0001_auth_tenancy.sql` through the Supabase SQL
    editor or CLI.
-4. In **Authentication → Hooks → Custom Access Token**, enable
-   `public.custom_access_token_hook`.
+4. In **Authentication → Hooks → Custom Access Token**, choose **HTTPS** and
+   set the URL to the public API over TLS, for example
+   `https://freshlens-admin.vercel.app/api/v1/auth/hooks/access-token` (the
+   Vercel proxy forwards `/api/v1/*` to the VPS). Generate the hook secret there
+   and put it in the VPS root `.env` as `SUPABASE_AUTH_HOOK_SECRET`
+   (`v1,whsec_...`), then restart the `api` container. The API returns 503 to
+   the hook until the secret is set, and Supabase then fails the sign-in.
 5. Copy the appropriate `.env.example` file to an ignored local env file for the
    API, web app, and mobile app. Use the project URL and publishable key; never
    place the service-role key in either client.
@@ -81,6 +95,14 @@ Local Compose uses `LOCAL_AUTH_SHADOW=true`: onboarding writes the same tenant
 and vendor identity to hosted Supabase for its JWT hook and to the disposable
 local database for RLS tests and local API use. Hosted database deployments
 leave this false and write only through the restricted database role.
+
+With the HTTPS access-token hook (migration 0006), the API resolves these claims
+from the application database, so the hosted Supabase copy written by
+`LOCAL_AUTH_SHADOW=true` becomes redundant. Keep the flag on for Compose for now:
+it also writes the local `auth.users` mirror that `public.users` references.
+Manual mapping still works: run the SQL below **in the application database**
+(the VPS `postgres` container) after inserting `(id, email)` into the local
+`auth.users` mirror, or use `scripts/provision-local-vendor.sh <uuid> <email>`.
 
 Platform admin:
 

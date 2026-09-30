@@ -98,6 +98,17 @@ async def apply_admin_context(
     )
 
 
+async def get_auth_hook_connection() -> AsyncIterator[asyncpg.Connection]:
+    """Yield a connection with no identity context for the access-token hook."""
+
+    connection = await connect_database()
+    try:
+        await assert_safe_database_role(connection)
+        yield connection
+    finally:
+        await connection.close()
+
+
 async def get_tenant_connection(
     principal: AuthPrincipal = Depends(require_vendor),
 ) -> AsyncIterator[asyncpg.Connection]:
