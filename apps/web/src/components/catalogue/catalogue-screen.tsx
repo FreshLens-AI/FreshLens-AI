@@ -1,60 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   Leaf,
   Search,
   SlidersHorizontal,
-  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import { ListPagination } from "@/components/ui/list-pagination";
 import { formatDate, formatNumber } from "@/lib/formatters";
-import { useAdminData } from "@/store/admin-data-provider";
+import type { ListPage } from "@/lib/api/admin-data";
+import type { Product } from "@/types/domain";
 
 import styles from "./catalogue.module.css";
 
-export function CatalogueScreen() {
-  const { products } = useAdminData();
-  const [query, setQuery] = useState("");
-  const [tenantId, setTenantId] = useState("all");
-  const deferredQuery = useDeferredValue(query.trim().toLocaleLowerCase());
-
-  const tenants = useMemo(
-    () =>
-      [...new Map(products.map((product) => [product.tenantId, product.tenantName])).entries()]
-        .sort((a, b) => a[1].localeCompare(b[1])),
-    [products],
-  );
-
-  const filteredProducts = useMemo(
-    () =>
-      products.filter((product) => {
-        const matchesQuery =
-          !deferredQuery ||
-          [product.name, product.tenantName].some((value) =>
-            value?.toLocaleLowerCase().includes(deferredQuery),
-          );
-        return matchesQuery && (tenantId === "all" || product.tenantId === tenantId);
-      }),
-    [deferredQuery, products, tenantId],
-  );
-
-  const activeFilters = query.length > 0 || tenantId !== "all";
-  const monthlyScans = products.reduce(
-    (sum, product) => sum + product.scansThisMonth,
-    0,
-  );
-
-  function clearFilters() {
-    setQuery("");
-    setTenantId("all");
-  }
+export function CatalogueScreen({ result, search, tenantId }: {
+  result: ListPage<Product>;
+  search: string;
+  tenantId?: string;
+}) {
+  const activeFilters = Boolean(search || tenantId);
+  const tenantName = tenantId ? result.items[0]?.tenantName : undefined;
 
   return (
     <div className={styles.pageStack}>
@@ -66,24 +37,15 @@ export function CatalogueScreen() {
 
       <section className={styles.summaryGrid} aria-label="Catalogue summary">
         <Card className={styles.summaryCard}>
-          <span>Total products</span>
-          <strong>{formatNumber(products.length)}</strong>
-          <small>Tenant product configurations</small>
-        </Card>
-        <Card className={styles.summaryCard}>
-          <span>Tenants represented</span>
-          <strong>{formatNumber(tenants.length)}</strong>
-          <small>With configured products</small>
-        </Card>
-        <Card className={styles.summaryCard}>
-          <span>Monthly scans</span>
-          <strong>{formatNumber(monthlyScans)}</strong>
-          <small>Across linked tenant products</small>
+          <span>{activeFilters ? "Matching products" : "Total products"}</span>
+          <strong>{formatNumber(result.total)}</strong>
+          <small>{tenantName ? `For ${tenantName}` : "Tenant product configurations"}</small>
         </Card>
       </section>
 
       <Card className={styles.catalogueCard}>
-        <div className={styles.toolbar}>
+        <form action="/catalogue" method="get" className={styles.toolbar}>
+          {tenantId ? <input type="hidden" name="tenant" value={tenantId} /> : null}
           <div className={styles.searchField}>
             <label htmlFor="catalogue-search">Search catalogue</label>
             <div className={styles.inputWithIcon}>
@@ -91,45 +53,25 @@ export function CatalogueScreen() {
               <input
                 id="catalogue-search"
                 type="search"
-                value={query}
+                name="q"
+                defaultValue={search}
                 placeholder="Search product or tenant"
-                onChange={(event) => setQuery(event.target.value)}
               />
             </div>
           </div>
 
-          <div className={styles.filterField}>
-            <label htmlFor="catalogue-tenant">Tenant</label>
-            <select
-              id="catalogue-tenant"
-              value={tenantId}
-              onChange={(event) => setTenantId(event.target.value)}
-            >
-              <option value="all">All tenants</option>
-              {tenants.map(([id, name]) => (
-                <option value={id} key={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {activeFilters ? (
-            <button type="button" className={styles.clearButton} onClick={clearFilters}>
-              <X size={15} aria-hidden="true" />
-              Clear filters
-            </button>
-          ) : null}
-        </div>
+          <Button type="submit" variant="secondary">Search</Button>
+          {activeFilters ? <Link href="/catalogue" className={styles.clearButton}>Clear filters</Link> : null}
+        </form>
 
         <div className={styles.resultBar} aria-live="polite">
           <span className={styles.resultIcon} aria-hidden="true">
             <SlidersHorizontal size={15} />
           </span>
-          Showing <strong>{filteredProducts.length}</strong> of {products.length} products
+          Showing <strong>{result.items.length}</strong> of {result.total} products
         </div>
 
-        {filteredProducts.length > 0 ? (
+        {result.items.length > 0 ? (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <caption className={styles.srOnly}>FreshLens product catalogue</caption>
@@ -145,7 +87,7 @@ export function CatalogueScreen() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((product) => (
+                {result.items.map((product) => (
                   <tr key={product.id}>
                     <td>
                       <Link href={`/catalogue/${product.id}`} className={styles.productLink}>
@@ -190,12 +132,13 @@ export function CatalogueScreen() {
               }
               action={
                 activeFilters ? (
-                  <Button variant="secondary" onClick={clearFilters}>Reset filters</Button>
+                  <Button href="/catalogue" variant="secondary">Reset filters</Button>
                 ) : undefined
               }
             />
           </div>
         )}
+        <ListPagination path="/catalogue" page={result.page} pageSize={result.pageSize} total={result.total} filters={{ q: search, tenant: tenantId }} />
       </Card>
     </div>
   );

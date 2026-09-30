@@ -5,7 +5,7 @@
 
 .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
@@ -353,34 +353,6 @@
   text-transform: uppercase;
 }
 
-.skeletonTitle,
-.skeletonGrid > div,
-.skeletonPanel {
-  border-radius: 0.75rem;
-  background: linear-gradient(90deg, #eef2f0, #f8faf9, #eef2f0);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite linear;
-}
-
-.skeletonTitle {
-  width: min(28rem, 75%);
-  height: 5rem;
-}
-
-.skeletonGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.skeletonGrid > div {
-  height: 5rem;
-}
-
-.skeletonPanel {
-  height: 18rem;
-}
-
 .srOnly {
   position: absolute;
   width: 1px;
@@ -391,10 +363,6 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-@keyframes shimmer {
-  to { background-position: -200% 0; }
 }
 
 @media (max-width: 1040px) {
@@ -419,8 +387,7 @@
 
 @media (max-width: 720px) {
   .summaryGrid,
-  .detailGrid,
-  .skeletonGrid {
+  .detailGrid {
     grid-template-columns: 1fr;
   }
 
@@ -430,13 +397,5 @@
 
   .ruleCard {
     flex-direction: column;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeletonTitle,
-  .skeletonGrid > div,
-  .skeletonPanel {
-    animation: none;
   }
 }

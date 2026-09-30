@@ -28,8 +28,10 @@ import { TenantStatusBadge } from "./tenant-status-badge";
 
 export function TenantDetail({
   tenantId,
+  productTotal,
 }: {
   tenantId: string;
+  productTotal: number;
 }) {
   const { tenants, products } = useAdminData();
   const tenant = tenants.find((item) => item.id === tenantId);
@@ -68,6 +70,7 @@ export function TenantDetail({
         eyebrow="Tenant profile"
         title={tenant.name}
         description="Organization details and privacy-safe platform aggregates for this vendor."
+        actions={<Link href={`/analytics?tenant=${tenant.id}`} className="button button--secondary button--md">View tenant analytics</Link>}
       />
 
       <section className={styles.statGrid} aria-label="Tenant aggregate metrics">
@@ -171,7 +174,7 @@ export function TenantDetail({
       </div>
 
       <Card>
-        <CardHeader title="Configured products" description={`${tenantProducts.length} product${tenantProducts.length === 1 ? "" : "s"} in this tenant's catalogue`} />
+        <CardHeader title="Configured products" description={`${productTotal} product${productTotal === 1 ? "" : "s"} in this tenant's catalogue`} />
         {tenantProducts.length ? <div className="table-wrap">
           <table>
             <thead><tr><th>Product</th><th>Shelf life</th><th>Low-stock threshold</th><th>Monthly scans</th></tr></thead>
@@ -183,6 +186,7 @@ export function TenantDetail({
             </tr>)}</tbody>
           </table>
         </div> : <p className={styles.aggregateNote}>No products configured for this tenant.</p>}
+        {productTotal > tenantProducts.length ? <p className={styles.aggregateNote}><Link href={`/catalogue?tenant=${tenant.id}`} className="text-link">View all {productTotal} products</Link></p> : null}
       </Card>
     </div>
   );

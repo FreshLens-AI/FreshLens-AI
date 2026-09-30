@@ -7,7 +7,6 @@ import { Bell, LogOut, Menu, RefreshCw, Sprout, X } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { insightNavigation, primaryNavigation } from "@/lib/navigation";
-import { useAdminData } from "@/store/admin-data-provider";
 
 const pageNames = [...primaryNavigation, ...insightNavigation];
 
@@ -58,10 +57,8 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { alerts } = useAdminData();
   const [open, setOpen] = useState(false);
   const [refreshing, startRefresh] = useTransition();
-  const activeAlerts = alerts.length;
   const currentPage =
     pageNames.find(
       (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
@@ -146,9 +143,8 @@ export function AdminShell({
             >
               <RefreshCw size={18} className={refreshing ? "is-spinning" : undefined} aria-hidden="true" />
             </button>
-            <Link href="/alerts" className="icon-button notification-button" aria-label={`${activeAlerts} active alerts`}>
+            <Link href="/alerts" className="icon-button" aria-label="View alerts">
               <Bell size={20} />
-              {activeAlerts > 0 ? <span>{activeAlerts}</span> : null}
             </Link>
             <div className="profile-chip" aria-label="Platform admin profile">
               <span className="profile-chip__avatar">

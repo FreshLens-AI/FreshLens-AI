@@ -41,6 +41,8 @@ export interface Alert {
   title: string;
   message: string;
   productId?: string;
+  tenantName?: string;
+  productName?: string;
   batchReference?: string;
   createdAt: string;
   updatedAt: string;

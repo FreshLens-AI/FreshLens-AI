@@ -9,7 +9,6 @@ import {
   SlidersHorizontal,
   Store,
 } from "lucide-react";
-import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,10 @@ import {
   formatPercent,
   initials,
 } from "@/lib/formatters";
-import { useAdminData } from "@/store/admin-data-provider";
-import type { TenantStatus } from "@/types/domain";
+import type { ListPage } from "@/lib/api/admin-data";
+import type { Tenant, TenantStatus } from "@/types/domain";
 import styles from "./tenants.module.css";
 import { TenantStatusBadge } from "./tenant-status-badge";
-
-const PAGE_SIZE = 8;
 
 type StatusFilter = "all" | TenantStatus;
 
@@ -38,41 +35,20 @@ function spoilageTone(rate: number) {
   return "success" as const;
 }
 
-export function TenantList() {
-  const { tenants } = useAdminData();
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const [page, setPage] = useState(1);
-
-  const filteredTenants = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-
-    return tenants.filter((tenant) => {
-      const searchableText = [
-        tenant.name,
-        tenant.ownerName,
-        tenant.email,
-      ]
-        .join(" ")
-        .toLocaleLowerCase();
-
-      return (
-        (!normalizedQuery || searchableText.includes(normalizedQuery)) &&
-        (status === "all" || tenant.status === status)
-      );
-    });
-  }, [query, status, tenants]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredTenants.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const pageStart = (currentPage - 1) * PAGE_SIZE;
-  const visibleTenants = filteredTenants.slice(pageStart, pageStart + PAGE_SIZE);
-  const hasFilters = query.length > 0 || status !== "all";
-
-  function resetFilters() {
-    setQuery("");
-    setStatus("all");
-    setPage(1);
+export function TenantList({ result, search, status }: {
+  result: ListPage<Tenant>;
+  search: string;
+  status: StatusFilter;
+}) {
+  const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
+  const pageStart = (result.page - 1) * result.pageSize;
+  const hasFilters = Boolean(search) || status !== "all";
+  function pageHref(page: number) {
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (status !== "all") params.set("status", status);
+    params.set("page", String(page));
+    return `/tenants?${params}`;
   }
 
   return (
@@ -83,7 +59,7 @@ export function TenantList() {
         description="Live tenant profiles and privacy-safe aggregate activity from the FreshLens API."
       />
 
-      <Card className={styles.filtersCard}>
+      <form action="/tenants" method="get" className={`${styles.filtersCard} card`}>
         <div className={styles.searchField}>
           <Search size={18} aria-hidden="true" />
           <label htmlFor="tenant-search" className={styles.srOnly}>
@@ -92,12 +68,9 @@ export function TenantList() {
           <input
             id="tenant-search"
             type="search"
-            value={query}
+            defaultValue={search}
             placeholder="Search tenant or contact"
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
+            name="q"
           />
         </div>
 
@@ -106,11 +79,8 @@ export function TenantList() {
           <label htmlFor="tenant-status">Status</label>
           <select
             id="tenant-status"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as StatusFilter);
-              setPage(1);
-            }}
+            defaultValue={status}
+            name="status"
           >
             <option value="all">All statuses</option>
             <option value="active">Active</option>
@@ -118,29 +88,26 @@ export function TenantList() {
           </select>
         </div>
 
-        {hasFilters ? (
-          <Button variant="ghost" size="sm" onClick={resetFilters}>
-            Clear filters
-          </Button>
-        ) : null}
-      </Card>
+        <Button type="submit" variant="secondary" size="sm">Apply filters</Button>
+        {hasFilters ? <Link href="/tenants" className="text-link">Clear filters</Link> : null}
+      </form>
 
       <div className={styles.resultsSummary} aria-live="polite">
         <p>
-          <strong>{formatNumber(filteredTenants.length)}</strong>{" "}
-          {filteredTenants.length === 1 ? "tenant" : "tenants"}
+          <strong>{formatNumber(result.total)}</strong>{" "}
+          {result.total === 1 ? "tenant" : "tenants"}
           {hasFilters ? " match the current filters" : " from the API"}
         </p>
         <p>Aggregate activity only</p>
       </div>
 
-      {visibleTenants.length === 0 ? (
+      {result.items.length === 0 ? (
         <EmptyState
           icon={<Store size={24} aria-hidden="true" />}
-          title={tenants.length ? "No tenants match these filters" : "No tenants yet"}
-          description={tenants.length ? "Try another search term or clear the status filter." : "Tenant profiles will appear here once they are provisioned."}
+          title={hasFilters ? "No tenants match these filters" : "No tenants yet"}
+          description={hasFilters ? "Try another search term or clear the status filter." : "Tenant profiles will appear here once they are provisioned."}
           action={
-            hasFilters ? <Button variant="secondary" onClick={resetFilters}>Clear filters</Button> : undefined
+            hasFilters ? <Button href="/tenants" variant="secondary">Clear filters</Button> : undefined
           }
         />
       ) : (
@@ -162,7 +129,7 @@ export function TenantList() {
                 </tr>
               </thead>
               <tbody>
-                {visibleTenants.map((tenant) => (
+                {result.items.map((tenant) => (
                   <tr key={tenant.id}>
                     <td>
                       <div className={styles.tenantIdentity}>
@@ -208,29 +175,13 @@ export function TenantList() {
           {totalPages > 1 ? <nav className={styles.pagination} aria-label="Tenant list pagination">
             <p>
               Showing {pageStart + 1}–
-              {Math.min(pageStart + PAGE_SIZE, filteredTenants.length)} of{" "}
-              {filteredTenants.length}
+              {Math.min(pageStart + result.pageSize, result.total)} of{" "}
+              {result.total}
             </p>
             <div>
-              <button
-                type="button"
-                className={styles.pageButton}
-                disabled={currentPage === 1}
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
-                aria-label="Previous page"
-              >
-                <ArrowLeft size={17} aria-hidden="true" />
-              </button>
-              <span className={styles.pageCount}>Page {currentPage} of {totalPages}</span>
-              <button
-                type="button"
-                className={styles.pageButton}
-                disabled={currentPage === totalPages}
-                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                aria-label="Next page"
-              >
-                <ArrowRight size={17} aria-hidden="true" />
-              </button>
+              {result.page > 1 ? <Link href={pageHref(result.page - 1)} className={styles.pageButton} aria-label="Previous page"><ArrowLeft size={17} aria-hidden="true" /></Link> : null}
+              <span className={styles.pageCount}>Page {result.page} of {totalPages}</span>
+              {result.page < totalPages ? <Link href={pageHref(result.page + 1)} className={styles.pageButton} aria-label="Next page"><ArrowRight size={17} aria-hidden="true" /></Link> : null}
             </div>
           </nav> : null}
         </Card>

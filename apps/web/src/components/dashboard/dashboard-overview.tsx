@@ -20,15 +20,14 @@ import { StatCard } from "@/components/ui/stat-card";
 import { formatDateTime, formatNumber, formatPercent, initials } from "@/lib/formatters";
 import { alertSeverityTone, titleCase } from "@/lib/presentation";
 import { useAdminData } from "@/store/admin-data-provider";
+import type { AdminOverview } from "@/lib/api/admin-data";
 
-export function DashboardOverview() {
-  const { alerts, products, tenants, trend } = useAdminData();
-  const activeTenants = tenants.filter((tenant) => tenant.status === "active");
-  const totalScans = tenants.reduce((sum, tenant) => sum + tenant.scansThisMonth, 0);
+export function DashboardOverview({ overview }: { overview: AdminOverview }) {
+  const { alerts, tenants, trend } = useAdminData();
   const activeAlerts = alerts;
-  const completed = tenants.reduce((sum, tenant) => sum + tenant.completedClassifications, 0);
-  const freshCount = tenants.reduce((sum, tenant) => sum + tenant.classificationCounts.fresh, 0);
-  const mediumCount = tenants.reduce((sum, tenant) => sum + tenant.classificationCounts.medium, 0);
+  const completed = overview.monthly_fresh + overview.monthly_medium + overview.monthly_spoiled;
+  const freshCount = overview.monthly_fresh;
+  const mediumCount = overview.monthly_medium;
   const fresh = completed ? Math.round((freshCount / completed) * 100) : 0;
   const medium = completed ? Math.round((mediumCount / completed) * 100) : 0;
   const spoiled = completed ? Math.max(0, 100 - fresh - medium) : 0;
@@ -45,10 +44,10 @@ export function DashboardOverview() {
       />
 
       <section className="stat-grid" aria-label="Platform summary">
-        <StatCard label="Active tenants" value={`${activeTenants.length}`} helper={`of ${tenants.length} onboarded`} icon={<Building2 size={21} />} />
-        <StatCard label="Monthly scans" value={formatNumber(totalScans)} helper="aggregate submissions" icon={<ScanLine size={21} />} tone="blue" />
-        <StatCard label="Configured products" value={`${products.length}`} helper="across all tenants" icon={<Leaf size={21} />} tone="amber" />
-        <StatCard label="Active alerts" value={`${activeAlerts.length}`} helper={`${activeAlerts.filter((item) => item.severity === "critical").length} critical`} icon={<BellRing size={21} />} tone="red" />
+        <StatCard label="Active tenants" value={`${overview.active_tenants}`} helper={`of ${overview.total_tenants} onboarded`} icon={<Building2 size={21} />} />
+        <StatCard label="Monthly scans" value={formatNumber(overview.monthly_scans)} helper="aggregate submissions" icon={<ScanLine size={21} />} tone="blue" />
+        <StatCard label="Configured products" value={`${overview.total_products}`} helper="across all tenants" icon={<Leaf size={21} />} tone="amber" />
+        <StatCard label="Active alerts" value={`${overview.active_alerts}`} helper={`${overview.critical_alerts} critical`} icon={<BellRing size={21} />} tone="red" />
       </section>
 
       <section className="dashboard-main-grid">
@@ -102,11 +101,10 @@ export function DashboardOverview() {
           <CardHeader title="Needs attention" description="Live alert signals" action={<Link href="/alerts" className="text-link">Review all <ArrowRight size={15} /></Link>} />
           {activeAlerts.length ? <div className="alert-list-compact">
             {activeAlerts.slice(0, 3).map((alert) => {
-              const tenant = tenants.find((item) => item.id === alert.tenantId);
               return (
                 <div className="alert-compact" key={alert.id}>
                   <span className={`alert-compact__icon alert-compact__icon--${alert.severity}`}><BellRing size={17} /></span>
-                  <span className="alert-compact__copy"><strong>{alert.title}</strong><small>{tenant?.name ?? "Unknown tenant"} · {formatDateTime(alert.createdAt)}</small></span>
+                  <span className="alert-compact__copy"><strong>{alert.title}</strong><small>{alert.tenantName ?? "Unknown tenant"} · {formatDateTime(alert.createdAt)}</small></span>
                   <Badge tone={alertSeverityTone(alert.severity)}>{titleCase(alert.severity)}</Badge>
                 </div>
               );

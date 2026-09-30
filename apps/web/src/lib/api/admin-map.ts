@@ -138,6 +138,8 @@ export function mapAdminAlert(row: AdminAlertResponse): Alert {
       : alertTitles[row.type],
     message: row.message,
     productId: row.product_id ?? undefined,
+    tenantName: row.tenant_name,
+    productName: row.product_name ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.created_at,
   };

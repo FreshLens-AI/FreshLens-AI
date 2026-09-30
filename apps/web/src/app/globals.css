@@ -340,6 +340,7 @@ svg {
 .admin-shell__body {
   min-height: 100vh;
   margin-left: var(--sidebar-width);
+  background: var(--canvas);
 }
 
 .topbar {
@@ -435,27 +436,6 @@ svg {
 
 @keyframes icon-spin { to { transform: rotate(360deg); } }
 
-.notification-button {
-  position: relative;
-}
-
-.notification-button > span {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  display: grid;
-  min-width: 17px;
-  height: 17px;
-  place-items: center;
-  padding: 0 4px;
-  border: 2px solid #fff;
-  border-radius: 999px;
-  color: #fff;
-  background: var(--red-700);
-  font-size: 12px;
-  font-weight: 800;
-}
-
 .profile-chip {
   display: flex;
   align-items: center;
@@ -523,6 +503,7 @@ svg {
 .page-content {
   width: 100%;
   max-width: 1440px;
+  min-height: calc(100vh - 68px);
   margin: 0 auto;
   padding: 32px clamp(20px, 3vw, 40px) 64px;
 }
@@ -535,6 +516,21 @@ svg {
   display: grid;
   gap: 22px;
 }
+
+.list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.list-pagination > div { display: flex; align-items: center; gap: 13px; }
+.list-pagination a { display: inline-grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: var(--brand-700); }
+.list-pagination a:hover { background: var(--brand-50); }
 
 /* Page heading and primitives */
 .page-header {

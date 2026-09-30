@@ -90,15 +90,3 @@ export function ProductDetailScreen() {
     </div>
   );
 }
-
-export function ProductDetailSkeleton() {
-  return (
-    <div className={styles.pageStack} aria-busy="true" aria-label="Loading product">
-      <div className={styles.skeletonTitle} />
-      <div className={styles.skeletonGrid}>
-        <div /><div /><div />
-      </div>
-      <div className={styles.skeletonPanel} />
-    </div>
-  );
-}
