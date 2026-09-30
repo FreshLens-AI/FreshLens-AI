@@ -35,9 +35,17 @@ in filename order through the Supabase SQL editor or CLI.
 Tier-2 freshness fields on `scans`. This prevents identity confidence from being
 reported as freshness confidence and allows unknown inputs to remain unlinked.
 
+`0004_category_shelf_life.sql` adds shared rules for Banana, Cucumber,
+Eggplant, and Tomato. An administrator sets fresh-to-medium and
+medium-to-spoiled durations. Their sum updates each matching tenant product's
+existing `shelf_life_days`, including products added later. Existing aging
+alerts use that combined duration. These rules contain
+no tenant data; tenant products retain their RLS policies. Initial durations
+are unset so the migration does not invent transition times.
+
 After applying `0001`, enable `public.custom_access_token_hook` under
 **Authentication → Hooks → Custom Access Token**. Existing sessions must sign in
-again before the new claims appear. Apply `0002` and then `0003` after `0001` on
+again before the new claims appear. Apply `0002`, `0003`, and `0004` in order after `0001` on
 hosted Supabase.
 
 Do not connect FastAPI with `postgres`, a table owner, or `service_role` for
@@ -56,7 +64,8 @@ Docker Compose initializes a new disposable development volume in this order:
 3. `migrations/0002_business_tables.sql` creates tenant-scoped operational tables
    with RLS in the same migration.
 4. `migrations/0003_scan_identity.sql` adds Tier-1 identity result fields.
-5. `local/0020_runtime_login.sql` creates the development-only
+5. `migrations/0004_category_shelf_life.sql` adds shared shelf-life rules.
+6. `local/0020_runtime_login.sql` creates the development-only
    `freshlens_api_local` login and grants it `freshlens_api`.
 
 The API container connects as `freshlens_api_local`, never as the database owner.

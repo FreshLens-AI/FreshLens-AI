@@ -11,6 +11,9 @@ from app.schemas.admin import (
     AdminAnalytics,
     AdminOverview,
     AdminProductList,
+    CategoryShelfLife,
+    CategoryShelfLifeUpdate,
+    ProductCategory,
     TenantList,
 )
 from app.schemas.auth import AuthPrincipal
@@ -19,11 +22,30 @@ from app.services.admin import (
     AdminAlertService,
     AdminAnalyticsService,
     AdminProductService,
+    CategoryShelfLifeService,
     AdminOverviewService,
 )
 from app.services.tenants import TenantService
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
+
+
+@router.get("/shelf-life-rules", response_model=list[CategoryShelfLife])
+async def list_shelf_life_rules(
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+) -> list[CategoryShelfLife]:
+    return await CategoryShelfLifeService(connection).list()
+
+
+@router.put("/shelf-life-rules/{category}", response_model=CategoryShelfLife)
+async def update_shelf_life_rule(
+    category: ProductCategory,
+    values: CategoryShelfLifeUpdate,
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+) -> CategoryShelfLife:
+    return await CategoryShelfLifeService(connection).update(category, values)
 
 
 @router.get("/tenants", response_model=TenantList)

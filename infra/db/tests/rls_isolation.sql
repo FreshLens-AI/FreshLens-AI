@@ -47,21 +47,21 @@ insert into public.products (
   (
     '30000000-0000-4000-8000-000000000001',
     '20000000-0000-4000-8000-000000000001',
-    'Tomato A',
+    'Tomato',
     5,
     3
   ),
   (
     '30000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000002',
-    'Tomato B',
+    'Tomato',
     5,
     3
   ),
   (
     '30000000-0000-4000-8000-000000000003',
     '20000000-0000-4000-8000-000000000003',
-    'Tomato Inactive',
+    'Tomato',
     5,
     3
   );
@@ -118,7 +118,7 @@ insert into public.alerts (
     '20000000-0000-4000-8000-000000000001',
     'low_stock',
     'warning',
-    'Tomato A is low',
+    'Tomato is low',
     '30000000-0000-4000-8000-000000000001',
     '40000000-0000-4000-8000-000000000001'
   ),
@@ -127,7 +127,7 @@ insert into public.alerts (
     '20000000-0000-4000-8000-000000000002',
     'aging',
     'info',
-    'Tomato B is aging',
+    'Tomato is aging',
     '30000000-0000-4000-8000-000000000002',
     '40000000-0000-4000-8000-000000000002'
   );
@@ -224,6 +224,9 @@ begin
     or (select count(*) from public.device_tokens) <> 0 then
     raise exception 'RLS exposed business rows without request context';
   end if;
+  if (select count(*) from public.product_category_shelf_life) <> 0 then
+    raise exception 'shelf-life rules were exposed without request context';
+  end if;
 end
 $no_context$;
 rollback;
@@ -247,6 +250,9 @@ begin
   if (select array_agg(id order by id) from public.products)
     <> array['30000000-0000-4000-8000-000000000001'::uuid] then
     raise exception 'Tenant A can see another tenant product';
+  end if;
+  if (select count(*) from public.product_category_shelf_life) <> 4 then
+    raise exception 'vendor cannot read shared shelf-life rules';
   end if;
   if (select array_agg(id order by id) from public.batches)
     <> array['40000000-0000-4000-8000-000000000001'::uuid] then
@@ -279,6 +285,14 @@ do $tenant_a_cannot_update$
 declare
   affected_rows bigint;
 begin
+  update public.product_category_shelf_life
+  set fresh_to_medium_days = 1, medium_to_spoiled_days = 1
+  where category = 'tomato';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then
+    raise exception 'vendor changed a global shelf-life rule';
+  end if;
+
   update public.tenants
   set name = 'Vendor changed own tenant'
   where id = '20000000-0000-4000-8000-000000000001';
@@ -312,7 +326,7 @@ begin
   end if;
 
   update public.products
-  set name = 'Hijacked Tomato B'
+  set name = 'Hijacked Tomato'
   where id = '30000000-0000-4000-8000-000000000002';
   get diagnostics affected_rows = row_count;
   if affected_rows <> 0 then
@@ -413,6 +427,19 @@ begin
     or (select count(*) from public.alerts) <> 2
     or (select count(*) from public.device_tokens) <> 2 then
     raise exception 'platform admin cannot see every business row';
+  end if;
+
+  update public.product_category_shelf_life
+  set fresh_to_medium_days = 3, medium_to_spoiled_days = 4
+  where category = 'tomato';
+  if (select count(*) from public.products where name = 'Tomato' and shelf_life_days = 7) <> 3 then
+    raise exception 'category rule did not synchronize tenant products';
+  end if;
+
+  insert into public.products (tenant_id, name, shelf_life_days)
+  values ('20000000-0000-4000-8000-000000000001', 'Tomato', 2);
+  if (select count(*) from public.products where name = 'Tomato' and shelf_life_days = 7) <> 4 then
+    raise exception 'new tenant product did not inherit the category rule';
   end if;
 
   update public.tenants

@@ -49,7 +49,11 @@ export function ProductDetailScreen() {
       <section className={styles.detailGrid} aria-label="Product overview">
         <Card className={styles.detailStat}>
           <span className={styles.detailStatIcon} aria-hidden="true"><CalendarClock size={20} /></span>
-          <div><small>Typical shelf-life</small><strong>{product.shelfLifeDays} days</strong></div>
+          <div><small>Fresh → medium</small><strong>{product.freshToMediumDays === null ? "Not set" : `${product.freshToMediumDays} days`}</strong></div>
+        </Card>
+        <Card className={styles.detailStat}>
+          <span className={styles.detailStatIcon} aria-hidden="true"><CalendarClock size={20} /></span>
+          <div><small>Medium → spoiled</small><strong>{product.mediumToSpoiledDays === null ? "Not set" : `${product.mediumToSpoiledDays} days`}</strong></div>
         </Card>
         <Card className={styles.detailStat}>
           <span className={styles.detailStatIcon} aria-hidden="true"><Store size={20} /></span>
@@ -75,10 +79,10 @@ export function ProductDetailScreen() {
         <Card className={styles.ruleCard}>
           <span className={styles.ruleCardIcon} aria-hidden="true"><Clock3 size={22} /></span>
           <div>
-            <p className={styles.eyebrow}>Static aging context</p>
-            <h2>{product.shelfLifeDays}-day product reference</h2>
+            <p className={styles.eyebrow}>Shared aging context</p>
+            <h2>{product.shelfLifeDays}-day total shelf life</h2>
             <p>
-              FreshLens uses configured shelf-life days as a lookup input when evaluating aging alerts. It does not predict a rot date or replace human inspection.
+              The category rule applies to all retailers. FreshLens uses the combined duration for aging alerts. These are estimates and do not replace inspection.
             </p>
             <Button href="/catalogue" variant="secondary">
               Back to catalogue

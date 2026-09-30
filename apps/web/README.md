@@ -3,8 +3,9 @@
 Platform administration workspace for FreshLens. Supabase Auth protects every
 admin route with the `platform_admin` role. Tenant profiles, product settings,
 alert signals, scan-pipeline totals, and analytics are loaded from authenticated
-FastAPI admin endpoints. The workspace is read-only and includes a manual
-refresh control for live data.
+FastAPI admin endpoints. The workspace includes a manual refresh control for
+live data. Platform admins can configure shared product-category shelf lives;
+tenant inventory remains read-only here.
 
 ## Run locally
 
@@ -29,7 +30,7 @@ described in [`../../docs/authentication.md`](../../docs/authentication.md).
 |---|---|
 | `/dashboard` | Platform overview and attention items |
 | `/tenants` | Live tenant profiles and monthly aggregates |
-| `/catalogue` | Live tenant product metadata and details |
+| `/catalogue` | Shared stage durations and live tenant product metadata |
 | `/scans` | Aggregate queue and classification activity only |
 | `/alerts` | Live tenant alert signals without batch identifiers |
 | `/analytics` | Live platform and tenant-level aggregate trends |

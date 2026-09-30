@@ -28,8 +28,17 @@ export interface Product {
   tenantName: string;
   name: string;
   shelfLifeDays: number;
+  freshToMediumDays: number | null;
+  mediumToSpoiledDays: number | null;
   scansThisMonth: number;
   lowStockThreshold: number;
+  updatedAt: string;
+}
+
+export interface CategoryShelfLife {
+  category: "banana" | "cucumber" | "eggplant" | "tomato";
+  freshToMediumDays: number | null;
+  mediumToSpoiledDays: number | null;
   updatedAt: string;
 }
 

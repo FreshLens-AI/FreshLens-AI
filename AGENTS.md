@@ -11,7 +11,7 @@ FreshLens is a multi-tenant SaaS for small grocery retailers (CS3203 Group 21, P
 | Path | Stack | Purpose |
 |---|---|---|
 | `apps/api` | FastAPI 0.116, Python 3.12, asyncpg, PyJWT, Celery | REST API (`/api/v1`), auth, tenant context, scan/sales orchestration |
-| `apps/web` | Next.js 16.2, React 19, @supabase/ssr | Vendor dashboard + admin UI (deliberately read-only, aggregate-only) |
+| `apps/web` | Next.js 16.2, React 19, @supabase/ssr | Admin UI: aggregate-only reads and shared shelf-life configuration |
 | `apps/mobile` | Expo ~57, React Native 0.86 | Vendor scanning app |
 | `packages/ml` | ultralytics, Celery worker | CNN inference worker + training scripts |
 | `infra/db/migrations` | SQL | Schema migrations (0001 auth_tenancy, 0002 business_tables, 0003 scan_identity) |
@@ -43,7 +43,7 @@ cd apps/mobile && npm test && npm run typecheck
 
 These are invariants — do not weaken them, and flag any change that would:
 
-1. **Tenant isolation via Postgres RLS.** Every business table gets, in the SAME migration: `tenant_id UUID NOT NULL REFERENCES tenants(id)`, `ENABLE ROW LEVEL SECURITY`, a policy `USING (tenant_id = current_setting('app.tenant_id')::uuid)`, and an index on `tenant_id`. Identity-root exception: `tenants` itself; `users.tenant_id` is nullable only for `platform_admin` (DB-constrained).
+1. **Tenant isolation via Postgres RLS.** Every tenant-owned business table gets, in the SAME migration: `tenant_id UUID NOT NULL REFERENCES tenants(id)`, `ENABLE ROW LEVEL SECURITY`, a tenant policy, and an index on `tenant_id`. Identity-root exception: `tenants` itself; `users.tenant_id` is nullable only for `platform_admin` (DB-constrained). `product_category_shelf_life` is shared reference data with no tenant rows; it has forced RLS, readable by authenticated vendors/admins and writable only by platform admins.
 2. **Restricted DB role.** The API connects as `freshlens_api_runtime` (hosted) / `freshlens_api_local` (dev), in the NOBYPASSRLS group `freshlens_api`. Startup guard `assert_safe_database_role` rejects superuser/BYPASSRLS connections. Per-request transactions set `app.tenant_id` / `app.user_id` / `app.user_role` via `set_config`.
 3. **Async inference only.** `POST /api/v1/scans` returns 202; the Celery worker in `packages/ml` runs the CNN. Never run inference inline in a request handler.
 4. **Sales invariants.** `POST /api/v1/sales` is the ONLY stock-deduction path — atomic, idempotent via `Idempotency-Key` (unique `(tenant_id, idempotency_key)`; same key + same payload → replay, same key + different payload → 409), never lets batches go negative, tenant derived from JWT, never from the request body.

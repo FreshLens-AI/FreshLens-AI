@@ -412,14 +412,14 @@ The web application shall allow platform admins to manage the product catalogue 
 
 ### FR-A-006 Configure shelf-life for aging alerts (Must)
 
-Platform admins shall be able to set or update the typical shelf-life (in days) used by V1 static aging alerts for product categories (or products).
+Platform admins shall be able to set or update two positive durations for each supported product category: days from fresh to medium, and days from medium to spoiled. One category rule applies to all retailers. The sum supplies the typical shelf-life used by V1 static aging alerts; these timings do not override CNN classifications.
 
 
 |            |                                                      |
 | ---------- | ---------------------------------------------------- |
-| Inputs     | Shelf-life days value                                |
-| Processing | Persist configuration used by aging rules (FR-S-010) |
-| Outputs    | Configuration reflected in later aging evaluations   |
+| Inputs     | Fresh-to-medium and medium-to-spoiled days           |
+| Processing | Persist a shared category rule and synchronize tenant product shelf-life totals used by aging rules (FR-S-010) |
+| Outputs    | Both durations visible to admins; combined duration reflected in later aging evaluations |
 
 
 ---

@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal
 
 from app.schemas.alerts import AlertSeverity, AlertType
 from app.schemas.scans import ScanStatus
@@ -42,6 +43,8 @@ class AdminProduct(BaseModel):
     tenant_name: str
     name: str
     shelf_life_days: int
+    fresh_to_medium_days: int | None = None
+    medium_to_spoiled_days: int | None = None
     low_stock_threshold: int
     created_at: datetime
     updated_at: datetime
@@ -53,6 +56,21 @@ class AdminProductList(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+ProductCategory = Literal["banana", "cucumber", "eggplant", "tomato"]
+
+
+class CategoryShelfLife(BaseModel):
+    category: ProductCategory
+    fresh_to_medium_days: int | None
+    medium_to_spoiled_days: int | None
+    updated_at: datetime
+
+
+class CategoryShelfLifeUpdate(BaseModel):
+    fresh_to_medium_days: int = Field(ge=1, le=3650)
+    medium_to_spoiled_days: int = Field(ge=1, le=3650)
 
 
 class AdminAlert(BaseModel):

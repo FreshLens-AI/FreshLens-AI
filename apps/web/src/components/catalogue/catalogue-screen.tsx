@@ -15,12 +15,15 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ListPagination } from "@/components/ui/list-pagination";
 import { formatDate, formatNumber } from "@/lib/formatters";
 import type { ListPage } from "@/lib/api/admin-data";
-import type { Product } from "@/types/domain";
+import type { CategoryShelfLife, Product } from "@/types/domain";
+
+import { ShelfLifeRules } from "./shelf-life-rules";
 
 import styles from "./catalogue.module.css";
 
-export function CatalogueScreen({ result, search, tenantId }: {
+export function CatalogueScreen({ result, rules, search, tenantId }: {
   result: ListPage<Product>;
+  rules: CategoryShelfLife[];
   search: string;
   tenantId?: string;
 }) {
@@ -32,8 +35,10 @@ export function CatalogueScreen({ result, search, tenantId }: {
       <PageHeader
         eyebrow="Catalogue operations"
         title="Product catalogue"
-        description="Tenant product settings and shelf-life values from the live API."
+        description="Set shared freshness stages and review tenant product settings."
       />
+
+      <ShelfLifeRules rules={rules} />
 
       <section className={styles.summaryGrid} aria-label="Catalogue summary">
         <Card className={styles.summaryCard}>
