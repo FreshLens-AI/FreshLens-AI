@@ -42,3 +42,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase client config (FCM); supplied to EAS as the GOOGLE_SERVICES_JSON file env var
+google-services.json
+GoogleService-Info.plist

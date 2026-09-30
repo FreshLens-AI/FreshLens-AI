@@ -280,3 +280,22 @@ export async function listAlerts(): Promise<Alert[]> {
   const body = await parseJsonOrThrow<{ items: Alert[] }>(res);
   return body.items;
 }
+
+export interface RegisteredDevice {
+  id: string;
+  platform: 'ios' | 'android';
+  active: boolean;
+  updated_at: string;
+}
+
+export async function registerDevice(
+  token: string,
+  platform: 'ios' | 'android',
+): Promise<RegisteredDevice> {
+  const res = await apiFetch('api/v1/devices', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, platform }),
+  });
+  return parseJsonOrThrow<RegisteredDevice>(res);
+}
