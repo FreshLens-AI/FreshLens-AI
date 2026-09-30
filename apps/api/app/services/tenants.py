@@ -1,12 +1,54 @@
 import asyncpg
-from uuid import UUID
+import logging
+from uuid import UUID, uuid4
 
-from app.schemas.admin import Tenant, TenantList
+from app.core.config import get_settings
+from app.schemas.admin import Tenant, TenantCreate, TenantCreated, TenantList
+from app.services.tenant_invites import SupabaseInviter
+
+logger = logging.getLogger(__name__)
 
 
 class TenantService:
     def __init__(self, connection: asyncpg.Connection) -> None:
         self.connection = connection
+
+    async def create(self, values: TenantCreate, inviter: SupabaseInviter) -> TenantCreated:
+        email = values.vendor_email.lower()
+        user_id = await inviter.invite(email, values.vendor_name)
+        tenant_id = uuid4()
+        local_shadow = get_settings().local_auth_shadow
+        try:
+            if local_shadow:
+                await inviter.provision_hosted_identity(
+                    tenant_id, values.name, user_id, values.vendor_name, email,
+                )
+                await self.connection.execute(
+                    "select public.create_local_auth_shadow($1, $2)", user_id, email,
+                )
+            await self.connection.execute(
+                "insert into public.tenants (id, name) values ($1, $2)",
+                tenant_id, values.name,
+            )
+            await self.connection.execute(
+                """insert into public.users (id, tenant_id, role, display_name, email)
+                   values ($1, $2, 'vendor', $3, $4)""",
+                user_id, tenant_id, values.vendor_name, email,
+            )
+        except Exception:
+            if local_shadow:
+                try:
+                    await inviter.delete_hosted_identity(tenant_id, user_id)
+                except Exception:
+                    logger.exception("Could not remove hosted identity after tenant insert failed")
+            try:
+                await inviter.delete(user_id)
+            except Exception:
+                logger.exception("Could not remove invited Auth user after tenant insert failed")
+            raise
+        return TenantCreated(
+            id=tenant_id, name=values.name, vendor_email=email, invitation_sent=True,
+        )
 
     async def list(
         self, *, limit: int, offset: int, search: str = "",

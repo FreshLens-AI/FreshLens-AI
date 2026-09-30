@@ -3,6 +3,16 @@
   gap: 1.5rem;
 }
 
+.createCard { padding: 1.25rem; display: grid; gap: 1rem; }
+.createCard h2 { font-size: 1.05rem; font-weight: 800; }
+.createCard p { color: #65736a; font-size: 0.86rem; margin-top: 0.25rem; }
+.createForm { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem; }
+.createForm label { display: grid; gap: 0.35rem; flex: 1 1 12rem; font-size: 0.8rem; font-weight: 700; }
+.createForm input { min-height: 2.75rem; padding: 0.65rem 0.8rem; border: 1px solid #dce5dd; border-radius: 0.7rem; font: inherit; }
+.createForm button { min-height: 2.75rem; }
+.createCard .createError { color: #b91c1c; }
+.createCard .createSuccess { color: #047857; }
+
 .srOnly {
   position: absolute;
   width: 1px;

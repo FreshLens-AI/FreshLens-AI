@@ -293,6 +293,13 @@ begin
     raise exception 'vendor changed a global shelf-life rule';
   end if;
 
+  begin
+    insert into public.tenants (name) values ('Unauthorized Grocer');
+    raise exception 'vendor created a tenant';
+  exception when insufficient_privilege then
+    null;
+  end;
+
   update public.tenants
   set name = 'Vendor changed own tenant'
   where id = '20000000-0000-4000-8000-000000000001';
@@ -412,6 +419,7 @@ select set_config('app.user_id', '10000000-0000-4000-8000-000000000004', true);
 do $platform_admin$
 declare
   affected_rows bigint;
+  created_tenant_id uuid;
 begin
   if (select count(*) from public.tenants) <> 3 then
     raise exception 'platform admin cannot see every tenant';
@@ -440,6 +448,23 @@ begin
   values ('20000000-0000-4000-8000-000000000001', 'Tomato', 2);
   if (select count(*) from public.products where name = 'Tomato' and shelf_life_days = 7) <> 4 then
     raise exception 'new tenant product did not inherit the category rule';
+  end if;
+
+  perform public.create_local_auth_shadow(
+    '10000000-0000-4000-8000-000000000005', 'new-vendor@example.com'
+  );
+  insert into public.tenants (name) values ('New Grocer') returning id into created_tenant_id;
+  insert into public.users (id, tenant_id, role, display_name, email)
+  values (
+    '10000000-0000-4000-8000-000000000005', created_tenant_id,
+    'vendor', 'New Vendor', 'new-vendor@example.com'
+  );
+  if not exists (
+    select 1 from public.users
+    where id = '10000000-0000-4000-8000-000000000005'
+      and tenant_id = created_tenant_id
+  ) then
+    raise exception 'platform admin could not provision tenant and vendor';
   end if;
 
   update public.tenants

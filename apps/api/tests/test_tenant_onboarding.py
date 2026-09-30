@@ -1,0 +1,199 @@
+import asyncio
+from uuid import UUID, uuid4
+
+import pytest
+import httpx
+from fastapi.testclient import TestClient
+
+from app.core.database import get_admin_connection
+from app.main import app
+from app.schemas.admin import TenantCreate
+from app.services.tenant_invites import InviteError, SupabaseInviter, get_inviter
+from app.services.tenants import TenantService
+from tests.conftest import StaticVerifier
+from tests.test_auth import admin_claims, vendor_claims
+
+
+class FakeInviter:
+    def __init__(self) -> None:
+        self.user_id = uuid4()
+        self.invited: tuple[str, str] | None = None
+        self.deleted: UUID | None = None
+        self.error: InviteError | None = None
+        self.hosted: tuple[object, ...] | None = None
+        self.hosted_deleted: tuple[UUID, UUID] | None = None
+
+    async def invite(self, email: str, name: str) -> UUID:
+        if self.error:
+            raise self.error
+        self.invited = (email, name)
+        return self.user_id
+
+    async def delete(self, user_id: UUID) -> None:
+        self.deleted = user_id
+
+    async def provision_hosted_identity(self, *values: object) -> None:
+        self.hosted = values
+
+    async def delete_hosted_identity(self, tenant_id: UUID, user_id: UUID) -> None:
+        self.hosted_deleted = (tenant_id, user_id)
+
+
+class FakeConnection:
+    def __init__(self) -> None:
+        self.tenant_id: UUID | None = None
+        self.inserted_user: tuple[object, ...] | None = None
+        self.fail = False
+
+    async def execute(self, query: str, *values: object) -> None:
+        if self.fail:
+            raise RuntimeError("database unavailable")
+        if "create_local_auth_shadow" in query:
+            return
+        if "insert into public.tenants" in query:
+            self.tenant_id = values[0]
+            assert values[1] == "New Grocer"
+            return
+        assert "insert into public.users" in query
+        self.inserted_user = values
+
+
+def test_admin_creates_tenant_and_invites_vendor(
+    client: TestClient, verifier: StaticVerifier,
+) -> None:
+    verifier.claims = admin_claims()
+    connection = FakeConnection()
+    inviter = FakeInviter()
+
+    async def connection_override():
+        yield connection
+
+    app.dependency_overrides[get_admin_connection] = connection_override
+    app.dependency_overrides[get_inviter] = lambda: inviter
+    try:
+        response = client.post(
+            "/api/v1/admin/tenants",
+            headers={"Authorization": "Bearer valid"},
+            json={"name": " New Grocer ", "vendor_name": " Shop Owner ",
+                  "vendor_email": "OWNER@EXAMPLE.COM"},
+        )
+        assert response.status_code == 201
+        assert response.json()["id"] == str(connection.tenant_id)
+        assert response.json()["invitation_sent"] is True
+        assert inviter.invited == ("owner@example.com", "Shop Owner")
+        assert connection.inserted_user == (
+            inviter.user_id, connection.tenant_id, "Shop Owner", "owner@example.com",
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_vendor_cannot_create_tenant(
+    client: TestClient, verifier: StaticVerifier,
+) -> None:
+    verifier.claims = vendor_claims()
+    response = client.post(
+        "/api/v1/admin/tenants",
+        headers={"Authorization": "Bearer valid"},
+        json={"name": "New Grocer", "vendor_name": "Owner",
+              "vendor_email": "owner@example.com"},
+    )
+    assert response.status_code == 403
+
+
+def test_existing_email_is_reported_without_creating_tenant(
+    client: TestClient, verifier: StaticVerifier,
+) -> None:
+    verifier.claims = admin_claims()
+    inviter = FakeInviter()
+    inviter.error = InviteError("This email already has an account.", 409)
+
+    async def connection_override():
+        yield FakeConnection()
+
+    app.dependency_overrides[get_admin_connection] = connection_override
+    app.dependency_overrides[get_inviter] = lambda: inviter
+    try:
+        response = client.post(
+            "/api/v1/admin/tenants", headers={"Authorization": "Bearer valid"},
+            json={"name": "New Grocer", "vendor_name": "Owner",
+                  "vendor_email": "owner@example.com"},
+        )
+        assert response.status_code == 409
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_failed_database_provisioning_removes_invited_user() -> None:
+    connection = FakeConnection()
+    connection.fail = True
+    inviter = FakeInviter()
+    values = TenantCreate(
+        name="New Grocer", vendor_name="Owner", vendor_email="owner@example.com",
+    )
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        asyncio.run(TenantService(connection).create(values, inviter))
+    assert inviter.deleted == inviter.user_id
+
+
+def test_local_database_provisioning_mirrors_hosted_identity(monkeypatch) -> None:
+    from app.services import tenants
+
+    monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
+        "local_auth_shadow": True,
+    })())
+    connection = FakeConnection()
+    inviter = FakeInviter()
+    values = TenantCreate(
+        name="New Grocer", vendor_name="Owner", vendor_email="owner@example.com",
+    )
+    result = asyncio.run(TenantService(connection).create(values, inviter))
+    assert inviter.hosted == (
+        result.id, "New Grocer", inviter.user_id, "Owner", "owner@example.com",
+    )
+
+
+def test_failed_local_provisioning_removes_hosted_identity(monkeypatch) -> None:
+    from app.services import tenants
+
+    monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
+        "local_auth_shadow": True,
+    })())
+    connection = FakeConnection()
+    connection.fail = True
+    inviter = FakeInviter()
+    values = TenantCreate(
+        name="New Grocer", vendor_name="Owner", vendor_email="owner@example.com",
+    )
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        asyncio.run(TenantService(connection).create(values, inviter))
+    assert inviter.hosted_deleted is not None
+    assert inviter.hosted_deleted[1] == inviter.user_id
+    assert inviter.deleted == inviter.user_id
+
+
+def test_supabase_invite_uses_mobile_password_link(monkeypatch) -> None:
+    from app.services import tenant_invites
+
+    user_id = uuid4()
+    requests: list[httpx.Request] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json={"user": {"id": str(user_id)}})
+
+    real_client = httpx.AsyncClient
+    transport = httpx.MockTransport(respond)
+    monkeypatch.setattr(tenant_invites, "get_settings", lambda: type("Settings", (), {
+        "supabase_url": "https://example.supabase.co",
+        "supabase_service_role_key": "server-secret",
+    })())
+    monkeypatch.setattr(tenant_invites.httpx, "AsyncClient", lambda **kwargs: real_client(
+        transport=transport, **kwargs,
+    ))
+
+    invited_id = asyncio.run(SupabaseInviter().invite("owner@example.com", "Owner"))
+    assert invited_id == user_id
+    assert requests[0].url.path == "/auth/v1/invite"
+    assert requests[0].url.params["redirect_to"] == "freshlens://set-password"
+    assert requests[0].headers["authorization"] == "Bearer server-secret"

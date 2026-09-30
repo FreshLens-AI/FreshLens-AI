@@ -340,6 +340,34 @@ paths:
           $ref: "#/components/responses/ValidationError"
 
   /api/v1/admin/tenants:
+    post:
+      tags: [Admin]
+      summary: Create a tenant and email its vendor an invitation
+      operationId: createTenant
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantCreate"
+      responses:
+        "201":
+          description: Tenant and vendor mapping created; invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Vendor email is already registered
+        "422":
+          $ref: "#/components/responses/ValidationError"
     get:
       tags: [Admin]
       summary: List tenant profiles and privacy-safe aggregates
@@ -1145,6 +1173,26 @@ components:
         offset:
           type: integer
           minimum: 0
+
+    TenantCreate:
+      type: object
+      required: [name, vendor_name, vendor_email]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        vendor_name: { type: string, minLength: 1, maxLength: 120 }
+        vendor_email: { type: string, format: email, maxLength: 254 }
+
+    TenantCreated:
+      type: object
+      required: [id, name, vendor_email, invitation_sent]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        name: { type: string }
+        vendor_email: { type: string, format: email }
+        invitation_sent: { type: boolean, const: true }
 
     AdminProduct:
       type: object

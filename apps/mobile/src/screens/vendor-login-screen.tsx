@@ -15,11 +15,13 @@ import {
 import { useAuth } from '../auth/auth-provider';
 
 export function VendorLoginScreen() {
-  const { message, signIn } = useAuth();
+  const { message, signIn, requestPasswordReset } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [validation, setValidation] = useState<string | null>(null);
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [resetRequested, setResetRequested] = useState(false);
 
   async function submit() {
     if (!email.includes('@') || !password) {
@@ -30,6 +32,20 @@ export function VendorLoginScreen() {
     setPending(true);
     try {
       await signIn(email, password);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function sendReset() {
+    if (!email.includes('@')) {
+      setValidation('Enter your vendor email address.');
+      return;
+    }
+    setValidation(null);
+    setPending(true);
+    try {
+      if (await requestPasswordReset(email)) setResetRequested(true);
     } finally {
       setPending(false);
     }
@@ -61,8 +77,14 @@ export function VendorLoginScreen() {
 
           {/* Login Card */}
           <View style={styles.card}>
-            <Text style={styles.cardHeader}>Sign In</Text>
-            <Text style={styles.cardSub}>Enter your credentials to access your store workspace.</Text>
+            <Text style={styles.cardHeader}>{forgotPassword ? 'Reset password' : 'Sign In'}</Text>
+            <Text style={styles.cardSub}>{forgotPassword
+              ? 'We will email you a link to set a new password.'
+              : 'Enter your credentials to access your store workspace.'}</Text>
+
+            {resetRequested ? <Text style={styles.successText}>
+              If this address has a vendor account, a reset link is on its way. Open it on a device with FreshLens installed.
+            </Text> : null}
 
             {validation || message ? (
               <View style={styles.errorBanner} accessibilityRole="alert">
@@ -90,8 +112,7 @@ export function VendorLoginScreen() {
               </View>
             </View>
 
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
+            {!forgotPassword ? <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Password</Text>
               <View style={styles.inputWrap}>
                 <TextInput
@@ -106,7 +127,7 @@ export function VendorLoginScreen() {
                   onSubmitEditing={() => void submit()}
                 />
               </View>
-            </View>
+            </View> : null}
 
             {/* Submit Button */}
             <Pressable
@@ -115,15 +136,24 @@ export function VendorLoginScreen() {
                 pending && styles.btnDisabled,
                 pressed && styles.btnPressed,
               ]}
-              onPress={() => void submit()}
+              onPress={() => void (forgotPassword ? sendReset() : submit())}
               disabled={pending}
               accessibilityRole="button"
             >
               {pending ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text style={styles.submitBtnText}>Sign In to Workspace →</Text>
+                <Text style={styles.submitBtnText}>{forgotPassword ? 'Email reset link' : 'Sign In to Workspace →'}</Text>
               )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => { setForgotPassword(!forgotPassword); setResetRequested(false); setValidation(null); }}
+              disabled={pending}
+              accessibilityRole="button"
+              style={styles.switchMode}
+            >
+              <Text style={styles.switchModeText}>{forgotPassword ? 'Back to sign in' : 'Forgot password?'}</Text>
             </Pressable>
 
 
@@ -213,6 +243,9 @@ const styles = StyleSheet.create({
   },
   errorIcon: { fontSize: 16 },
   errorText: { flex: 1, color: '#dc2626', fontSize: 12, fontWeight: '600' },
+  successText: { color: '#047857', fontSize: 13, lineHeight: 19, marginBottom: 16 },
+  switchMode: { alignItems: 'center', padding: 12, marginTop: 8 },
+  switchModeText: { color: '#047857', fontSize: 14, fontWeight: '700' },
   inputGroup: { marginBottom: 16 },
   inputLabel: { color: '#334155', fontSize: 13, fontWeight: '700', marginBottom: 6 },
   inputWrap: {
@@ -255,4 +288,3 @@ const styles = StyleSheet.create({
   securityIcon: { fontSize: 12 },
   securityText: { color: '#94a3b8', fontSize: 11, fontWeight: '600' },
 });
-

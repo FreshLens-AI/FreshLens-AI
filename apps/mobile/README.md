@@ -4,6 +4,12 @@ Expo mobile client for authenticated vendor workflows. Supabase sessions are
 stored in chunked Expo SecureStore values, and only signed `vendor` identities
 with a valid `tenant_id` can enter the application.
 
+Vendors invited by a platform admin receive a `freshlens://set-password` link.
+The login screen also offers **Forgot password?**; both email flows open a
+password form in an installed mobile build, then return to sign in. Configure
+this redirect URL in Supabase Auth and use a development or release build rather
+than Expo Go for email-link testing.
+
 After sign-in, vendors can open the scan flow: camera capture → quantity ≥ 1 →
 multipart submit (when `POST /api/v1/scans` is available) → status poll.
 

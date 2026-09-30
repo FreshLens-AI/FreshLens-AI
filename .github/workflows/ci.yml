@@ -120,6 +120,7 @@ jobs:
             infra/db/migrations/0002_business_tables.sql \
             infra/db/migrations/0003_scan_identity.sql \
             infra/db/migrations/0004_category_shelf_life.sql \
+            infra/db/migrations/0005_tenant_onboarding.sql \
             infra/db/local/0020_runtime_login.sql \
             infra/db/tests/rls_isolation.sql
           do

@@ -29,6 +29,8 @@ class Settings(BaseSettings):
         "verify-full",
     ] = "prefer"
     supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    local_auth_shadow: bool = False
     supabase_jwt_audience: str = "authenticated"
     supabase_jwt_clock_skew_seconds: int = 30
     cors_origins: str = (

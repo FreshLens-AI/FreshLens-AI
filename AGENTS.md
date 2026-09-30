@@ -11,7 +11,7 @@ FreshLens is a multi-tenant SaaS for small grocery retailers (CS3203 Group 21, P
 | Path | Stack | Purpose |
 |---|---|---|
 | `apps/api` | FastAPI 0.116, Python 3.12, asyncpg, PyJWT, Celery | REST API (`/api/v1`), auth, tenant context, scan/sales orchestration |
-| `apps/web` | Next.js 16.2, React 19, @supabase/ssr | Admin UI: aggregate-only reads and shared shelf-life configuration |
+| `apps/web` | Next.js 16.2, React 19, @supabase/ssr | Admin UI: aggregate-only reads, shared shelf-life configuration, and tenant invitations |
 | `apps/mobile` | Expo ~57, React Native 0.86 | Vendor scanning app |
 | `packages/ml` | ultralytics, Celery worker | CNN inference worker + training scripts |
 | `infra/db/migrations` | SQL | Schema migrations (0001 auth_tenancy, 0002 business_tables, 0003 scan_identity) |

@@ -31,11 +31,13 @@ signed `app_role` and `tenant_id` as request context. Vendor database work must
 use `get_tenant_connection`, which opens the query transaction and sets its
 transaction-local PostgreSQL RLS context on that same connection.
 
-### Platform-admin catalogue and reads
+### Platform-admin endpoints
 
 The admin web uses platform-admin-only endpoints backed by `get_admin_connection`:
 
 - `GET /api/v1/admin/tenants` returns tenant profiles and monthly aggregates.
+- `POST /api/v1/admin/tenants` creates a tenant and sends its vendor a Supabase
+  password-setup invitation. Requires server-only `SUPABASE_SERVICE_ROLE_KEY`.
 - `GET /api/v1/admin/products` returns product metadata without inventory rows.
 - `GET /api/v1/admin/shelf-life-rules` lists the four shared category rules.
 - `PUT /api/v1/admin/shelf-life-rules/{category}` sets the two stage durations

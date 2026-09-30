@@ -63,10 +63,24 @@ queries. Keep it server-only if a later administrative workflow requires it.
 
 ## Provision accounts
 
-Accounts are owner-provisioned for V1. In **Authentication → Users**, use
-**Create user** with an email and temporary password, then map its UUID in SQL.
-Do not use an email invitation yet: neither client implements an invite callback
-or password-setup route. Do not enable public signup to work around that gap.
+Platform admins can create a tenant in the web **Tenants** page with the store
+name, vendor contact name, and email. FastAPI calls Supabase Auth Admin to invite
+the vendor, then inserts the tenant and vendor mapping under admin RLS. The
+invitation contains a one-time link; no password is emailed. Opening it in an
+installed FreshLens mobile build lets the vendor set a password and then sign in.
+The mobile login screen can also email a password reset link. Public signup stays
+disabled.
+
+Set `SUPABASE_SERVICE_ROLE_KEY` only on the FastAPI server. Add
+`freshlens://set-password` to **Authentication → URL Configuration → Redirect
+URLs** in the Supabase project, and configure SMTP for delivery to real tenant
+email addresses. The installed mobile build must include the `freshlens` URL
+scheme; Expo Go is not a stable target for these email links. Invitation and
+recovery links expire according to Supabase's email OTP expiration setting.
+Local Compose uses `LOCAL_AUTH_SHADOW=true`: onboarding writes the same tenant
+and vendor identity to hosted Supabase for its JWT hook and to the disposable
+local database for RLS tests and local API use. Hosted database deployments
+leave this false and write only through the restricted database role.
 
 Platform admin:
 
@@ -77,7 +91,7 @@ from auth.users
 where email = 'admin@example.com';
 ```
 
-Vendor:
+Manual vendor provisioning, if needed:
 
 ```sql
 insert into public.tenants (id, name)
