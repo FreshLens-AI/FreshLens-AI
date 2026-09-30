@@ -81,26 +81,26 @@ export function ScanStatusScreen({
           <View style={styles.loadingCircle}>
             <ActivityIndicator size="large" color="#196a49" />
           </View>
-          <Text style={styles.loadingTitle}>Processing AI Inspection…</Text>
+          <Text style={styles.loadingTitle}>Inspecting Produce…</Text>
           <Text style={styles.loadingSubtitle}>
-            Image is queued for produce identification and freshness grading.
+            Please wait while we identify the produce and check its freshness.
           </Text>
 
           <View style={styles.stepsCard}>
             <View style={styles.stepRow}>
               <Text style={styles.stepCheck}>✓</Text>
-              <Text style={styles.stepText}>Image uploaded to secure storage</Text>
+              <Text style={styles.stepText}>Photo uploaded successfully</Text>
             </View>
             <View style={styles.stepRow}>
               <ActivityIndicator size="small" color="#196a49" style={{ marginRight: 4 }} />
               <Text style={[styles.stepText, { fontWeight: '700', color: '#196a49' }]}>
-                Running produce identity model…
+                Identifying produce type…
               </Text>
             </View>
             <View style={styles.stepRow}>
               <Text style={styles.stepPending}>○</Text>
               <Text style={[styles.stepText, { color: '#849188' }]}>
-                Freshness model runs after identity is accepted
+                Checking freshness…
               </Text>
             </View>
           </View>
@@ -217,14 +217,14 @@ export function ScanStatusScreen({
 
             {/* Inspection Details Card */}
             <View style={styles.detailsCard}>
-              <Text style={styles.detailsHeader}>Batch & Scan Metadata</Text>
+              <Text style={styles.detailsHeader}>Scan Summary</Text>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Batch Quantity</Text>
+                <Text style={styles.detailLabel}>Total Quantity</Text>
                 <Text style={styles.detailVal}>{scan.quantity} units</Text>
               </View>
               <View style={styles.detailDivider} />
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Scan ID</Text>
+                <Text style={styles.detailLabel}>Reference ID</Text>
                 <Text style={styles.detailVal}>{scan.id.slice(0, 13)}…</Text>
               </View>
 
