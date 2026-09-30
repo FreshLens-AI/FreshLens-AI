@@ -66,6 +66,66 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /api/v1/auth/hooks/access-token:
+    post:
+      tags: [Auth]
+      summary: Supabase custom access-token hook (server to server)
+      description: |
+        Called by Supabase Auth on every sign-in and token refresh, not by
+        clients. Authenticated by a Standard Webhooks signature
+        (`webhook-id`, `webhook-timestamp`, `webhook-signature`) using
+        `SUPABASE_AUTH_HOOK_SECRET`, not a Bearer token. Resolves `app_role`
+        and `tenant_id` from the application database and returns the claims
+        Supabase signs into the access token; claims are stripped for
+        unprovisioned accounts and inactive tenants.
+      operationId: accessTokenHook
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, claims]
+              properties:
+                user_id:
+                  $ref: "#/components/schemas/Uuid"
+                claims:
+                  type: object
+                  additionalProperties: true
+                authentication_method:
+                  type: string
+      responses:
+        "200":
+          description: Claims for Supabase to sign
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [claims]
+                properties:
+                  claims:
+                    type: object
+                    additionalProperties: true
+        "400":
+          description: Malformed payload or claims for a different user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing, forged, or stale webhook signature
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Hook secret is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/v1/scans:
     post:
       tags: [Scans]

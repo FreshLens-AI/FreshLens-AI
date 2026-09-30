@@ -529,4 +529,57 @@ end
 $hook_assertions$;
 rollback;
 
+-- The API HTTP hook resolves claims through the definer wrapper. The API login
+-- gets the same claims as the invoker hook without any identity-table bypass.
+begin;
+set local role freshlens_api_local;
+do $http_hook_assertions$
+declare
+  vendor_claims jsonb;
+  inactive_claims jsonb;
+begin
+  vendor_claims := public.resolve_access_token_claims(
+    jsonb_build_object(
+      'user_id', '10000000-0000-4000-8000-000000000001',
+      'claims', jsonb_build_object(
+        'sub', '10000000-0000-4000-8000-000000000001',
+        'app_role', 'platform_admin'
+      )
+    )
+  );
+  if vendor_claims #>> '{claims,app_role}' <> 'vendor'
+    or vendor_claims #>> '{claims,tenant_id}'
+      <> '20000000-0000-4000-8000-000000000001' then
+    raise exception 'API hook wrapper did not issue vendor claims';
+  end if;
+
+  inactive_claims := public.resolve_access_token_claims(
+    jsonb_build_object(
+      'user_id', '10000000-0000-4000-8000-000000000003',
+      'claims', jsonb_build_object('sub', '10000000-0000-4000-8000-000000000003')
+    )
+  );
+  if (inactive_claims -> 'claims') ? 'app_role' then
+    raise exception 'API hook wrapper issued claims for an inactive vendor';
+  end if;
+
+  if (select count(*) from public.users) <> 0 then
+    raise exception 'API login read identity rows without tenant context';
+  end if;
+end
+$http_hook_assertions$;
+rollback;
+
+begin;
+set local role authenticated;
+do $http_hook_denied$
+begin
+  perform public.resolve_access_token_claims('{}'::jsonb);
+  raise exception 'authenticated role executed the API hook wrapper';
+exception
+  when insufficient_privilege then null;
+end
+$http_hook_denied$;
+rollback;
+
 select 'RLS isolation and auth-hook checks passed' as result;

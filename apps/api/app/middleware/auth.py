@@ -17,6 +17,10 @@ from app.core.auth import (
 )
 from app.schemas.auth import AuthPrincipal
 
+# Supabase Auth calls the access-token hook with a signed webhook, not a user
+# session; the route verifies that signature itself.
+SIGNED_WEBHOOK_PATHS = frozenset({"/api/v1/auth/hooks/access-token"})
+
 current_principal: ContextVar[AuthPrincipal | None] = ContextVar(
     "current_principal",
     default=None,
@@ -42,6 +46,8 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         if not request.url.path.startswith("/api/v1"):
             return await call_next(request)
         if request.method == "OPTIONS":
+            return await call_next(request)
+        if request.url.path in SIGNED_WEBHOOK_PATHS:
             return await call_next(request)
 
         token = _bearer_token(request)

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     local_auth_shadow: bool = False
     supabase_jwt_audience: str = "authenticated"
     supabase_jwt_clock_skew_seconds: int = 30
+    supabase_auth_hook_secret: str = ""
     cors_origins: str = (
         "http://localhost:3000,http://localhost:3001,http://localhost:3002"
     )
