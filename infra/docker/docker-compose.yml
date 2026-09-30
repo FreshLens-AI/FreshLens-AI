@@ -89,6 +89,8 @@ services:
       FRESHNESS_IMAGE_SIZE: ${FRESHNESS_IMAGE_SIZE:-224}
       FRESHNESS_MIN_CONFIDENCE: ${FRESHNESS_MIN_CONFIDENCE:-0.50}
       YOLO_CONFIG_DIR: /var/lib/freshlens/yolo
+      PUSH_ENABLED: ${PUSH_ENABLED:-true}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
     volumes:
       - scan_images:/var/lib/freshlens/scans
       - yolo_weights:/var/lib/freshlens/yolo

@@ -57,7 +57,7 @@ class FakeConnection:
             return FakeCursor()
         if normalized.startswith("insert into public.alerts"):
             self.alert_inserts += 1
-            return FakeCursor()
+            return FakeCursor({"id": "new-alert"})
         raise AssertionError(f"Unexpected SQL: {normalized}")
 
 
@@ -132,6 +132,7 @@ def test_spoiled_result_creates_critical_alert(monkeypatch) -> None:
         identity_model_version="identity-yolo26n-cls-v1",
     )
 
-    db.complete("tenant-1", "scan-1", spoiled)
+    alert_id = db.complete("tenant-1", "scan-1", spoiled)
 
     assert connection.alert_inserts == 1
+    assert alert_id == "new-alert"
