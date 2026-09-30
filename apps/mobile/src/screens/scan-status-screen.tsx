@@ -219,7 +219,7 @@ export function ScanStatusScreen({
             <View style={styles.detailsCard}>
               <Text style={styles.detailsHeader}>Scan Summary</Text>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Total Quantity</Text>
+                <Text style={styles.detailLabel}>Batch Quantity</Text>
                 <Text style={styles.detailVal}>{scan.quantity} units</Text>
               </View>
               <View style={styles.detailDivider} />
