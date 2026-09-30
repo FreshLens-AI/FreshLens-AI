@@ -23,6 +23,7 @@ tags:
   - name: Auth
   - name: Scans
   - name: Alerts
+  - name: Devices
   - name: Products
   - name: Batches
   - name: Sales
@@ -172,6 +173,39 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+
+  /api/v1/devices:
+    post:
+      tags: [Devices]
+      summary: Register or refresh this device's push token
+      description: |
+        Called by the vendor app after sign-in (FR-V-001). Upserts on
+        `(tenant_id, token)`; tenant and user come from the JWT, never the body.
+        The worker sends best-effort Expo Push wake-ups to active tokens when a
+        scan completes/fails or a spoilage alert is raised (FR-V-006, FR-S-013).
+      operationId: registerDevice
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDeviceRequest"
+      responses:
+        "200":
+          description: Device token registered and active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
 
   /api/v1/products:
     get:
@@ -929,6 +963,37 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Uuid"
             - type: "null"
+
+    RegisterDeviceRequest:
+      type: object
+      required: [token, platform]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+          description: Expo push token (e.g. `ExponentPushToken[...]`)
+        platform:
+          type: string
+          enum: [ios, android]
+
+    Device:
+      type: object
+      required: [id, platform, active, updated_at]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+          enum: [ios, android]
+        active:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
 
     AlertList:
       type: object

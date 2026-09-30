@@ -13,6 +13,13 @@ const PUBLIC_PATHS = new Set([
   "/session-expired",
 ]);
 
+function isProxiedApiPath(pathname: string) {
+  return (
+    pathname === "/health" ||
+    pathname === "/openapi.json" ||
+    pathname.startsWith("/api/v1/")
+  );
+}
 function hasSupabaseAuthCookie(request: NextRequest) {
   return request.cookies
     .getAll()
@@ -44,6 +51,10 @@ function redirectWithSession(
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  // FastAPI is the auth boundary for proxied API traffic (Bearer JWT).
+  if (isProxiedApiPath(pathname)) {
+    return NextResponse.next({ request });
+  }
   const isPublicPath = PUBLIC_PATHS.has(pathname);
   const hadAuthCookie = hasSupabaseAuthCookie(request);
 

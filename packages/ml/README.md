@@ -57,7 +57,21 @@ python -m training.merge_identity_dataset \
 
 The generated `manifest.csv` records provenance and grouping. The generated
 `dataset-summary.json` records class counts, licences, and source URLs. Dataset
-images and model weights are gitignored; do not commit third-party image data.
+images and training run outputs remain gitignored; do not commit third-party
+image data. The shared V1 checkpoints below are intentionally versioned.
+
+## Shared V1 checkpoints
+
+| File | Use |
+|---|---|
+| `models/identity-v1.pt` | Five-class identity classifier loaded by the local worker. |
+| `models/freshness-v1.pt` | Three-class freshness classifier loaded by the local worker. |
+| `yolo26n-cls.pt` | Base classifier checkpoint from the V1 training workflow; not loaded by the worker. |
+
+The worker image copies `models/` into `/app/models`, so a fresh clone has the
+two runtime checkpoints available after `docker compose up --build`. These are
+integration baselines; the CUDA retraining and device-captured release tests
+described below are still required before calling them release models.
 
 ## Freshness dataset
 
@@ -111,8 +125,9 @@ pass the deduplicated cross-domain split. Even then, the final report must
 include a team-captured, device-diverse local test set; public web datasets can
 contain unrecorded near-duplicates and do not reproduce the app's camera flow.
 
-To activate a checkpoint locally, copy it to `models/identity-v1.pt`, then
-copy the freshness checkpoint to `models/freshness-v1.pt` and build the worker.
+The checked-in V1 checkpoints are active by default. To try replacement
+checkpoints locally, copy them to `models/identity-v1.pt` and
+`models/freshness-v1.pt`, then rebuild the worker.
 The worker applies configurable `IDENTITY_MIN_CONFIDENCE` (0.75) and
 `FRESHNESS_MIN_CONFIDENCE` (0.50) gates. A rejected identity is completed
 without a grade; a rejected freshness prediction fails safely and asks for a
@@ -179,4 +194,3 @@ python -m training.evaluate_fl2tc \
   --split test \
   --output-dir ../../runs/eval
 ```
-

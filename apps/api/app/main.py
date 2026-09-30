@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import SupabaseJWTVerifier
 from app.core.config import get_settings
 from app.middleware.auth import SupabaseAuthMiddleware
-from app.routers import admin, alerts, auth, catalog, health, sales, scans
+from app.routers import admin, alerts, auth, catalog, devices, health, sales, scans
 
 settings = get_settings()
 
@@ -30,6 +30,7 @@ app.include_router(scans.router)
 app.include_router(catalog.router)
 app.include_router(sales.router)
 app.include_router(alerts.router)
+app.include_router(devices.router)
 app.include_router(admin.router)
 
 
