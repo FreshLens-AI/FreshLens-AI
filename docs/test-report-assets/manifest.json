@@ -1,0 +1,191 @@
+[
+  {
+    "id": "E01",
+    "file": "E01-api-scans.png",
+    "source": "Screenshot from 2026-09-27 18-58-00.png",
+    "title": "API-01: scan request and orchestration tests",
+    "caption": "10 passed; multipart input validation, asynchronous acceptance and tenant-namespaced publishing. Component tests use substituted dependencies.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "e3a598f80a228b3eea59cbe982bb208363f80cddb5d864c600c3c811fe79df3c"
+  },
+  {
+    "id": "E02",
+    "file": "E02-api-sales.png",
+    "source": "Screenshot from 2026-09-27 18-58-05.png",
+    "title": "API-02: sales business rules",
+    "caption": "9 passed; stock rules and sequential idempotency checks with a fake database. Live concurrency is covered separately by INT-01.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "57fffb1e9f347370e9270e90678a8a4216cfb54e681a00773431184fffdef6d3"
+  },
+  {
+    "id": "E03",
+    "file": "E03-database-security.png",
+    "source": "Screenshot from 2026-09-27 18-58-10.png",
+    "title": "SEC-01: PostgreSQL isolation and restricted role",
+    "caption": "Both SQL suites passed with ON_ERROR_STOP=1; the final command exit code is 0.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "04149091682c12aa6fdb09e6fa2fbfa4b33545ce9590a1908b03f395e6c85dd1"
+  },
+  {
+    "id": "E04",
+    "file": "E04-ml-confidence.png",
+    "source": "Screenshot from 2026-09-27 18-58-13.png",
+    "title": "ML-01: identity and freshness confidence gates",
+    "caption": "5 passed using controlled model predictions. This verifies decision logic, not trained-model accuracy.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "de84f42b2e1d2543e454de0b1df059e1d641c8a34707854a6563c41d73792b06"
+  },
+  {
+    "id": "E05",
+    "file": "E05-web-unit.png",
+    "source": "Screenshot from 2026-09-27 18-58-20.png",
+    "title": "UI-01: web utility unit tests",
+    "caption": "8 passed using node:test through tsx. These tests cover mappings and authentication claims; browser UI testing is recorded as UI-02.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "33a14d55109388ea5e20780f60147ada0e95b9bdff27b23b413e51a902b5fbad"
+  },
+  {
+    "id": "E06",
+    "file": "E06-mobile-unit.png",
+    "source": "Screenshot from 2026-09-27 18-58-27.png",
+    "title": "MOB-01: mobile authentication and session storage",
+    "caption": "9 passed; signed-claim validation and chunked storage logic. This is not phone-device UI automation.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "736da71e5e6580e0d80005b7bf753c63ba1b99d1c55f96fda9bfc04bbc86b359"
+  },
+  {
+    "id": "E07",
+    "file": "E07-api-suite.png",
+    "source": "Screenshot from 2026-09-27 18-58-30.png",
+    "title": "Complete API regression suite",
+    "caption": "68 passed, with one third-party Starlette/AnyIO deprecation warning; exit code 0. API-01 and API-02 are subsets of this total.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "1bdaa864f661cb42e4d6140655a1ec684686de0c6ab2fb8c27bf384271d80fa6"
+  },
+  {
+    "id": "E08",
+    "file": "E08-ml-suite.png",
+    "source": "Screenshot from 2026-09-27 18-58-33.png",
+    "title": "Complete ML utility and worker-logic suite",
+    "caption": "28 passed; dataset preparation, confidence logic and inventory/stub utilities. ML-01 is a subset of this total.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "2ef03a9e4543f8dfaa5a09bdad2c9ca1da64adfcbd518dbe0be14323adaa060b"
+  },
+  {
+    "id": "E09",
+    "file": "E09-static-checks.png",
+    "source": "Screenshot from 2026-09-27 18-58-38.png",
+    "title": "Static analysis: lint and TypeScript",
+    "caption": "Web ESLint, web typecheck and mobile typecheck completed successfully; exit code 0. These are static checks rather than runtime tests.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "fe885d705978143946d84ba658b91bd8ed27bdf7539864f41a5b4227926053f6"
+  },
+  {
+    "id": "E10",
+    "file": "E10-integration.png",
+    "source": "Screenshot from 2026-09-27 21-35-40.png",
+    "title": "INT-01: live service integration",
+    "caption": "14 passed in 2.49 seconds. Real HTTP, PostgreSQL, Redis and Celery; local JWKS issuer and stub-v0 classifier. Includes the sales concurrency fix.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "77ecbaad4abc55728b6fbe8332fe03c111ba7327d0417732cf0476b74160a3fc"
+  },
+  {
+    "id": "E11",
+    "file": "E11-smoke-setup.png",
+    "source": "Screenshot from 2026-09-27 21-35-52.png",
+    "title": "PERF-01: k6 smoke configuration",
+    "caption": "1 virtual user for 10 seconds; local fixtures and thresholds shown. The gracefulStop warning caused the default 30-second grace period to apply.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "dffd87990fec48acf73abe3811c31eba2feffe8b520b47d087d694c9d359c002"
+  },
+  {
+    "id": "E12",
+    "file": "E12-smoke-thresholds.png",
+    "source": "Screenshot from 2026-09-27 21-35-57.png",
+    "title": "PERF-01: smoke thresholds and checks",
+    "caption": "All four thresholds passed; 240 of 240 functional checks passed.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "176a466bb271d8c977b754428c84a93014f5edb658039a956d2df32bd539d260"
+  },
+  {
+    "id": "E13",
+    "file": "E13-smoke-results.png",
+    "source": "Screenshot from 2026-09-27 21-36-02.png",
+    "title": "PERF-01: smoke metrics and completion",
+    "caption": "84 HTTP requests; read p95 77.50 ms, write p95 110.91 ms; 0% HTTP failures; both stock checks passed; exit 0.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "6a9c1c9171f76dcf1a1e280db7a252dd4d8a8aa05d137e6eb682c212b5919509"
+  },
+  {
+    "id": "E14",
+    "file": "E14-load-setup.png",
+    "source": "Screenshot from 2026-09-27 21-38-33.png",
+    "title": "PERF-02: k6 load configuration",
+    "caption": "Gradual ramp to 10 virtual users over a 60-second profile; same populated fixtures and thresholds as smoke and spike.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "5c83a2712e2d4e1ad748fc61bb011fc06260735327fa323918838649f392b17b"
+  },
+  {
+    "id": "E15",
+    "file": "E15-load-thresholds.png",
+    "source": "Screenshot from 2026-09-27 21-38-39.png",
+    "title": "PERF-02: load thresholds and checks",
+    "caption": "All four thresholds passed; 5,013 of 5,013 functional checks passed.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "a97281190ebf6dcb8adb3965ee0c4c8831427f5c317f47ba723c5cde079fae54"
+  },
+  {
+    "id": "E16",
+    "file": "E16-load-results.png",
+    "source": "Screenshot from 2026-09-27 21-38-41.png",
+    "title": "PERF-02: load metrics and completion",
+    "caption": "1,754 HTTP requests; read p95 308.80 ms, write p95 499.62 ms (rounded from JSON); 0% HTTP failures; stock checks passed; exit 0.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "efa674e595a3193a4ee9e685a233b490c4e08b4bb4b37488a708583c9123b1f3"
+  },
+  {
+    "id": "E17",
+    "file": "E17-spike-setup.png",
+    "source": "Screenshot from 2026-09-27 21-38-46.png",
+    "title": "PERF-03: k6 spike configuration",
+    "caption": "Short spike to 25 virtual users over a 44-second profile; setup, actual grace period and acceptance thresholds shown.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "c9e793e335feb9070db008c67035f3543b2fb875afe2f83b4a0f42cb2801e531"
+  },
+  {
+    "id": "E18",
+    "file": "E18-spike-thresholds.png",
+    "source": "Screenshot from 2026-09-27 21-38-50.png",
+    "title": "PERF-03: spike latency threshold failures",
+    "caption": "Read p95 668.52 ms exceeds 500 ms; write p95 1,192.94 ms exceeds 1,000 ms. All 2,910 functional checks passed, but the performance verdict is FAIL.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "39ee414824034836aa62203759d6f6d6cdf1cf47a9e1af19183e19f337cba2dd"
+  },
+  {
+    "id": "E19",
+    "file": "E19-spike-results.png",
+    "source": "Screenshot from 2026-09-27 21-38-53.png",
+    "title": "PERF-03: spike metrics and failed completion",
+    "caption": "1,032 HTTP requests; 0% HTTP failures; stock checks passed for both tenants. Exit code 99 records the two failed latency thresholds.",
+    "origin": "User-captured terminal screenshot",
+    "sha256": "4371f06cd69622cf874108398703eba933c47afd897d1354afc326a6f2ac669f"
+  },
+  {
+    "id": "E20",
+    "file": "E20-playwright.png",
+    "source": "test_empty_submission_shows_field_errors.png",
+    "title": "UI-02: Playwright desktop form validation",
+    "caption": "Actual Next.js sign-in page after Playwright submitted an empty form. Both validation messages and invalid-field states were asserted at 1440 x 900.",
+    "origin": "Playwright browser screenshot, 27 September 2026",
+    "sha256": "0d1b1dcc98a26a16e24785429ef6aae3f836fb7d0c2365cec503dff0f0363bbb"
+  },
+  {
+    "id": "E21",
+    "file": "E21-playwright.png",
+    "source": "test_mobile_width_login_has_no_horizontal_overflow.png",
+    "title": "UI-02: Playwright mobile-width layout",
+    "caption": "Actual browser capture at a 390 x 844 viewport (full page). Playwright verified the submit control was visible and inside the viewport width, with no horizontal overflow. This is browser viewport testing, not native mobile testing.",
+    "origin": "Playwright browser screenshot, 27 September 2026",
+    "sha256": "ba310ce08666a405b58c6c849d55f1f323dd3acfe0406f24c7b06384e3fbba3a"
+  }
+]
