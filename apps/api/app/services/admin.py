@@ -6,6 +6,7 @@ from app.schemas.admin import (
     AdminAlert,
     AdminAlertList,
     AdminAnalytics,
+    AdminOverview,
     AdminPipelineTotal,
     AdminProduct,
     AdminProductList,
@@ -18,7 +19,10 @@ class AdminProductService:
     def __init__(self, connection: asyncpg.Connection) -> None:
         self.connection = connection
 
-    async def list(self, *, limit: int, offset: int) -> AdminProductList:
+    async def list(
+        self, *, limit: int, offset: int, search: str = "",
+        tenant_id: UUID | None = None, product_id: UUID | None = None,
+    ) -> AdminProductList:
         rows = await self.connection.fetch(
             """
             select
@@ -39,11 +43,18 @@ class AdminProductService:
               count(*) over()::int as total
             from public.products
             join public.tenants on tenants.id = products.tenant_id
+            where ($3 = '' or products.name ilike '%' || $3 || '%'
+              or tenants.name ilike '%' || $3 || '%')
+              and ($4::uuid is null or products.tenant_id = $4)
+              and ($5::uuid is null or products.id = $5)
             order by products.updated_at desc, products.name
             limit $1 offset $2
             """,
             limit,
             offset,
+            search,
+            tenant_id,
+            product_id,
         )
         return AdminProductList(
             items=[AdminProduct.model_validate(dict(row)) for row in rows],
@@ -57,7 +68,10 @@ class AdminAlertService:
     def __init__(self, connection: asyncpg.Connection) -> None:
         self.connection = connection
 
-    async def list(self, *, limit: int, offset: int) -> AdminAlertList:
+    async def list(
+        self, *, limit: int, offset: int, search: str = "",
+        alert_type: str | None = None, severity: str | None = None,
+    ) -> AdminAlertList:
         rows = await self.connection.fetch(
             """
             select
@@ -74,11 +88,19 @@ class AdminAlertService:
             from public.alerts
             join public.tenants on tenants.id = alerts.tenant_id
             left join public.products on products.id = alerts.product_id
+            where ($3 = '' or alerts.message ilike '%' || $3 || '%'
+              or tenants.name ilike '%' || $3 || '%'
+              or products.name ilike '%' || $3 || '%')
+              and ($4::text is null or alerts.type::text = $4)
+              and ($5::text is null or alerts.severity::text = $5)
             order by alerts.created_at desc
             limit $1 offset $2
             """,
             limit,
             offset,
+            search,
+            alert_type,
+            severity,
         )
         return AdminAlertList(
             items=[AdminAlert.model_validate(dict(row)) for row in rows],
@@ -86,6 +108,38 @@ class AdminAlertService:
             limit=limit,
             offset=offset,
         )
+
+
+class AdminOverviewService:
+    def __init__(self, connection: asyncpg.Connection) -> None:
+        self.connection = connection
+
+    async def get(self) -> AdminOverview:
+        row = await self.connection.fetchrow(
+            """
+            select
+              (select count(*)::int from public.tenants) as total_tenants,
+              (select count(*)::int from public.tenants where status = 'active') as active_tenants,
+              (select count(*)::int from public.products) as total_products,
+              (select count(*)::int from public.alerts) as active_alerts,
+              (select count(*)::int from public.alerts where severity = 'critical') as critical_alerts,
+              (select count(distinct tenant_id)::int from public.alerts) as affected_tenants,
+              coalesce(scans.monthly_scans, 0)::int as monthly_scans,
+              coalesce(scans.monthly_fresh, 0)::int as monthly_fresh,
+              coalesce(scans.monthly_medium, 0)::int as monthly_medium,
+              coalesce(scans.monthly_spoiled, 0)::int as monthly_spoiled
+            from (
+              select
+                count(*)::int as monthly_scans,
+                count(*) filter (where classification = 'fresh')::int as monthly_fresh,
+                count(*) filter (where classification = 'medium')::int as monthly_medium,
+                count(*) filter (where classification = 'spoiled')::int as monthly_spoiled
+              from public.scans
+              where created_at >= date_trunc('month', now())
+            ) scans
+            """
+        )
+        return AdminOverview.model_validate(dict(row))
 
 
 class AdminAnalyticsService:

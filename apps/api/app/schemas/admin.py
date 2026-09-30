@@ -94,3 +94,16 @@ class AdminAnalytics(BaseModel):
     tenant_id: UUID | None = None
     trend: list[AdminTrendPoint]
     pipeline: list[AdminPipelineTotal]
+
+
+class AdminOverview(BaseModel):
+    total_tenants: int
+    active_tenants: int
+    total_products: int
+    active_alerts: int
+    critical_alerts: int
+    affected_tenants: int
+    monthly_scans: int
+    monthly_fresh: int
+    monthly_medium: int
+    monthly_spoiled: int

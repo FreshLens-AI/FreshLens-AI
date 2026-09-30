@@ -1,4 +1,5 @@
 import asyncpg
+from uuid import UUID
 
 from app.schemas.admin import Tenant, TenantList
 
@@ -7,7 +8,10 @@ class TenantService:
     def __init__(self, connection: asyncpg.Connection) -> None:
         self.connection = connection
 
-    async def list(self, *, limit: int, offset: int) -> TenantList:
+    async def list(
+        self, *, limit: int, offset: int, search: str = "",
+        status: str | None = None, tenant_id: UUID | None = None,
+    ) -> TenantList:
         rows = await self.connection.fetch(
             """
             select
@@ -72,11 +76,19 @@ class TenantService:
               order by users.created_at
               limit 1
             ) primary_contact on true
+            where ($3 = '' or tenants.name ilike '%' || $3 || '%'
+              or primary_contact.display_name ilike '%' || $3 || '%'
+              or primary_contact.email ilike '%' || $3 || '%')
+              and ($4::text is null or tenants.status::text = $4)
+              and ($5::uuid is null or tenants.id = $5)
             order by tenants.created_at desc
             limit $1 offset $2
             """,
             limit,
             offset,
+            search,
+            status,
+            tenant_id,
         )
         items = [Tenant.model_validate(dict(row)) for row in rows]
         total = int(rows[0]["total"]) if rows else 0

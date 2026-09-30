@@ -72,7 +72,11 @@ After a sale commits, clients use `GET /api/v1/products`, `GET /api/v1/batches`,
 | `GET` | `/api/v1/batches` | vendor | `200` `BatchList` |
 | `POST` | `/api/v1/sales` | vendor | `201` `Sale` |
 | `POST` | `/api/v1/sales/voice-draft` | vendor | `200` `VoiceSaleDraft` |
-| `GET` | `/api/v1/admin/tenants` | platform_admin | `200` `TenantList` (web scaffold) |
+| `GET` | `/api/v1/admin/tenants` | platform_admin | `200` `TenantList` (search, status, pagination) |
+| `GET` | `/api/v1/admin/products` | platform_admin | `200` `AdminProductList` (search, tenant, pagination) |
+| `GET` | `/api/v1/admin/alerts` | platform_admin | `200` `AdminAlertList` (search, type, severity, pagination) |
+| `GET` | `/api/v1/admin/overview` | platform_admin | `200` `AdminOverview` (aggregate totals) |
+| `GET` | `/api/v1/admin/analytics` | platform_admin | `200` `AdminAnalytics` (days and tenant filters) |
 
 ## Authentication claims
 
@@ -83,7 +87,7 @@ request bodies or user-editable metadata. See [`../authentication.md`](../authen
 
 ## Out of scope (later)
 
-Presigned R2 upload · webhooks · alert CRUD · product/batch full CRUD · analytics dashboards.
+Presigned R2 upload · webhooks · alert CRUD · product/batch full CRUD.
 
 ## Viewing the OpenAPI
 
