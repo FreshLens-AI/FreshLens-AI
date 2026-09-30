@@ -37,6 +37,15 @@ export async function loginAction(
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    if (error.code === "over_request_rate_limit") {
+      return { message: "Too many sign-in attempts. Please try again later." };
+    }
+    if (error.code === "email_not_confirmed") {
+      return { message: "Confirm your email before signing in." };
+    }
+    if (error.code !== "invalid_credentials") {
+      return { message: "Sign-in is temporarily unavailable. Please try again shortly." };
+    }
     return { message: "Incorrect email or password. Please try again." };
   }
 

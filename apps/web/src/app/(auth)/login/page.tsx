@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LockKeyhole, ShieldCheck, Sprout } from "lucide-react";
+import { LockKeyhole, Sprout } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -38,21 +38,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <p className={styles.eyebrow}>Platform administration</p>
           <h1>Clear oversight for fresher decisions.</h1>
           <p>
-            Manage tenant operations, catalogue standards, shelf-life rules, and
-            privacy-safe platform intelligence from one focused workspace.
+            Review tenant activity, product settings, alerts, and privacy-safe
+            trends from one focused workspace.
           </p>
         </div>
 
-        <div className={styles.privacy}>
-          <ShieldCheck size={22} aria-hidden="true" />
-          <div>
-            <strong>Designed around tenant privacy</strong>
-            <p>
-              Administrator access is role-gated and never exposes raw vendor
-              scans, images, quantities, or inventory records.
-            </p>
-          </div>
-        </div>
       </section>
 
       <section className={styles.panel} aria-labelledby="login-heading">

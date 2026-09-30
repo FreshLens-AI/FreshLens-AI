@@ -15,8 +15,12 @@ NOW = datetime(2026, 8, 13, tzinfo=UTC)
 class FakeConnection:
     def __init__(self) -> None:
         self.rows: list[dict[str, object]] = []
+        self.last_query = ""
+        self.last_args: tuple[object, ...] = ()
 
     async def fetch(self, query: str, *args: object) -> list[dict[str, object]]:
+        self.last_query = query
+        self.last_args = args
         return self.rows
 
 
@@ -35,6 +39,7 @@ class SequenceConnection:
         "/api/v1/admin/products",
         "/api/v1/admin/alerts",
         "/api/v1/admin/analytics",
+        "/api/v1/admin/overview",
     ],
 )
 def test_vendor_cannot_read_admin_data(
@@ -74,6 +79,40 @@ def test_admin_lists_tenants(
         assert response.status_code == 200
         assert body["total"] == 1
         assert body["items"][0]["name"] == "Example Grocer"
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.parametrize(
+    ("path", "expected_args", "query_fragment"),
+    [
+        ("/api/v1/admin/tenants?search=Grocer&status=active&limit=8&offset=8",
+         (8, 8, "Grocer", "active", None), "tenants.name ilike"),
+        ("/api/v1/admin/products?search=Tomato&limit=12&offset=12",
+         (12, 12, "Tomato", None, None), "products.name ilike"),
+        ("/api/v1/admin/alerts?search=Tomato&alert_type=aging&severity=warning&limit=12&offset=12",
+         (12, 12, "Tomato", "aging", "warning"), "alerts.message ilike"),
+    ],
+)
+def test_admin_list_filters_are_applied_by_database(
+    client: TestClient,
+    verifier: StaticVerifier,
+    path: str,
+    expected_args: tuple[object, ...],
+    query_fragment: str,
+) -> None:
+    connection = FakeConnection()
+
+    async def override_connection():
+        yield connection
+
+    app.dependency_overrides[get_admin_connection] = override_connection
+    try:
+        verifier.claims = admin_claims()
+        response = client.get(path, headers={"Authorization": "Bearer valid"})
+        assert response.status_code == 200
+        assert connection.last_args == expected_args
+        assert query_fragment in connection.last_query
     finally:
         app.dependency_overrides.clear()
 
@@ -203,5 +242,42 @@ def test_admin_reads_aggregate_scan_analytics(
             {"status": "completed", "count": 5},
             {"status": "failed", "count": 0},
         ]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_admin_overview_contains_only_aggregate_totals(
+    client: TestClient,
+    verifier: StaticVerifier,
+) -> None:
+    class OverviewConnection:
+        async def fetchrow(self, query: str):
+            assert "count(distinct tenant_id)" in query
+            return {
+                "total_tenants": 3,
+                "active_tenants": 2,
+                "total_products": 7,
+                "active_alerts": 4,
+                "critical_alerts": 1,
+                "affected_tenants": 2,
+                "monthly_scans": 20,
+                "monthly_fresh": 12,
+                "monthly_medium": 5,
+                "monthly_spoiled": 3,
+            }
+
+    async def override_connection():
+        yield OverviewConnection()
+
+    app.dependency_overrides[get_admin_connection] = override_connection
+    try:
+        verifier.claims = admin_claims()
+        response = client.get(
+            "/api/v1/admin/overview",
+            headers={"Authorization": "Bearer valid"},
+        )
+        assert response.status_code == 200
+        assert response.json()["monthly_scans"] == 20
+        assert "quantity" not in response.json()
     finally:
         app.dependency_overrides.clear()

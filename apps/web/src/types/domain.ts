@@ -1,26 +1,22 @@
 export type TenantStatus = "active" | "inactive";
-export type TenantPlan = "Starter" | "Growth" | "Pilot" | "Not configured";
-export type ProductStatus = "active" | "draft" | "archived";
 export type Classification = "fresh" | "medium" | "spoiled";
 export type ScanStatus = "pending" | "processing" | "completed" | "failed";
 export type AlertType = "spoilage" | "low_stock" | "aging" | "other";
 export type AlertSeverity = "info" | "warning" | "critical";
-export type AlertStatus = "active" | "acknowledged" | "dismissed";
 
 export interface Tenant {
   id: string;
   name: string;
-  ownerName: string;
-  email: string;
-  phone: string;
-  city: string;
+  ownerName: string | null;
+  email: string | null;
   status: TenantStatus;
-  plan: TenantPlan;
   createdAt: string;
-  lastActiveAt: string;
+  lastActiveAt: string | null;
   memberCount: number;
   catalogueCoverage: number;
   scansThisMonth: number;
+  completedClassifications: number;
+  classificationCounts: Record<Classification, number>;
   spoilageRate: number;
   classificationMix: Record<Classification, number>;
   activeAlerts: number;
@@ -28,25 +24,12 @@ export interface Tenant {
 
 export interface Product {
   id: string;
-  tenantId?: string;
-  tenantName?: string;
+  tenantId: string;
+  tenantName: string;
   name: string;
-  scientificName?: string;
-  category: string;
   shelfLifeDays: number;
-  status: ProductStatus;
-  tenantCoverage: number;
   scansThisMonth: number;
-  lowStockThreshold?: number;
-  updatedAt: string;
-  note?: string;
-}
-
-export interface ShelfLifeRule {
-  id: string;
-  category: string;
-  defaultDays: number;
-  productCount: number;
+  lowStockThreshold: number;
   updatedAt: string;
 }
 
@@ -55,10 +38,11 @@ export interface Alert {
   tenantId: string;
   type: AlertType;
   severity: AlertSeverity;
-  status: AlertStatus;
   title: string;
   message: string;
   productId?: string;
+  tenantName?: string;
+  productName?: string;
   batchReference?: string;
   createdAt: string;
   updatedAt: string;
@@ -82,7 +66,6 @@ export interface AdminDataSnapshot {
   tenants: Tenant[];
   products: Product[];
   alerts: Alert[];
-  shelfLifeRules: ShelfLifeRule[];
   trend: TrendPoint[];
   pipelineSummary: PipelineSummary[];
 }

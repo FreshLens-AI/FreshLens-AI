@@ -317,6 +317,16 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100, default: "" }
+          description: Case-insensitive organization or primary-contact search.
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, inactive] }
+        - name: tenant_id
+          in: query
+          schema: { $ref: "#/components/schemas/Uuid" }
       responses:
         "200":
           description: Tenant list
@@ -348,6 +358,16 @@ paths:
             maximum: 100
             default: 100
         - $ref: "#/components/parameters/Offset"
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100, default: "" }
+          description: Case-insensitive product or tenant name search.
+        - name: tenant_id
+          in: query
+          schema: { $ref: "#/components/schemas/Uuid" }
+        - name: product_id
+          in: query
+          schema: { $ref: "#/components/schemas/Uuid" }
       responses:
         "200":
           description: Tenant product metadata
@@ -379,6 +399,16 @@ paths:
             maximum: 100
             default: 100
         - $ref: "#/components/parameters/Offset"
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100, default: "" }
+          description: Case-insensitive alert message, tenant, or product search.
+        - name: alert_type
+          in: query
+          schema: { $ref: "#/components/schemas/AlertType" }
+        - name: severity
+          in: query
+          schema: { $ref: "#/components/schemas/AlertSeverity" }
       responses:
         "200":
           description: Tenant alert signals
@@ -386,6 +416,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminAlertList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/overview:
+    get:
+      tags: [Admin]
+      summary: Get privacy-safe platform overview totals
+      operationId: getAdminOverview
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      responses:
+        "200":
+          description: Aggregate tenant, product, alert, and current-month classification totals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1122,3 +1172,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminPipelineTotal"
+
+    AdminOverview:
+      type: object
+      additionalProperties: false
+      required: [total_tenants, active_tenants, total_products, active_alerts, critical_alerts, affected_tenants, monthly_scans, monthly_fresh, monthly_medium, monthly_spoiled]
+      properties:
+        total_tenants: { type: integer, minimum: 0 }
+        active_tenants: { type: integer, minimum: 0 }
+        total_products: { type: integer, minimum: 0 }
+        active_alerts: { type: integer, minimum: 0 }
+        critical_alerts: { type: integer, minimum: 0 }
+        affected_tenants: { type: integer, minimum: 0 }
+        monthly_scans: { type: integer, minimum: 0 }
+        monthly_fresh: { type: integer, minimum: 0 }
+        monthly_medium: { type: integer, minimum: 0 }
+        monthly_spoiled: { type: integer, minimum: 0 }

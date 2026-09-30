@@ -34,7 +34,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
             type="email"
             autoComplete="username"
             inputMode="email"
-            placeholder="admin@freshlens.ai"
+            placeholder="Enter your admin email"
             aria-invalid={Boolean(state.fieldErrors?.email)}
             aria-describedby={
               state.fieldErrors?.email ? "admin-email-error" : undefined

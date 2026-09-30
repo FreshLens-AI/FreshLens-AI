@@ -35,8 +35,7 @@
 }
 
 .brand,
-.storyCopy,
-.privacy {
+.storyCopy {
   position: relative;
   z-index: 1;
 }
@@ -78,6 +77,7 @@
 
 .storyCopy {
   max-width: 540px;
+  margin: auto 0;
 }
 
 .eyebrow {
@@ -103,31 +103,6 @@
   color: #b9cfc2;
   font-size: 16px;
   line-height: 1.75;
-}
-
-.privacy {
-  display: flex;
-  max-width: 510px;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 13px;
-  color: #bcd2c5;
-  background: rgba(5, 25, 18, 0.24);
-  backdrop-filter: blur(8px);
-}
-
-.privacy strong {
-  display: block;
-  margin-bottom: 2px;
-  color: #f2faf5;
-  font-size: 13px;
-}
-
-.privacy p {
-  font-size: 12px;
-  line-height: 1.55;
 }
 
 .panel {
@@ -340,7 +315,6 @@
   .page { grid-template-columns: 1fr; }
   .story { min-height: auto; gap: 72px; padding: 30px; }
   .storyCopy h1 { font-size: clamp(34px, 10vw, 50px); }
-  .privacy { display: none; }
   .panel { min-height: auto; padding: 56px 24px 72px; }
 }
 

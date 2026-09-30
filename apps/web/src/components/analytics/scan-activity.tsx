@@ -37,7 +37,6 @@ export function ScanActivity() {
         <div className="chart-summary-row"><div><strong>{formatNumber(today)}</strong><span>accepted today</span></div><div><strong>{formatNumber(total)}</strong><span>last 90 days</span></div></div>
         <TrendChart data={trend} />
       </Card>
-      <Card><CardHeader title="Status semantics" description="The exact lifecycle used throughout FreshLens V1" /><div className="status-explainer-grid">{pipelineSummary.map((item) => <div key={item.status}><Badge tone={scanStatusTone(item.status)}>{titleCase(item.status)}</Badge><p>{item.helper}</p></div>)}</div></Card>
     </div>
   );
 }

@@ -1,4 +1,7 @@
 import type { TrendPoint } from "@/types/domain";
+import { Activity } from "lucide-react";
+
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function TrendChart({
   data,
@@ -12,14 +15,16 @@ export function TrendChart({
   const insetX = 18;
   const insetY = 20;
   const values = data.map((item) => (mode === "scans" ? item.scans : item.spoiled));
+  if (values.every((value) => value === 0)) {
+    return <EmptyState icon={<Activity size={22} />} title="No activity in this period" description="The chart will appear when scans are recorded." />;
+  }
   const max = Math.max(...values, 1);
-  const points = values
-    .map((value, index) => {
+  const coordinates = values.map((value, index) => {
       const x = insetX + (index / Math.max(values.length - 1, 1)) * (width - insetX * 2);
       const y = height - insetY - (value / max) * (height - insetY * 2);
-      return `${x},${y}`;
-    })
-    .join(" ");
+      return { x, y, value };
+    });
+  const points = coordinates.map(({ x, y }) => `${x},${y}`).join(" ");
   const areaPoints = `${insetX},${height - insetY} ${points} ${width - insetX},${height - insetY}`;
   const color = mode === "scans" ? "#177a53" : "#d35b4b";
   const fill = mode === "scans" ? "url(#scanArea)" : "url(#spoilArea)";
@@ -42,10 +47,7 @@ export function TrendChart({
         ))}
         <polygon points={areaPoints} fill={fill} />
         <polyline points={points} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        {values.map((value, index) => {
-          const [x, y] = points.split(" ")[index].split(",");
-          return <circle key={`${value}-${index}`} cx={x} cy={y} r="3.5" fill="#fff" stroke={color} strokeWidth="2.5" />;
-        })}
+        {coordinates.map(({ x, y, value }, index) => value > 0 ? <circle key={index} cx={x} cy={y} r="3.5" fill="#fff" stroke={color} strokeWidth="2.5" /> : null)}
       </svg>
       <div className="trend-chart__labels" aria-hidden="true">
         {data.map((item, index) => (
