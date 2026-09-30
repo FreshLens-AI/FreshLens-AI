@@ -1,0 +1,9 @@
+# Demo / small-VM override: stub classifier without PyTorch YOLO image.
+# Used when root .env has CLASSIFIER=stub (see scripts/deploy-vps.sh).
+services:
+  worker:
+    build:
+      context: ../../packages/ml
+      dockerfile: Dockerfile.stub
+    environment:
+      CLASSIFIER: stub
