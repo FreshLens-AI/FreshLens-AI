@@ -54,10 +54,7 @@ export function VendorLoginScreen() {
               </View>
             </View>
 
-            <View style={styles.heroTag}>
-              <Text style={styles.heroTagDot}>●</Text>
-              <Text style={styles.heroTagText}>Enterprise Vendor Portal</Text>
-            </View>
+
 
             <Text style={styles.headline}>Automated produce inspection at your fingertips.</Text>
           </View>
@@ -129,13 +126,7 @@ export function VendorLoginScreen() {
               )}
             </Pressable>
 
-            {/* Security Badge */}
-            <View style={styles.securityRow}>
-              <Text style={styles.securityIcon}>🔒</Text>
-              <Text style={styles.securityText}>
-                Encrypted JWT Session · Partitioned Tenant Isolation
-              </Text>
-            </View>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

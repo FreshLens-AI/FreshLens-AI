@@ -18,7 +18,11 @@
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.sathurshnau.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +35,11 @@
           "cameraPermission": "FreshLens needs camera access to scan produce freshness."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1397c863-eefb-4271-ae36-d0f4cb93a6ee"
+      }
+    }
   }
 }

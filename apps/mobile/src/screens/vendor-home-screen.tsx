@@ -93,7 +93,7 @@ export function VendorHomeScreen({ navigation }: Props) {
               <View style={styles.onlineDot} />
               <Text style={styles.onlineText}>Connected</Text>
             </View>
-            <Text style={styles.tenantPill}>Example Grocer</Text>
+
           </View>
           <Text style={styles.heroTitle}>Produce Dashboard</Text>
           <Text style={styles.heroCopy}>
@@ -138,9 +138,6 @@ export function VendorHomeScreen({ navigation }: Props) {
           <View style={styles.actionTextCol}>
             <View style={styles.actionTitleRow}>
               <Text style={styles.primaryActionTitle}>Scan Produce</Text>
-              <View style={styles.aiTag}>
-                <Text style={styles.aiTagText}>YOLO AI</Text>
-              </View>
             </View>
             <Text style={styles.primaryActionSubtitle}>
               Photograph produce to inspect freshness score & classification
@@ -205,16 +202,7 @@ export function VendorHomeScreen({ navigation }: Props) {
           <Text style={styles.chevronSecondary}>›</Text>
         </Pressable>
 
-        {/* Security & Tenant Footer Notice */}
-        <View style={styles.footerCard}>
-          <Text style={styles.footerIcon}>🔒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.footerTitle}>Tenant Isolation Verified</Text>
-            <Text style={styles.footerCopy}>
-              Signed vendor session is scoped to Example Grocer database partition.
-            </Text>
-          </View>
-        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

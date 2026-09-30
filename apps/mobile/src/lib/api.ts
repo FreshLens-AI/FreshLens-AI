@@ -55,6 +55,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
 
   const headers = new Headers(init.headers);
   headers.set('Authorization', `Bearer ${accessToken}`);
+  headers.set('Bypass-Tunnel-Reminder', 'true');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
@@ -107,9 +108,14 @@ export async function submitScan(
   form.append('quantity', String(quantity));
 
   console.log('[submitScan] uploading file size=', image.size, 'qty=', quantity);
-  const res = await apiFetch('api/v1/scans', { method: 'POST', body: form });
-  console.log('[submitScan] response status=', res.status);
-  return parseJsonOrThrow<ScanAccepted>(res);
+  try {
+    const res = await apiFetch('api/v1/scans', { method: 'POST', body: form });
+    console.log('[submitScan] response status=', res.status);
+    return parseJsonOrThrow<ScanAccepted>(res);
+  } catch (err) {
+    console.error('[submitScan] ERROR:', err);
+    throw err;
+  }
 }
 
 export async function getScan(scanId: string): Promise<Scan> {
@@ -147,8 +153,9 @@ export function getIdentifiedProduce(
 }
 
 export function getProduceEmoji(name?: string | null): string {
-  if (!name) return '🥬';
+  if (!name) return '❓';
   const n = name.toLowerCase();
+  if (n.includes('unknown')) return '❓';
   if (n.includes('apple')) return '🍎';
   if (n.includes('banana')) return '🍌';
   if (n.includes('tomato')) return '🍅';
@@ -163,7 +170,8 @@ export function getProduceEmoji(name?: string | null): string {
   if (n.includes('mango')) return '🥭';
   if (n.includes('avocado')) return '🥑';
   if (n.includes('lemon')) return '🍋';
-  return '🥬';
+  if (n.includes('eggplant') || n.includes('brinjal')) return '🍆';
+  return '❓';
 }
 
 export function getFreshnessBadge(classification: Classification | null | undefined): {
