@@ -289,12 +289,12 @@ The view holds use-case diagrams and textual use-case specifications. Sequences 
 | Field | Content |
 |---|---|
 | Actor | Platform Admin |
-| Description | Maintain products and `shelf_life_days` used by V1 static aging alerts |
+| Description | Set shared fresh-to-medium and medium-to-spoiled durations for each supported produce category |
 | Preconditions | Admin authenticated |
-| Main flow | 1. Admin opens catalogue. 2. Creates or edits products and shelf-life days. 3. API persists under admin authorization. |
+| Main flow | 1. Admin opens catalogue. 2. Sets both stage durations for a category. 3. API persists the shared rule and updates matching tenant products' total shelf life. |
 | Success | Products available for vendor batches and aging rules |
 | Failure | Validation or auth failure |
-| Extensions | Category-level defaults if introduced without breaking per-product override |
+| Extensions | Product creation and per-product overrides are outside the current admin UI |
 | Requirements | FR-A-005, FR-A-006 |
 
 ## 4.10 UC-A-ANALYTICS: View platform analytics
@@ -746,6 +746,8 @@ Core entities: `tenants`, `users`, `products`, `batches`, `scans`, `alerts`, `de
 
 Every business table above includes `tenant_id` and an RLS policy in the same migration that creates the table (DR-001 through DR-012). Cross-tenant foreign keys are rejected by RLS and by application checks that resolve related rows under the same `app.tenant_id`.
 
+`product_category_shelf_life` is a shared reference table for the four model-supported produce categories. It contains no tenant or inventory rows. Its forced RLS policy lets authenticated vendors read rules and only platform admins update them; a database trigger synchronizes each matching tenant product's combined `shelf_life_days`.
+
 ![Figure 9.1. Entity-relationship model](diagrams/fig-9-1-er-model.png)
 
 *Figure 9.1. Logical ER model in crow's foot notation for FreshLens V1, including sales, sale_items, and device_tokens.*
@@ -891,4 +893,3 @@ Stock deduction, low-stock evaluation inputs, and RLS context are centralized so
 ## Tools
 
 Architecture figures were drawn in the diagrams.net (Draw.io) online editor and exported as PNG under `docs/design/diagrams/`. The master markdown document `docs/design/FreshLens-SAD.md` concatenates sections `01` through `12` in order.
-

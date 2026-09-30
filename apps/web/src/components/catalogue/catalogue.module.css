@@ -3,6 +3,78 @@
   gap: 1.5rem;
 }
 
+.rulesSection {
+  display: grid;
+  gap: 1rem;
+}
+
+.rulesSection h2 {
+  color: var(--text-strong, #13251d);
+  font-size: 1.05rem;
+}
+
+.rulesSection > div:first-child p {
+  margin-top: 0.35rem;
+  color: var(--text-muted, #64748b);
+  font-size: 0.85rem;
+}
+
+.rulesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.shelfLifeRule {
+  padding: 1.15rem;
+}
+
+.ruleHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.ruleHeading h3 { font-size: 1rem; }
+.ruleHeading span { color: var(--text-muted, #64748b); font-size: 0.8rem; }
+
+.ruleForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.ruleForm label {
+  display: grid;
+  gap: 0.38rem;
+  color: var(--text-muted, #52645c);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ruleForm input {
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border-strong, #cedbd5);
+  border-radius: 0.55rem;
+  background: var(--surface, #fff);
+  color: var(--text-strong, #13251d);
+  font: inherit;
+}
+
+.ruleForm input:focus-visible {
+  border-color: var(--brand, #137a4a);
+  outline: 3px solid color-mix(in srgb, var(--brand, #137a4a) 15%, transparent);
+}
+
+.ruleMessage, .ruleError { min-height: 1.1rem; margin-top: 0.45rem; font-size: 0.78rem; }
+.ruleMessage { color: var(--brand, #137a4a); }
+.ruleError { color: #b42318; }
+
 .summaryGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -262,7 +334,7 @@
 
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -366,6 +438,8 @@
 }
 
 @media (max-width: 1040px) {
+  .ruleForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ruleForm button { grid-column: 1 / -1; }
   .toolbar {
     grid-template-columns: minmax(14rem, 1fr) minmax(10rem, 0.45fr);
   }
@@ -386,6 +460,7 @@
 }
 
 @media (max-width: 720px) {
+  .rulesGrid, .ruleForm { grid-template-columns: 1fr; }
   .summaryGrid,
   .detailGrid {
     grid-template-columns: 1fr;

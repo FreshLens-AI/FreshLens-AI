@@ -32,6 +32,8 @@ export interface AdminProductResponse {
   tenant_name: string;
   name: string;
   shelf_life_days: number;
+  fresh_to_medium_days: number | null;
+  medium_to_spoiled_days: number | null;
   low_stock_threshold: number;
   created_at: string;
   updated_at: string;
@@ -114,6 +116,8 @@ export function mapAdminProduct(row: AdminProductResponse): Product {
     tenantName: row.tenant_name,
     name: row.name,
     shelfLifeDays: row.shelf_life_days,
+    freshToMediumDays: row.fresh_to_medium_days,
+    mediumToSpoiledDays: row.medium_to_spoiled_days,
     scansThisMonth: row.scans_this_month,
     lowStockThreshold: row.low_stock_threshold,
     updatedAt: row.updated_at,

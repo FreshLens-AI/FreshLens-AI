@@ -11,7 +11,7 @@ import {
   type AdminProductResponse,
   type AdminTenantResponse,
 } from "@/lib/api/admin-map";
-import type { Alert, AdminDataSnapshot, Product, Tenant } from "@/types/domain";
+import type { Alert, AdminDataSnapshot, CategoryShelfLife, Product, Tenant } from "@/types/domain";
 
 interface Page<T> {
   items: T[];
@@ -96,6 +96,21 @@ export function loadProductPage(page = 1, search = "", tenantId?: string, produc
   return loadPage<AdminProductResponse, Product>(
     "products", page, pageSize, { search, tenant_id: tenantId, product_id: productId }, mapAdminProduct,
   );
+}
+
+export async function loadCategoryShelfLife(): Promise<CategoryShelfLife[]> {
+  const rows = await readJson<Array<{
+    category: CategoryShelfLife["category"];
+    fresh_to_medium_days: number | null;
+    medium_to_spoiled_days: number | null;
+    updated_at: string;
+  }>>("api/v1/admin/shelf-life-rules");
+  return rows.map((row) => ({
+    category: row.category,
+    freshToMediumDays: row.fresh_to_medium_days,
+    mediumToSpoiledDays: row.medium_to_spoiled_days,
+    updatedAt: row.updated_at,
+  }));
 }
 
 export function loadAlertPage(page = 1, search = "", alertType?: string, severity?: string) {

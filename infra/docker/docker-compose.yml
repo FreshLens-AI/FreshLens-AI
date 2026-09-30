@@ -14,6 +14,7 @@ services:
       - ../db/migrations/0001_auth_tenancy.sql:/docker-entrypoint-initdb.d/0010_auth_tenancy.sql:ro
       - ../db/migrations/0002_business_tables.sql:/docker-entrypoint-initdb.d/0015_business_tables.sql:ro
       - ../db/migrations/0003_scan_identity.sql:/docker-entrypoint-initdb.d/0016_scan_identity.sql:ro
+      - ../db/migrations/0004_category_shelf_life.sql:/docker-entrypoint-initdb.d/0017_category_shelf_life.sql:ro
       - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
       - ../db/local/0030_demo_catalogue.sql:/docker-entrypoint-initdb.d/0030_demo_catalogue.sql:ro
     healthcheck:

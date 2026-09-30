@@ -414,6 +414,64 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /api/v1/admin/shelf-life-rules:
+    get:
+      tags: [Admin]
+      summary: List shared product-category shelf-life rules
+      operationId: listShelfLifeRules
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      responses:
+        "200":
+          description: The four supported product categories and their configured durations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryShelfLife"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/shelf-life-rules/{category}:
+    put:
+      tags: [Admin]
+      summary: Set one category rule for every retailer
+      description: The two stage durations apply to every matching tenant product. Their sum supplies the existing aging-alert shelf life; the configured stages do not override the CNN classification.
+      operationId: updateShelfLifeRule
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [banana, cucumber, eggplant, tomato]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryShelfLifeUpdate"
+      responses:
+        "200":
+          description: Updated category rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryShelfLife"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   /api/v1/admin/alerts:
     get:
       tags: [Admin]
@@ -1090,7 +1148,7 @@ components:
 
     AdminProduct:
       type: object
-      required: [id, tenant_id, tenant_name, name, shelf_life_days, low_stock_threshold, created_at, updated_at, scans_this_month]
+      required: [id, tenant_id, tenant_name, name, shelf_life_days, fresh_to_medium_days, medium_to_spoiled_days, low_stock_threshold, created_at, updated_at, scans_this_month]
       additionalProperties: false
       properties:
         id:
@@ -1103,6 +1161,12 @@ components:
           type: string
         shelf_life_days:
           type: integer
+          minimum: 1
+        fresh_to_medium_days:
+          type: [integer, "null"]
+          minimum: 1
+        medium_to_spoiled_days:
+          type: [integer, "null"]
           minimum: 1
         low_stock_threshold:
           type: integer
@@ -1135,6 +1199,38 @@ components:
         offset:
           type: integer
           minimum: 0
+
+    CategoryShelfLife:
+      type: object
+      required: [category, fresh_to_medium_days, medium_to_spoiled_days, updated_at]
+      additionalProperties: false
+      properties:
+        category:
+          type: string
+          enum: [banana, cucumber, eggplant, tomato]
+        fresh_to_medium_days:
+          type: [integer, "null"]
+          minimum: 1
+        medium_to_spoiled_days:
+          type: [integer, "null"]
+          minimum: 1
+        updated_at:
+          type: string
+          format: date-time
+
+    CategoryShelfLifeUpdate:
+      type: object
+      required: [fresh_to_medium_days, medium_to_spoiled_days]
+      additionalProperties: false
+      properties:
+        fresh_to_medium_days:
+          type: integer
+          minimum: 1
+          maximum: 3650
+        medium_to_spoiled_days:
+          type: integer
+          minimum: 1
+          maximum: 3650
 
     AdminAlert:
       type: object

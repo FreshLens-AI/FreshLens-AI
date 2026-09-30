@@ -11,6 +11,9 @@ from app.schemas.admin import (
     AdminProduct,
     AdminProductList,
     AdminTrendPoint,
+    CategoryShelfLife,
+    CategoryShelfLifeUpdate,
+    ProductCategory,
 )
 from app.schemas.scans import ScanStatus
 
@@ -31,6 +34,8 @@ class AdminProductService:
               tenants.name as tenant_name,
               products.name,
               products.shelf_life_days,
+              rules.fresh_to_medium_days,
+              rules.medium_to_spoiled_days,
               products.low_stock_threshold,
               products.created_at,
               products.updated_at,
@@ -43,6 +48,8 @@ class AdminProductService:
               count(*) over()::int as total
             from public.products
             join public.tenants on tenants.id = products.tenant_id
+            left join public.product_category_shelf_life as rules
+              on rules.category = lower(trim(products.name))
             where ($3 = '' or products.name ilike '%' || $3 || '%'
               or tenants.name ilike '%' || $3 || '%')
               and ($4::uuid is null or products.tenant_id = $4)
@@ -62,6 +69,41 @@ class AdminProductService:
             limit=limit,
             offset=offset,
         )
+
+
+class CategoryShelfLifeService:
+    def __init__(self, connection: asyncpg.Connection) -> None:
+        self.connection = connection
+
+    async def list(self) -> list[CategoryShelfLife]:
+        rows = await self.connection.fetch(
+            """
+            select category, fresh_to_medium_days, medium_to_spoiled_days, updated_at
+            from public.product_category_shelf_life
+            order by category
+            """
+        )
+        return [CategoryShelfLife.model_validate(dict(row)) for row in rows]
+
+    async def update(
+        self, category: ProductCategory, values: CategoryShelfLifeUpdate
+    ) -> CategoryShelfLife:
+        row = await self.connection.fetchrow(
+            """
+            update public.product_category_shelf_life
+            set fresh_to_medium_days = $2,
+                medium_to_spoiled_days = $3,
+                updated_at = now()
+            where category = $1
+            returning category, fresh_to_medium_days, medium_to_spoiled_days, updated_at
+            """,
+            category,
+            values.fresh_to_medium_days,
+            values.medium_to_spoiled_days,
+        )
+        if row is None:
+            raise ValueError(f"Unknown product category: {category}")
+        return CategoryShelfLife.model_validate(dict(row))
 
 
 class AdminAlertService:
