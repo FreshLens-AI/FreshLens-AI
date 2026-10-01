@@ -139,7 +139,7 @@ export function TenantAccessManagement({
       <Card className={styles.accessCard}>
         <CardHeader
           title="Tenant access"
-          description="Revoking tenant access blocks every vendor account in this organization. Data remains intact."
+          description="Revoking tenant access blocks the owner and every vendor account in this organization. Data remains intact."
           action={
             <Badge tone={tenantStatus === "active" ? "success" : "danger"}>
               {tenantStatus === "active" ? "Allowed" : "Revoked"}

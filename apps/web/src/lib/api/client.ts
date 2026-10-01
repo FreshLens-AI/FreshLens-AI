@@ -3,7 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-import { requirePlatformAdmin } from "@/lib/auth/session";
+import { requirePlatformAdmin, requireTenantAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 function getApiUrl() {
@@ -35,6 +35,33 @@ const getAdminAccessToken = cache(async () => {
   return accessToken;
 });
 
+const getTenantAccessToken = cache(async () => {
+  await requireTenantAdmin();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (error || !accessToken) requireFreshSession();
+  return accessToken;
+});
+
+async function authenticatedApiFetch(
+  path: string,
+  accessToken: string,
+  init: RequestInit,
+) {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${accessToken}`);
+
+  const response = await fetch(`${getApiUrl()}/${path.replace(/^\/+/, "")}`, {
+    cache: "no-store",
+    ...init,
+    headers,
+  });
+  if (response.status === 401) requireFreshSession();
+  return response;
+}
+
 /**
  * Call FastAPI from trusted server code with a verified platform-admin token.
  *
@@ -48,18 +75,22 @@ export async function adminApiFetch(
 ): Promise<Response> {
   const accessToken = await getAdminAccessToken();
 
-  const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${accessToken}`);
+  return authenticatedApiFetch(path, accessToken, init);
+}
 
-  const response = await fetch(
-    `${getApiUrl()}/${path.replace(/^\/+/, "")}`,
-    {
-      cache: "no-store",
-      ...init,
-      headers,
-    },
-  );
+export async function tenantApiFetch(
+  path: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  return authenticatedApiFetch(path, await getTenantAccessToken(), init);
+}
 
-  if (response.status === 401) requireFreshSession();
-  return response;
+export async function publicApiFetch(
+  path: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  return fetch(`${getApiUrl()}/${path.replace(/^\/+/, "")}`, {
+    cache: "no-store",
+    ...init,
+  });
 }

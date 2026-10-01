@@ -1,0 +1,11 @@
+.stack { display: grid; gap: 18px; }
+.inviteForm { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 12px; padding: 20px; }
+.inviteForm label { display: grid; gap: 6px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+.inviteForm input { min-height: 40px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 9px; color: var(--ink); background: #fff; }
+.accessForm { display: grid; justify-items: end; gap: 4px; }
+.error, .success { font-size: 11px; }
+.error { color: var(--red-700); }
+.success { color: var(--brand-700); }
+.email { display: block; margin-top: 2px; color: var(--ink-muted); }
+.empty { padding: 24px; color: var(--ink-muted); }
+@media (max-width: 760px) { .inviteForm { grid-template-columns: 1fr; align-items: stretch; } .accessForm { justify-items: start; } }

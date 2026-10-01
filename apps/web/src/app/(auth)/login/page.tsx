@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LockKeyhole, Sprout } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
@@ -7,7 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import styles from "@/components/auth/login.module.css";
 
 export const metadata: Metadata = {
-  title: "Admin sign in",
+  title: "Sign in",
 };
 
 interface LoginPageProps {
@@ -35,7 +36,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         <div className={styles.storyCopy}>
-          <p className={styles.eyebrow}>Platform administration</p>
+          <p className={styles.eyebrow}>Produce intelligence</p>
           <h1>Clear oversight for fresher decisions.</h1>
           <p>
             Review tenant activity, product settings, alerts, and privacy-safe
@@ -51,8 +52,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <span><LockKeyhole size={12} /> Restricted access</span>
             <h2 id="login-heading">Welcome back</h2>
             <p>
-              Sign in with the administrator account provisioned by your
-              FreshLens project owner.
+              Sign in with your platform or tenant administrator account.
             </p>
           </header>
 
@@ -72,8 +72,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <LoginForm configured={configured} />
           <p className={styles.help}>
-            Administrator accounts are provisioned by a FreshLens
-            Owner. This workspace does not provide a signup flow.
+            Need FreshLens for your store? <Link href="/signup">Apply for a tenant account</Link>.
           </p>
         </div>
       </section>
