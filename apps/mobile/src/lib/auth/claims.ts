@@ -1,6 +1,7 @@
 export interface VendorIdentity {
   userId: string;
   tenantId: string;
+  role: 'vendor' | 'tenant_admin';
   email: string | null;
 }
 
@@ -15,7 +16,7 @@ export function parseVendorClaims(claims: unknown): VendorIdentity | null {
   const tenantId = typeof payload.tenant_id === 'string' ? payload.tenant_id : '';
 
   if (payload.role !== 'authenticated' || payload.is_anonymous !== false) return null;
-  if (payload.app_role !== 'vendor') return null;
+  if (payload.app_role !== 'vendor' && payload.app_role !== 'tenant_admin') return null;
   if (
     !UUID_PATTERN.test(userId) ||
     !UUID_PATTERN.test(sessionId) ||
@@ -27,6 +28,7 @@ export function parseVendorClaims(claims: unknown): VendorIdentity | null {
   return {
     userId,
     tenantId,
+    role: payload.app_role,
     email: typeof payload.email === 'string' ? payload.email : null,
   };
 }
