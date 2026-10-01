@@ -48,7 +48,7 @@ Vendor-only endpoints shall reject `platform_admin` (and vice versa) with HTTP 4
 
 ### NFR-SEC-003 Tenant isolation via RLS (Must)
 
-Every business table shall include `tenant_id` and a PostgreSQL RLS policy such that a session can only read/write rows for `current_setting('app.tenant_id')`. Application-layer filters are defense in depth only and shall not be the sole safeguard.
+Every tenant-owned business table shall include `tenant_id` and a PostgreSQL RLS policy such that a session can only read/write rows for `current_setting('app.tenant_id')`. Shared reference tables shall use forced RLS with explicit role policies. Application-layer filters are defense in depth only and shall not be the sole safeguard.
 
 ### NFR-SEC-004 No client-trusted tenant_id (Must)
 

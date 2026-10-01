@@ -96,7 +96,7 @@ Platform admins shall be able to set or update two positive durations for each s
 |            |                                                      |
 | ---------- | ---------------------------------------------------- |
 | Inputs     | Fresh-to-medium and medium-to-spoiled days           |
-| Processing | Persist a shared category rule and synchronize tenant product shelf-life totals used by aging rules (FR-S-010) |
+| Processing | Persist a shared category rule and synchronize the global product shelf-life total used by aging rules (FR-S-010) |
 | Outputs    | Both durations visible to admins; combined duration reflected in later aging evaluations |
 
 

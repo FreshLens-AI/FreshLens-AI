@@ -10,7 +10,7 @@ Core entities: `tenants`, `users`, `products`, `batches`, `scans`, `alerts`, `de
 |---|---|---|---|
 | `tenants` | `id` uuid | name, timestamps | Root |
 | `users` | `id` uuid | `tenant_id`, role, auth subject | N users per tenant |
-| `products` | `id` uuid | `tenant_id`, name, `shelf_life_days`, `low_stock_threshold` | N products per tenant |
+| `products` | `id` uuid | name, `shelf_life_days`, `low_stock_threshold` | Global catalogue shared by all tenants |
 | `batches` | `id` uuid | `tenant_id`, `product_id`, intake dates, quantities | N batches per product |
 | `scans` | `id` uuid | `tenant_id`, `image_path`, status, classification fields, optional `batch_id` | N scans per tenant |
 | `alerts` | `id` uuid | `tenant_id`, type, severity, optional product/batch | N alerts per tenant |
@@ -18,7 +18,7 @@ Core entities: `tenants`, `users`, `products`, `batches`, `scans`, `alerts`, `de
 | `sales` | `id` uuid | `tenant_id`, `source`, `idempotency_key`, `created_at` | N sales per tenant |
 | `sale_items` | `id` uuid | `tenant_id`, `sale_id`, `product_id`, `batch_id`, `quantity_sold` | N items per sale |
 
-Every business table above includes `tenant_id` and an RLS policy in the same migration that creates the table (DR-001 through DR-012). Cross-tenant foreign keys are rejected by RLS and by application checks that resolve related rows under the same `app.tenant_id`.
+Every tenant-owned operational table above includes `tenant_id` and an RLS policy in the same migration that creates the table (DR-001 through DR-012). `products` is shared reference data under forced RLS; batches carry the tenant-owned inventory quantities. Cross-tenant batch relationships are rejected by composite foreign keys, RLS, and application checks under the same `app.tenant_id`.
 
 ![Figure 9.1. Entity-relationship model](diagrams/fig-9-1-er-model.png)
 
@@ -41,7 +41,7 @@ Application `WHERE tenant_id = ...` filters are defense in depth only.
 ## 9.3 Sale and stock invariants
 
 1. `sales.idempotency_key` is unique per tenant so retries cannot create a second deduction.
-2. Each `sale_items` row references a product and a vendor-selected batch in the same tenant.
+2. Each `sale_items` row references a global product and a vendor-selected batch in the same tenant.
 3. Before deduction, the sales transaction locks the selected batch rows and checks `quantity_remaining >= quantity_sold`.
 4. Deduction updates `quantity_remaining` without allowing negative values.
 5. Low-stock evaluation uses committed post-sale quantities.

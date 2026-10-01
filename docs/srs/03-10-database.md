@@ -24,7 +24,7 @@ The persistent store shall support at least these entities and relationships:
 
 ### DR-002 Tenant column on business tables (Must)
 
-Every business table that stores vendor operational data (`users`, `products` as tenant-scoped, `scans`, `batches`, `sales`, `sale_items`, `device_tokens`, `alerts`, and any future tenant-scoped table) shall include a `tenant_id` attribute referencing the owning tenant. Platform-global catalogue design may distinguish shared vs tenant-owned products in the SAD, but any tenant-owned row shall carry `tenant_id`.
+Every table that stores tenant-owned operational data (`users`, `scans`, `batches`, `sales`, `sale_items`, `device_tokens`, `alerts`, and any future tenant-scoped table) shall include a `tenant_id` attribute referencing the owning tenant. `products` is global shared reference data under forced RLS; tenant-owned inventory is represented by `batches`.
 
 ### DR-003 RLS requirement (Must)
 

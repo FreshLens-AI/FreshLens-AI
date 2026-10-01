@@ -33,7 +33,7 @@ Version 1 includes:
 - FreshLens Two-Tier Classifier (FL-2TC): Tier 1 identifies produce type; Tier 2 labels it `fresh`, `medium`, or `spoiled` (a stub classifier is acceptable at mid-evaluation)
 - Manual sale entry for the mid-evaluation, where the vendor selects one product and one active batch, enters a quantity, reviews the item, and explicitly confirms the sale
 - Voice-assisted sale entry for final V1, where device speech-to-text and a provider-neutral LLM parser may draft multiple products for vendor correction, batch selection, and explicit confirmation
-- Multi-tenant isolation through PostgreSQL Row-Level Security (`tenant_id` on every business table)
+- Multi-tenant isolation through PostgreSQL Row-Level Security (`tenant_id` on every tenant-owned table; forced RLS on shared catalogue data)
 - Low-stock alerts and static aging alerts based on administrator-configured shelf-life days
 - Core entities: tenants, users, products, scans, batches, sales, sale items, alerts
 
@@ -116,7 +116,7 @@ Physical deployment, container topology, and detailed sequence diagrams belong i
 4. Classify produce (identify and freshness) asynchronously and persist results.
 5. List scans and show classification and freshness score to the vendor.
 6. Maintain batches and inventory quantities linked to scans where applicable.
-7. List tenant-scoped products and active batches for sale entry.
+7. List shared catalogue products and tenant-scoped active batches for sale entry.
 8. Record confirmed sales through one stock-deduction path and evaluate low-stock alerts from the committed post-sale quantities.
 9. Raise and list low-stock and static aging alerts.
 10. Let platform admins manage tenants, vendor profiles, and product catalogues, and view aggregated analytics (V1 graded scope as implemented for demos).
@@ -134,7 +134,7 @@ Physical deployment, container topology, and detailed sequence diagrams belong i
 | ------------------------ |-------------|
 | Approved stack           | FastAPI, PostgreSQL + RLS, Supabase Auth, Next.js, Expo, Celery + Redis, Cloudflare R2, Docker Compose |
 | Async inference only     | No CNN inside API request handlers |
-| Tenant isolation         | Every business table has `tenant_id` + RLS in the same migration |
+| Tenant isolation         | Every tenant-owned table has `tenant_id` + RLS; shared catalogue tables use forced RLS |
 | Redis namespacing        | Keys use `tenant:{tenant_id}:...` |
 | V1 scan model            | One product type per photo; quantity is vendor-confirmed |
 | Course calendar          | Mid-eval may use stub ML; real FL-2TC by Progress Review 2 / final |
@@ -305,7 +305,7 @@ The mobile application shall allow the vendor to record a sale manually by selec
 | | |
 |--|--|
 | Inputs | Authenticated vendor session; one selected product; one selected active batch for that product; positive `quantity_sold` |
-| Processing | Load tenant-scoped products and active batches; validate the quantity; show the product, batch, and quantity for review; require explicit confirmation; submit exactly one confirmed item to `POST /api/v1/sales`; make retries safe by reusing the idempotency key for the same attempted sale |
+| Processing | Load shared catalogue products and tenant-scoped active batches; validate the quantity; show the product, batch, and quantity for review; require explicit confirmation; submit exactly one confirmed item to `POST /api/v1/sales`; make retries safe by reusing the idempotency key for the same attempted sale |
 | Outputs | Confirmed sale result and updated quantity on success; clear validation or insufficient-stock error without a partial deduction; retry-safe outcome when the same request is submitted again |
 
 ---
@@ -418,7 +418,7 @@ Platform admins shall be able to set or update two positive durations for each s
 |            |                                                      |
 | ---------- | ---------------------------------------------------- |
 | Inputs     | Fresh-to-medium and medium-to-spoiled days           |
-| Processing | Persist a shared category rule and synchronize tenant product shelf-life totals used by aging rules (FR-S-010) |
+| Processing | Persist a shared category rule and synchronize the global product shelf-life total used by aging rules (FR-S-010) |
 | Outputs    | Both durations visible to admins; combined duration reflected in later aging evaluations |
 
 
@@ -748,7 +748,7 @@ Vendor-only endpoints shall reject `platform_admin` (and vice versa) with HTTP 4
 
 ### NFR-SEC-003 Tenant isolation via RLS (Must)
 
-Every business table shall include `tenant_id` and a PostgreSQL RLS policy such that a session can only read/write rows for `current_setting('app.tenant_id')`. Application-layer filters are defense in depth only and shall not be the sole safeguard.
+Every tenant-owned business table shall include `tenant_id` and a PostgreSQL RLS policy such that a session can only read/write rows for `current_setting('app.tenant_id')`. Shared reference tables shall use forced RLS with explicit role policies. Application-layer filters are defense in depth only and shall not be the sole safeguard.
 
 ### NFR-SEC-004 No client-trusted tenant_id (Must)
 
@@ -976,7 +976,7 @@ The persistent store shall support at least these entities and relationships:
 
 ### DR-002 Tenant column on business tables (Must)
 
-Every business table that stores vendor operational data (`users`, `products` as tenant-scoped, `scans`, `batches`, `sales`, `sale_items`, `device_tokens`, `alerts`, and any future tenant-scoped table) shall include a `tenant_id` attribute referencing the owning tenant. Platform-global catalogue design may distinguish shared vs tenant-owned products in the SAD, but any tenant-owned row shall carry `tenant_id`.
+Every table that stores tenant-owned operational data (`users`, `scans`, `batches`, `sales`, `sale_items`, `device_tokens`, `alerts`, and any future tenant-scoped table) shall include a `tenant_id` attribute referencing the owning tenant. `products` is global shared reference data under forced RLS; tenant-owned inventory is represented by `batches`.
 
 ### DR-003 RLS requirement (Must)
 
