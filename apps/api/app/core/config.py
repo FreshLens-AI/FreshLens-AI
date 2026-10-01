@@ -28,6 +28,8 @@ class Settings(BaseSettings):
         "verify-ca",
         "verify-full",
     ] = "prefer"
+    database_pool_min_size: int = 1
+    database_pool_max_size: int = 10
     supabase_url: str = ""
     supabase_service_role_key: str = ""
     local_auth_shadow: bool = False

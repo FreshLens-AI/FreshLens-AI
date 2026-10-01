@@ -15,8 +15,19 @@ class StaticVerifier:
         return self.claims
 
 
+def _disable_database_pool(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unit tests substitute DB deps; do not open a real pool during lifespan."""
+
+    async def _noop() -> None:
+        return None
+
+    monkeypatch.setattr("app.core.database.init_pool", _noop)
+    monkeypatch.setattr("app.core.database.close_pool", _noop)
+
+
 @pytest.fixture
-def client() -> Iterator[TestClient]:
+def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    _disable_database_pool(monkeypatch)
     original = app.state.auth_verifier
     with TestClient(app) as test_client:
         yield test_client

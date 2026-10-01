@@ -152,7 +152,12 @@ def test_vendor_without_tenant_is_forbidden(
     assert response.status_code == 403
 
 
-def test_verifier_rejects_unsupported_algorithm() -> None:
+def test_verifier_rejects_unsupported_algorithm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests.conftest import _disable_database_pool
+
+    _disable_database_pool(monkeypatch)
     now = datetime.now(UTC)
     token = jwt.encode(
         {

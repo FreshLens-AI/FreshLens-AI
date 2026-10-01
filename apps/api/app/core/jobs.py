@@ -1,3 +1,4 @@
+from functools import lru_cache
 from uuid import UUID
 
 from celery import Celery
@@ -27,7 +28,10 @@ class ClassificationJobPublisher:
         return str(result.id)
 
 
+@lru_cache
 def get_publisher() -> ClassificationJobPublisher:
+    """Reuse one Celery + Redis client for the API process lifetime."""
+
     from app.core.config import get_settings
 
     settings = get_settings()

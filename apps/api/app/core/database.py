@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import asyncpg
 from fastapi import Depends, HTTPException, status
@@ -9,13 +10,16 @@ from app.schemas.auth import AppRole, AuthPrincipal
 
 FRESHLENS_API_ROLE = "freshlens_api"
 
+_pool: asyncpg.Pool | None = None
+_role_verified = False
+
 
 class UnsafeDatabaseRoleError(RuntimeError):
     """The configured database login can bypass FreshLens tenant isolation."""
 
 
 async def connect_database() -> asyncpg.Connection:
-    """Open a connection compatible with direct and Supavisor transaction modes."""
+    """Open a one-off connection (tests / fallback without a pool)."""
 
     settings = get_settings()
     return await asyncpg.connect(
@@ -23,6 +27,40 @@ async def connect_database() -> asyncpg.Connection:
         ssl=settings.database_ssl_mode,
         statement_cache_size=0,
     )
+
+
+async def init_pool() -> None:
+    """Create the shared pool and verify the login role once at startup."""
+
+    global _pool, _role_verified
+    if _pool is not None:
+        return
+    settings = get_settings()
+    pool = await asyncpg.create_pool(
+        settings.database_url,
+        ssl=settings.database_ssl_mode,
+        statement_cache_size=0,
+        min_size=settings.database_pool_min_size,
+        max_size=settings.database_pool_max_size,
+    )
+    try:
+        async with pool.acquire() as connection:
+            await assert_safe_database_role(connection)
+    except Exception:
+        await pool.close()
+        raise
+    _pool = pool
+    _role_verified = True
+
+
+async def close_pool() -> None:
+    """Close the shared pool (FastAPI shutdown)."""
+
+    global _pool, _role_verified
+    if _pool is not None:
+        await _pool.close()
+        _pool = None
+    _role_verified = False
 
 
 async def assert_safe_database_role(connection: asyncpg.Connection) -> None:
@@ -56,6 +94,16 @@ async def assert_safe_database_role(connection: asyncpg.Connection) -> None:
             f"Database role {role['role_name']!r} is not a member of "
             f"{FRESHLENS_API_ROLE!r}."
         )
+
+
+async def ensure_safe_database_role(connection: asyncpg.Connection) -> None:
+    """Run the role guard once per process after a successful pool check."""
+
+    global _role_verified
+    if _role_verified:
+        return
+    await assert_safe_database_role(connection)
+    _role_verified = True
 
 
 async def apply_tenant_context(
@@ -98,27 +146,38 @@ async def apply_admin_context(
     )
 
 
+@asynccontextmanager
+async def acquired_connection() -> AsyncIterator[asyncpg.Connection]:
+    """Borrow from the pool, or open a one-off connection when none exists."""
+
+    pool = _pool
+    if pool is None:
+        connection = await connect_database()
+        try:
+            yield connection
+        finally:
+            await connection.close()
+        return
+
+    async with pool.acquire() as connection:
+        yield connection
+
+
 async def get_auth_hook_connection() -> AsyncIterator[asyncpg.Connection]:
     """Yield a connection with no identity context for the access-token hook."""
 
-    connection = await connect_database()
-    try:
-        await assert_safe_database_role(connection)
+    async with acquired_connection() as connection:
+        await ensure_safe_database_role(connection)
         yield connection
-    finally:
-        await connection.close()
 
 
 async def get_public_connection() -> AsyncIterator[asyncpg.Connection]:
     """Yield a restricted transaction with no identity context."""
 
-    connection = await connect_database()
-    try:
-        await assert_safe_database_role(connection)
+    async with acquired_connection() as connection:
+        await ensure_safe_database_role(connection)
         async with connection.transaction():
             yield connection
-    finally:
-        await connection.close()
 
 
 async def get_tenant_connection(
@@ -126,9 +185,8 @@ async def get_tenant_connection(
 ) -> AsyncIterator[asyncpg.Connection]:
     """Yield one transaction whose RLS tenant came only from the verified JWT."""
 
-    connection = await connect_database()
-    try:
-        await assert_safe_database_role(connection)
+    async with acquired_connection() as connection:
+        await ensure_safe_database_role(connection)
         transaction = connection.transaction()
         await transaction.start()
         try:
@@ -147,8 +205,6 @@ async def get_tenant_connection(
             raise
         else:
             await transaction.commit()
-    finally:
-        await connection.close()
 
 
 async def get_admin_connection(
@@ -156,9 +212,8 @@ async def get_admin_connection(
 ) -> AsyncIterator[asyncpg.Connection]:
     """Yield one transaction whose RLS role came only from the verified JWT."""
 
-    connection = await connect_database()
-    try:
-        await assert_safe_database_role(connection)
+    async with acquired_connection() as connection:
+        await ensure_safe_database_role(connection)
         transaction = connection.transaction()
         await transaction.start()
         try:
@@ -169,5 +224,3 @@ async def get_admin_connection(
             raise
         else:
             await transaction.commit()
-    finally:
-        await connection.close()

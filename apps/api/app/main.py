@@ -1,6 +1,10 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core import database as db
 from app.core.auth import SupabaseJWTVerifier
 from app.core.config import get_settings
 from app.middleware.auth import SupabaseAuthMiddleware
@@ -20,10 +24,21 @@ from app.routers import (
 
 settings = get_settings()
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    await db.init_pool()
+    try:
+        yield
+    finally:
+        await db.close_pool()
+
+
 app = FastAPI(
     title="FreshLens API",
     version="0.1.0",
     description="Multi-tenant produce freshness API (CS3203 · Group 21 · PID 5)",
+    lifespan=lifespan,
 )
 
 app.state.auth_verifier = SupabaseJWTVerifier(settings)
