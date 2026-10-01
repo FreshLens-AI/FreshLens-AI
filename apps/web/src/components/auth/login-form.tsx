@@ -52,7 +52,6 @@ export function LoginForm({ configured }: { configured: boolean }) {
       <div className={styles.field}>
         <div className={styles.labelRow}>
           <label htmlFor="admin-password">Password</label>
-          <span>Supabase protected</span>
         </div>
         <div className={styles.inputWrap}>
           <LockKeyhole size={18} aria-hidden="true" />

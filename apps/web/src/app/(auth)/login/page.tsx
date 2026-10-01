@@ -72,8 +72,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <LoginForm configured={configured} />
           <p className={styles.help}>
-            Administrator accounts are provisioned by a FreshLens project
-            owner. This workspace does not provide a signup flow.
+            Administrator accounts are provisioned by a FreshLens
+            Owner. This workspace does not provide a signup flow.
           </p>
         </div>
       </section>

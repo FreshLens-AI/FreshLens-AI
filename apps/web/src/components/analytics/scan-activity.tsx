@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainCircuit, CircleCheck, Clock3, LockKeyhole, TriangleAlert } from "lucide-react";
+import { BrainCircuit, CircleCheck, Clock3, TriangleAlert } from "lucide-react";
 
 import { TrendChart } from "@/components/analytics/trend-chart";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,6 @@ export function ScanActivity() {
   return (
     <div className="page-stack">
       <PageHeader eyebrow="Aggregate operations" title="Scan activity" description="Live asynchronous pipeline totals and classification throughput without tenant-private scan records." />
-      <Card className="privacy-banner privacy-banner--blue"><div className="privacy-banner__icon"><LockKeyhole size={19} /></div><div><strong>Aggregate operational view</strong><p>Images, quantities, products, batches, and individual scan histories remain tenant-private.</p></div></Card>
       <section className="pipeline-grid" aria-label="Scan status summary">
         {pipelineSummary.map((item) => {
           const Icon = statusIcons[item.status];
