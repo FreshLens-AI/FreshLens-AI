@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Pressable,
@@ -45,9 +46,11 @@ export function VendorHomeScreen({ navigation }: Props) {
     }
   }, []);
 
-  useEffect(() => {
-    void loadStats();
-  }, [loadStats]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadStats();
+    }, [loadStats]),
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -434,4 +437,3 @@ const styles = StyleSheet.create({
   footerTitle: { color: '#18533d', fontSize: 12, fontWeight: '800' },
   footerCopy: { color: '#536158', fontSize: 11, lineHeight: 15, marginTop: 2 },
 });
-

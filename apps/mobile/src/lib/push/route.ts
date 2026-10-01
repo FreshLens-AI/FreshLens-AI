@@ -1,7 +1,9 @@
 // Pure helpers for push payloads sent by the worker (packages/ml/worker/push.py).
 // Kept free of React Native imports so they run under the Node test runner.
 
-export type PushRoute = 'Alerts' | 'History';
+export type PushDestination =
+  | { name: 'Alerts'; params: { alertId: string } }
+  | { name: 'History' };
 
 export type PushPayload =
   | { type: 'scan'; scanId: string; status: string | null }
@@ -26,8 +28,10 @@ export function parsePushPayload(data: unknown): PushPayload | null {
 }
 
 // The payload is only a wake-up; the target screen refetches from the API.
-export function routeForNotification(data: unknown): PushRoute | null {
+export function destinationForNotification(data: unknown): PushDestination | null {
   const payload = parsePushPayload(data);
   if (!payload) return null;
-  return payload.type === 'alert' ? 'Alerts' : 'History';
+  return payload.type === 'alert'
+    ? { name: 'Alerts', params: { alertId: payload.alertId } }
+    : { name: 'History' };
 }

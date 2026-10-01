@@ -7,7 +7,7 @@ import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { registerForPushNotifications } from '../lib/push/register';
-import { routeForNotification } from '../lib/push/route';
+import { destinationForNotification } from '../lib/push/route';
 
 import { AlertsScreen } from '../screens/alerts-screen';
 import { ManualSaleScreen } from '../screens/manual-sale-screen';
@@ -18,8 +18,8 @@ import { VendorHomeScreen } from '../screens/vendor-home-screen';
 export type VendorStackParamList = {
   Home: undefined;
   Scan: undefined;
-  Sale: undefined;
-  Alerts: undefined;
+  Sale: { productId?: string; batchId?: string } | undefined;
+  Alerts: { alertId?: string } | undefined;
   History: undefined;
 };
 
@@ -33,10 +33,17 @@ function usePushNotifications() {
   const pending = useRef<unknown>(null);
 
   const open = useCallback((data: unknown) => {
-    const route = routeForNotification(data);
-    if (!route) return;
-    if (navigationRef.isReady()) navigationRef.navigate(route);
-    else pending.current = data;
+    const destination = destinationForNotification(data);
+    if (!destination) return;
+    if (!navigationRef.isReady()) {
+      pending.current = data;
+      return;
+    }
+    if (destination.name === 'Alerts') {
+      navigationRef.navigate('Alerts', destination.params);
+    } else {
+      navigationRef.navigate('History');
+    }
   }, []);
 
   useEffect(() => {
@@ -83,16 +90,26 @@ export function VendorNavigator() {
           name="Sale"
           options={{ presentation: 'fullScreenModal', headerShown: false }}
         >
-          {({ navigation }) => (
-            <ManualSaleScreen onDone={() => navigation.navigate('Home')} />
+          {({ navigation, route }) => (
+            <ManualSaleScreen
+              initialProductId={route.params?.productId}
+              initialBatchId={route.params?.batchId}
+              onDone={() => navigation.navigate('Home')}
+            />
           )}
         </Stack.Screen>
         <Stack.Screen
           name="Alerts"
           options={{ presentation: 'fullScreenModal', headerShown: false }}
         >
-          {({ navigation }) => (
-            <AlertsScreen onDone={() => navigation.navigate('Home')} />
+          {({ navigation, route }) => (
+            <AlertsScreen
+              focusedAlertId={route.params?.alertId}
+              onDone={() => navigation.navigate('Home')}
+              onSell={(productId, batchId) =>
+                navigation.navigate('Sale', { productId, batchId })
+              }
+            />
           )}
         </Stack.Screen>
         <Stack.Screen

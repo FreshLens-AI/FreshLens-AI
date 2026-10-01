@@ -235,6 +235,13 @@ export interface Alert {
   created_at: string;
   batch_id: string | null;
   product_id: string | null;
+  event_key: string | null;
+  product_name: string | null;
+  quantity_received: number | null;
+  quantity_remaining: number | null;
+  transition_at: string | null;
+  read_at: string | null;
+  resolved_at: string | null;
 }
 
 export async function listProducts(): Promise<ProductSummary[]> {
@@ -279,6 +286,11 @@ export async function listAlerts(): Promise<Alert[]> {
   const res = await apiFetch('api/v1/alerts');
   const body = await parseJsonOrThrow<{ items: Alert[] }>(res);
   return body.items;
+}
+
+export async function markAlertRead(alertId: string): Promise<Alert> {
+  const res = await apiFetch(`api/v1/alerts/${alertId}/read`, { method: 'PATCH' });
+  return parseJsonOrThrow<Alert>(res);
 }
 
 export interface RegisteredDevice {

@@ -21,7 +21,15 @@ import {
   type ProductSummary,
 } from '../lib/api';
 
-export function ManualSaleScreen({ onDone }: { onDone: () => void }) {
+export function ManualSaleScreen({
+  initialProductId,
+  initialBatchId,
+  onDone,
+}: {
+  initialProductId?: string;
+  initialBatchId?: string;
+  onDone: () => void;
+}) {
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [batches, setBatches] = useState<BatchSummary[]>([]);
   const [product, setProduct] = useState<ProductSummary | null>(null);
@@ -40,8 +48,9 @@ export function ManualSaleScreen({ onDone }: { onDone: () => void }) {
     void listProducts()
       .then((items) => {
         setProducts(items);
-        if (items.length > 0) {
-          void selectProduct(items[0]);
+        const initial = items.find((item) => item.id === initialProductId) ?? items[0];
+        if (initial) {
+          void selectProduct(initial, initialBatchId);
         }
       })
       .catch((err: unknown) => {
@@ -50,7 +59,7 @@ export function ManualSaleScreen({ onDone }: { onDone: () => void }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function selectProduct(next: ProductSummary) {
+  async function selectProduct(next: ProductSummary, preferredBatchId?: string) {
     setProduct(next);
     setBatch(null);
     setError(null);
@@ -58,7 +67,10 @@ export function ManualSaleScreen({ onDone }: { onDone: () => void }) {
       const loadedBatches = await listBatches(next.id);
       setBatches(loadedBatches);
       if (loadedBatches.length > 0) {
-        setBatch(loadedBatches[0]);
+        setBatch(
+          loadedBatches.find((item) => item.id === preferredBatchId) ??
+            loadedBatches[0],
+        );
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not load batches.');
@@ -600,4 +612,3 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: { color: '#536158', fontSize: 15, fontWeight: '700' },
 });
-
