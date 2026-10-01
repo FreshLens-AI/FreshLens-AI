@@ -1,4 +1,5 @@
 export type TenantStatus = "active" | "inactive";
+export type UserStatus = "active" | "inactive";
 export type Classification = "fresh" | "medium" | "spoiled";
 export type ScanStatus = "pending" | "processing" | "completed" | "failed";
 export type AlertType = "spoilage" | "low_stock" | "aging" | "other";
@@ -20,6 +21,16 @@ export interface Tenant {
   spoilageRate: number;
   classificationMix: Record<Classification, number>;
   activeAlerts: number;
+}
+
+export interface TenantUser {
+  id: string;
+  tenantId: string;
+  displayName: string;
+  email: string;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Product {

@@ -6,12 +6,14 @@ import {
   mapAdminData,
   mapAdminProduct,
   mapAdminTenant,
+  mapAdminTenantUser,
   type AdminAlertResponse,
   type AdminAnalyticsResponse,
   type AdminProductResponse,
   type AdminTenantResponse,
+  type AdminTenantUserResponse,
 } from "@/lib/api/admin-map";
-import type { Alert, AdminDataSnapshot, CategoryShelfLife, Product, Tenant } from "@/types/domain";
+import type { Alert, AdminDataSnapshot, CategoryShelfLife, Product, Tenant, TenantUser } from "@/types/domain";
 
 interface Page<T> {
   items: T[];
@@ -90,6 +92,13 @@ export function loadTenantPage(page = 1, search = "", status?: string, tenantId?
   return loadPage<AdminTenantResponse, Tenant>(
     "tenants", page, pageSize, { search, status, tenant_id: tenantId }, mapAdminTenant,
   );
+}
+
+export async function loadTenantUsers(tenantId: string): Promise<TenantUser[]> {
+  const response = await readJson<{ items: AdminTenantUserResponse[]; total: number }>(
+    `api/v1/admin/tenants/${tenantId}/users`,
+  );
+  return response.items.map(mapAdminTenantUser);
 }
 
 export function loadProductPage(page = 1, search = "", tenantId?: string, productId?: string, pageSize = 12) {
