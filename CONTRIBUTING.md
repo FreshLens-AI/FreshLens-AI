@@ -133,7 +133,7 @@ Use GitHub Issues/Discussions for decisions — link the issue in chat so contex
 
 ## Architecture rules (do not break)
 
-1. **Multi-tenancy via RLS** — `tenant_id` on every business table; policy uses `current_setting('app.tenant_id')`.
+1. **Multi-tenancy via RLS** — `tenant_id` on every tenant-owned business table; shared catalogue reference tables use forced RLS.
 2. **Async inference** — `POST /scan` uploads image, enqueues Celery job, returns `202`. CNN runs in worker only.
 
 ## Secrets

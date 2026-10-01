@@ -123,7 +123,7 @@ This section records the goals that drive FreshLens V1 architecture and the cons
 
 ### 3.2.1 Multi-tenancy via PostgreSQL RLS
 
-Constraint: Every business table carries `tenant_id`, and RLS policies use `current_setting('app.tenant_id')` in the same migration that creates the table (DR-001 through DR-012).
+Constraint: Every tenant-owned business table carries `tenant_id`, and RLS policies use `current_setting('app.tenant_id')` in the same migration that creates the table (DR-001 through DR-012). Shared catalogue reference tables use forced RLS without tenant rows.
 
 Consequence: API middleware must set `app.tenant_id` from the validated JWT before business queries. Application-level tenant filters are defense in depth only.
 
@@ -291,7 +291,7 @@ The view holds use-case diagrams and textual use-case specifications. Sequences 
 | Actor | Platform Admin |
 | Description | Set shared fresh-to-medium and medium-to-spoiled durations for each supported produce category |
 | Preconditions | Admin authenticated |
-| Main flow | 1. Admin opens catalogue. 2. Sets both stage durations for a category. 3. API persists the shared rule and updates matching tenant products' total shelf life. |
+| Main flow | 1. Admin opens catalogue. 2. Sets both stage durations for a category. 3. API persists the shared rule and updates the matching global product's total shelf life. |
 | Success | Products available for vendor batches and aging rules |
 | Failure | Validation or auth failure |
 | Extensions | Product creation and per-product overrides are outside the current admin UI |
@@ -602,7 +602,7 @@ Push is best-effort notification. Missing a push does not change persisted alert
 
 Manual sale is one product, one vendor-selected batch, one positive quantity, and explicit confirmation.
 
-1. Mobile loads tenant products and batches under RLS.
+1. Mobile loads the shared product catalogue and tenant-owned batches under RLS.
 2. Vendor confirms the line.
 3. Mobile calls `POST /api/v1/sales` with an `Idempotency-Key`.
 4. `SalesService` locks selected batch rows, validates remaining stock, writes `sales` / `sale_items`, deducts quantities, evaluates low stock, and commits atomically.
@@ -736,7 +736,7 @@ Core entities: `tenants`, `users`, `products`, `batches`, `scans`, `alerts`, `de
 |---|---|---|---|
 | `tenants` | `id` uuid | name, timestamps | Root |
 | `users` | `id` uuid | `tenant_id`, role, auth subject | N users per tenant |
-| `products` | `id` uuid | `tenant_id`, name, `shelf_life_days`, `low_stock_threshold` | N products per tenant |
+| `products` | `id` uuid | name, `shelf_life_days`, `low_stock_threshold` | Global catalogue shared by all tenants |
 | `batches` | `id` uuid | `tenant_id`, `product_id`, intake dates, quantities | N batches per product |
 | `scans` | `id` uuid | `tenant_id`, `image_path`, status, classification fields, optional `batch_id` | N scans per tenant |
 | `alerts` | `id` uuid | `tenant_id`, type, severity, optional product/batch | N alerts per tenant |
@@ -744,9 +744,9 @@ Core entities: `tenants`, `users`, `products`, `batches`, `scans`, `alerts`, `de
 | `sales` | `id` uuid | `tenant_id`, `source`, `idempotency_key`, `created_at` | N sales per tenant |
 | `sale_items` | `id` uuid | `tenant_id`, `sale_id`, `product_id`, `batch_id`, `quantity_sold` | N items per sale |
 
-Every business table above includes `tenant_id` and an RLS policy in the same migration that creates the table (DR-001 through DR-012). Cross-tenant foreign keys are rejected by RLS and by application checks that resolve related rows under the same `app.tenant_id`.
+Every tenant-owned operational table above includes `tenant_id` and an RLS policy in the same migration that creates the table (DR-001 through DR-012). `products` is shared reference data under forced RLS; batches carry the tenant-owned inventory quantities. Cross-tenant batch relationships are rejected by composite foreign keys, RLS, and application checks under the same `app.tenant_id`.
 
-`product_category_shelf_life` is a shared reference table for the four model-supported produce categories. It contains no tenant or inventory rows. Its forced RLS policy lets authenticated vendors read rules and only platform admins update them; a database trigger synchronizes each matching tenant product's combined `shelf_life_days`.
+`products` and `product_category_shelf_life` are shared reference tables for the four model-supported produce categories. They contain no tenant inventory rows. Forced RLS lets active vendors read the catalogue and only platform admins mutate it; a database trigger synchronizes each matching product's combined `shelf_life_days`.
 
 ![Figure 9.1. Entity-relationship model](diagrams/fig-9-1-er-model.png)
 
@@ -769,7 +769,7 @@ Application `WHERE tenant_id = ...` filters are defense in depth only.
 ## 9.3 Sale and stock invariants
 
 1. `sales.idempotency_key` is unique per tenant so retries cannot create a second deduction.
-2. Each `sale_items` row references a product and a vendor-selected batch in the same tenant.
+2. Each `sale_items` row references a global product and a vendor-selected batch in the same tenant.
 3. Before deduction, the sales transaction locks the selected batch rows and checks `quantity_remaining >= quantity_sold`.
 4. Deduction updates `quantity_remaining` without allowing negative values.
 5. Low-stock evaluation uses committed post-sale quantities.
@@ -842,7 +842,7 @@ For each quality attribute class in the SRS, this section names the architectura
 | Requirement theme | Mechanism |
 |---|---|
 | Authenticated API access | Supabase JWT validation on protected routes |
-| Tenant isolation (NFR-SEC-003) | `app.tenant_id` + Postgres RLS on every business table |
+| Tenant isolation (NFR-SEC-003) | `app.tenant_id` + Postgres RLS on tenant-owned tables; forced RLS on shared catalogue data |
 | No tenant id from body | Middleware reads claims only |
 | Redis key safety (NFR-SEC-006) | `tenant:{tenant_id}:...` namespaces |
 | LLM cannot mutate inventory (NFR-SEC-007) | Voice-draft endpoint is read-only toward stock; no DB credentials for the model |
