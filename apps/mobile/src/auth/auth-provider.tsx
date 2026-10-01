@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       setIdentity(null);
       setStatus('unauthenticated');
-      setMessage('This account is not provisioned for the vendor mobile app.');
+      setMessage('This account is not provisioned for tenant mobile operations.');
       return null;
     }
 

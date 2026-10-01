@@ -27,8 +27,20 @@ describe('parseVendorClaims', () => {
       {
         userId: USER_ID,
         tenantId: TENANT_ID,
+        role: 'vendor',
         email: 'vendor@example.com',
       },
+    );
+  });
+
+  it('accepts a signed tenant admin for normal tenant operations', () => {
+    assert.equal(
+      parseVendorClaims({
+        ...AUTHENTICATED_IDENTITY,
+        app_role: 'tenant_admin',
+        tenant_id: TENANT_ID,
+      })?.role,
+      'tenant_admin',
     );
   });
 

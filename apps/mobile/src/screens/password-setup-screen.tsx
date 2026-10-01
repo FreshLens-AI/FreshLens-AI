@@ -47,7 +47,7 @@ export function PasswordSetupScreen() {
       <KeyboardAvoidingView style={styles.center} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.card}>
           <Text style={styles.title}>Set your password</Text>
-          <Text style={styles.description}>Choose a password for your FreshLens vendor account.</Text>
+          <Text style={styles.description}>Choose a password for your FreshLens tenant account.</Text>
           {error || message ? <Text style={styles.error}>{error ?? message}</Text> : null}
           <View style={styles.inputWrap}>
             <TextInput
