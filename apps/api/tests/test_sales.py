@@ -300,6 +300,7 @@ def test_vendor_lists_products_and_alerts(
         ) -> dict[str, object] | None:
             if "update public.alerts" not in query:
                 return None
+            dismissed = "resolved_at = coalesce" in query
             return {
                 "id": args[0],
                 "type": "aging",
@@ -314,7 +315,7 @@ def test_vendor_lists_products_and_alerts(
                 "quantity_remaining": 8,
                 "transition_at": NOW + timedelta(days=1),
                 "read_at": NOW,
-                "resolved_at": None,
+                "resolved_at": NOW if dismissed else None,
             }
 
     async def override_connection():
@@ -343,5 +344,11 @@ def test_vendor_lists_products_and_alerts(
         assert read.status_code == 200
         assert read.json()["event_key"] == "fresh_to_medium_warning"
         assert read.json()["read_at"] is not None
+        dismissed = client.patch(
+            f"/api/v1/alerts/{alert_id}/dismiss",
+            headers={"Authorization": "Bearer valid"},
+        )
+        assert dismissed.status_code == 200
+        assert dismissed.json()["resolved_at"] is not None
     finally:
         app.dependency_overrides.clear()

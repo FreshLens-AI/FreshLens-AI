@@ -116,3 +116,39 @@ class AlertService:
             alert_id,
         )
         return Alert.model_validate(dict(row)) if row is not None else None
+
+    async def dismiss(self, alert_id: UUID) -> Alert | None:
+        row = await self.connection.fetchrow(
+            """
+            with updated as (
+              update public.alerts
+              set read_at = coalesce(read_at, now()),
+                  resolved_at = coalesce(resolved_at, now())
+              where id = $1
+              returning *
+            )
+            select
+              updated.id,
+              updated.type::text as type,
+              updated.message,
+              updated.severity::text as severity,
+              updated.created_at,
+              updated.batch_id,
+              updated.product_id,
+              updated.event_key,
+              products.name as product_name,
+              batches.quantity_received,
+              batches.quantity_remaining,
+              updated.transition_at,
+              updated.read_at,
+              updated.resolved_at
+            from updated
+            left join public.products
+              on products.id = updated.product_id
+            left join public.batches
+              on batches.id = updated.batch_id
+             and batches.tenant_id = updated.tenant_id
+            """,
+            alert_id,
+        )
+        return Alert.model_validate(dict(row)) if row is not None else None

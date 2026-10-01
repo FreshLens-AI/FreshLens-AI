@@ -35,3 +35,15 @@ async def mark_alert_read(
     if alert is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alert not found.")
     return alert
+
+
+@router.patch("/{alert_id}/dismiss", response_model=Alert)
+async def dismiss_alert(
+    alert_id: UUID,
+    _principal: AuthPrincipal = Depends(require_tenant_member),
+    connection: asyncpg.Connection = Depends(get_tenant_connection),
+) -> Alert:
+    alert = await AlertService(connection).dismiss(alert_id)
+    if alert is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Alert not found.")
+    return alert
