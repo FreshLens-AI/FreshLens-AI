@@ -28,23 +28,23 @@ export function CatalogueScreen({ result, rules, search, tenantId }: {
   tenantId?: string;
 }) {
   const activeFilters = Boolean(search || tenantId);
-  const tenantName = tenantId ? result.items[0]?.tenantName : undefined;
+  const hasSearch = Boolean(search);
 
   return (
     <div className={styles.pageStack}>
       <PageHeader
         eyebrow="Catalogue operations"
         title="Product catalogue"
-        description="Set shared freshness stages and review tenant product settings."
+        description="Manage the shared produce catalogue available to every tenant."
       />
 
       <ShelfLifeRules rules={rules} />
 
       <section className={styles.summaryGrid} aria-label="Catalogue summary">
         <Card className={styles.summaryCard}>
-          <span>{activeFilters ? "Matching products" : "Total products"}</span>
+          <span>{hasSearch ? "Matching products" : "Global products"}</span>
           <strong>{formatNumber(result.total)}</strong>
-          <small>{tenantName ? `For ${tenantName}` : "Tenant product configurations"}</small>
+          <small>{tenantId ? "Monthly scans filtered to the selected tenant" : "Available to every tenant"}</small>
         </Card>
       </section>
 
@@ -60,7 +60,7 @@ export function CatalogueScreen({ result, rules, search, tenantId }: {
                 type="search"
                 name="q"
                 defaultValue={search}
-                placeholder="Search product or tenant"
+                placeholder="Search product"
               />
             </div>
           </div>
@@ -83,7 +83,6 @@ export function CatalogueScreen({ result, rules, search, tenantId }: {
               <thead>
                 <tr>
                   <th scope="col">Product</th>
-                  <th scope="col">Tenant</th>
                   <th scope="col">Shelf life</th>
                   <th scope="col" className={styles.optionalColumn}>Low-stock threshold</th>
                   <th scope="col" className={styles.optionalColumn}>Monthly scans</th>
@@ -104,7 +103,6 @@ export function CatalogueScreen({ result, rules, search, tenantId }: {
                         </span>
                       </Link>
                     </td>
-                    <td>{product.tenantName}</td>
                     <td><strong>{product.shelfLifeDays}</strong> days</td>
                     <td className={styles.optionalColumn}>{formatNumber(product.lowStockThreshold ?? 0)}</td>
                     <td className={styles.optionalColumn}>{formatNumber(product.scansThisMonth)}</td>
@@ -129,11 +127,11 @@ export function CatalogueScreen({ result, rules, search, tenantId }: {
           <div className={styles.embeddedEmpty}>
             <EmptyState
               icon={<Leaf size={24} aria-hidden="true" />}
-              title={activeFilters ? "No products match these filters" : "No catalogue products yet"}
+              title={hasSearch ? "No products match this search" : "No catalogue products yet"}
               description={
-                activeFilters
-                  ? "Try another product or tenant, or clear the filters."
-                  : "Products will appear after vendors configure their catalogues."
+                hasSearch
+                  ? "Try another product name or clear the search."
+                  : "Add products to the shared catalogue before vendors scan inventory."
               }
               action={
                 activeFilters ? (

@@ -74,8 +74,6 @@ describe("admin API mapping", () => {
       [
         {
           id: "11111111-1111-4111-8111-111111111201",
-          tenant_id: tenant.id,
-          tenant_name: tenant.name,
           name: "Tomato",
           shelf_life_days: 5,
           fresh_to_medium_days: 2,
@@ -115,7 +113,6 @@ describe("admin API mapping", () => {
     );
 
     assert.equal(snapshot.tenants.length, 1);
-    assert.equal(snapshot.products[0].tenantName, "Example Grocer");
     assert.equal(snapshot.products[0].freshToMediumDays, 2);
     assert.equal(snapshot.products[0].mediumToSpoiledDays, 3);
     assert.equal(snapshot.alerts[0].title, "Shelf-life alert · Tomato");

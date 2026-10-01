@@ -39,7 +39,7 @@ export function ProductDetailScreen() {
       <PageHeader
         eyebrow="Catalogue product"
         title={product.name}
-        description={`Product configuration for ${product.tenantName}.`}
+        description="Shared product configuration available to every tenant."
         breadcrumbs={[
           { label: "Catalogue", href: "/catalogue" },
           { label: product.name },
@@ -70,7 +70,7 @@ export function ProductDetailScreen() {
           <CardHeader title="Catalogue information" description="Core produce metadata used across the platform." />
           <dl className={styles.descriptionList}>
             <div><dt>Common name</dt><dd>{product.name}</dd></div>
-            <div><dt>Tenant</dt><dd>{product.tenantName}</dd></div>
+            <div><dt>Scope</dt><dd>All tenants</dd></div>
             <div><dt>Last updated</dt><dd>{formatDate(product.updatedAt)}</dd></div>
             <div><dt>Catalogue ID</dt><dd><code>{product.id}</code></dd></div>
           </dl>

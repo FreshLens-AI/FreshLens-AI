@@ -203,7 +203,6 @@ class TenantService:
             left join lateral (
               select count(*)::int as catalogue_coverage
               from public.products
-              where products.tenant_id = tenants.id
             ) product_totals on true
             left join lateral (
               select

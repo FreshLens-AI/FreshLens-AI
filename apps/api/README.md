@@ -38,10 +38,10 @@ The admin web uses platform-admin-only endpoints backed by `get_admin_connection
 - `GET /api/v1/admin/tenants` returns tenant profiles and monthly aggregates.
 - `POST /api/v1/admin/tenants` creates a tenant and sends its vendor a Supabase
   password-setup invitation. Requires server-only `SUPABASE_SERVICE_ROLE_KEY`.
-- `GET /api/v1/admin/products` returns product metadata without inventory rows.
+- `GET /api/v1/admin/products` returns shared product metadata without inventory rows.
 - `GET /api/v1/admin/shelf-life-rules` lists the four shared category rules.
 - `PUT /api/v1/admin/shelf-life-rules/{category}` sets the two stage durations
-  for every retailer. Their sum updates matching tenant products' shelf life.
+  for every retailer. Their sum updates the matching global product's shelf life.
 - `GET /api/v1/admin/alerts` returns alert signals without batch identifiers.
 - `GET /api/v1/admin/analytics` returns daily and pipeline-status aggregates.
 

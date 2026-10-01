@@ -301,14 +301,14 @@ paths:
   /api/v1/products:
     get:
       tags: [Products]
-      summary: List saleable products for the current tenant
+      summary: List products in the shared catalogue
       operationId: listProducts
       security:
         - bearerAuth: []
       x-freshlens-roles: [vendor]
       responses:
         "200":
-          description: Tenant-scoped saleable products
+          description: Products available to every active tenant
           content:
             application/json:
               schema:
@@ -631,8 +631,8 @@ paths:
   /api/v1/admin/products:
     get:
       tags: [Admin]
-      summary: List tenant product metadata
-      description: Returns product configuration metadata without batches, quantities, or inventory rows.
+      summary: List shared product metadata
+      description: Returns global product configuration metadata without batches, quantities, or inventory rows.
       operationId: listAdminProducts
       security:
         - bearerAuth: []
@@ -650,16 +650,17 @@ paths:
         - name: search
           in: query
           schema: { type: string, maxLength: 100, default: "" }
-          description: Case-insensitive product or tenant name search.
+          description: Case-insensitive product name search.
         - name: tenant_id
           in: query
           schema: { $ref: "#/components/schemas/Uuid" }
+          description: Scope monthly scan counts to one tenant; catalogue rows remain global.
         - name: product_id
           in: query
           schema: { $ref: "#/components/schemas/Uuid" }
       responses:
         "200":
-          description: Tenant product metadata
+          description: Shared product metadata
           content:
             application/json:
               schema:
@@ -695,7 +696,7 @@ paths:
     put:
       tags: [Admin]
       summary: Set one category rule for every retailer
-      description: The two stage durations apply to every matching tenant product. Their sum supplies the existing aging-alert shelf life; the configured stages do not override the CNN classification.
+      description: The two stage durations update the matching global product. Their sum supplies the existing aging-alert shelf life; the configured stages do not override the CNN classification.
       operationId: updateShelfLifeRule
       security:
         - bearerAuth: []
@@ -1529,15 +1530,11 @@ components:
 
     AdminProduct:
       type: object
-      required: [id, tenant_id, tenant_name, name, shelf_life_days, fresh_to_medium_days, medium_to_spoiled_days, low_stock_threshold, created_at, updated_at, scans_this_month]
+      required: [id, name, shelf_life_days, fresh_to_medium_days, medium_to_spoiled_days, low_stock_threshold, created_at, updated_at, scans_this_month]
       additionalProperties: false
       properties:
         id:
           $ref: "#/components/schemas/Uuid"
-        tenant_id:
-          $ref: "#/components/schemas/Uuid"
-        tenant_name:
-          type: string
         name:
           type: string
         shelf_life_days:

@@ -35,8 +35,6 @@ export interface TenantUser {
 
 export interface Product {
   id: string;
-  tenantId: string;
-  tenantName: string;
   name: string;
   shelfLifeDays: number;
   freshToMediumDays: number | null;
