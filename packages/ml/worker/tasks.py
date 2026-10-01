@@ -49,4 +49,3 @@ def classify_scan(
         if accepted:
             mark_alert_notification_sent(tenant_id, user_id, alert_id)
     return result.label
-
