@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 
 import asyncpg
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from app.core.config import get_settings
 from app.dependencies.auth import require_platform_admin, require_vendor
@@ -121,6 +121,14 @@ async def get_tenant_connection(
         await transaction.start()
         try:
             await apply_tenant_context(connection, principal)
+            has_access = await connection.fetchval(
+                "select public.current_vendor_has_access()"
+            )
+            if not has_access:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access to this tenant has been revoked.",
+                )
             yield connection
         except BaseException:
             await transaction.rollback()
