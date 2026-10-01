@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,11 +11,36 @@ import {
   View,
 } from 'react-native';
 
-import { ApiError, listAlerts, type Alert } from '../lib/api';
+import { ApiError, listAlerts, markAlertRead, type Alert } from '../lib/api';
 
 type SeverityFilter = 'all' | 'critical' | 'warning' | 'info';
 
-export function AlertsScreen({ onDone }: { onDone: () => void }) {
+function alertTitle(alert: Alert): string {
+  if (alert.event_key === 'fresh_to_medium_warning') return 'Freshness changing soon';
+  if (alert.event_key === 'medium_to_spoiled_warning') return 'Expected spoilage soon';
+  if (alert.event_key === 'low_stock') return 'Low stock';
+  if (alert.event_key === 'spoiled_detected') return 'Spoiled batch detected';
+  return alert.type.replace(/_/g, ' ');
+}
+
+function transitionLabel(value: string | null): string | null {
+  if (!value) return null;
+  const hours = Math.ceil((new Date(value).getTime() - Date.now()) / 3_600_000);
+  if (hours <= 0) return 'Expected transition is due now';
+  if (hours < 24) return `Expected transition in about ${hours} hour${hours === 1 ? '' : 's'}`;
+  const days = Math.ceil(hours / 24);
+  return `Expected transition in about ${days} day${days === 1 ? '' : 's'}`;
+}
+
+export function AlertsScreen({
+  focusedAlertId,
+  onDone,
+  onSell,
+}: {
+  focusedAlertId?: string;
+  onDone: () => void;
+  onSell: (productId: string, batchId: string) => void;
+}) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,9 +60,11 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchAlerts();
-  }, [fetchAlerts]);
+  useFocusEffect(
+    useCallback(() => {
+      void fetchAlerts();
+    }, [fetchAlerts]),
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -47,6 +75,18 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
     if (filter === 'all') return true;
     return a.severity === filter;
   });
+
+  const acknowledge = useCallback(async (alert: Alert) => {
+    if (alert.read_at) return;
+    try {
+      const updated = await markAlertRead(alert.id);
+      setAlerts((items) =>
+        items.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update alert.');
+    }
+  }, []);
 
   return (
     <SafeAreaView style={styles.page}>
@@ -127,6 +167,13 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
               const isCrit = alert.severity === 'critical';
               const isWarn = alert.severity === 'warning';
               const icon = isCrit ? '🚨' : isWarn ? '⚠️' : 'ℹ️';
+              const transition = transitionLabel(alert.transition_at);
+              const canSell = Boolean(
+                alert.product_id &&
+                  alert.batch_id &&
+                  (alert.quantity_remaining ?? 0) > 0 &&
+                  alert.event_key !== 'spoiled_detected',
+              );
 
               return (
                 <View
@@ -135,6 +182,8 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
                     styles.card,
                     isCrit && styles.cardCritical,
                     isWarn && styles.cardWarning,
+                    !alert.read_at && styles.cardUnread,
+                    alert.id === focusedAlertId && styles.cardFocused,
                   ]}
                 >
                   <View style={styles.cardTop}>
@@ -147,7 +196,7 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
                           isWarn && styles.typeWarning,
                         ]}
                       >
-                        {alert.type.replace(/_/g, ' ')}
+                        {alertTitle(alert)}
                       </Text>
                     </View>
                     <View
@@ -176,6 +225,23 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
                   </View>
 
                   <Text style={styles.message}>{alert.message}</Text>
+                  {transition ? (
+                    <Text style={styles.transition}>{transition}</Text>
+                  ) : null}
+                  {alert.product_name ? (
+                    <View style={styles.batchContext}>
+                      <Text style={styles.batchContextName}>{alert.product_name}</Text>
+                      {alert.quantity_remaining !== null ? (
+                        <Text style={styles.batchContextQty}>
+                          {alert.quantity_remaining}
+                          {alert.quantity_received !== null
+                            ? ` of ${alert.quantity_received}`
+                            : ''}{' '}
+                          items remaining
+                        </Text>
+                      ) : null}
+                    </View>
+                  ) : null}
                   <Text style={styles.timestamp}>
                     {new Date(alert.created_at).toLocaleString([], {
                       month: 'short',
@@ -184,6 +250,31 @@ export function AlertsScreen({ onDone }: { onDone: () => void }) {
                       minute: '2-digit',
                     })}
                   </Text>
+                  <View style={styles.actionRow}>
+                    {!alert.read_at ? (
+                      <Pressable
+                        style={styles.readButton}
+                        onPress={() => void acknowledge(alert)}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.readButtonText}>Mark as read</Text>
+                      </Pressable>
+                    ) : (
+                      <Text style={styles.readLabel}>Read</Text>
+                    )}
+                    {canSell && alert.product_id && alert.batch_id ? (
+                      <Pressable
+                        style={styles.sellButton}
+                        onPress={() => {
+                          void acknowledge(alert);
+                          onSell(alert.product_id!, alert.batch_id!);
+                        }}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.sellButtonText}>Sell this batch</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
                 </View>
               );
             })
@@ -268,6 +359,8 @@ const styles = StyleSheet.create({
     borderColor: '#ffe082',
     backgroundColor: '#fffdf5',
   },
+  cardUnread: { borderLeftWidth: 5 },
+  cardFocused: { borderColor: '#1a73e8', borderWidth: 2 },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -297,7 +390,34 @@ const styles = StyleSheet.create({
   sevTextWarn: { color: '#c47d00' },
   sevTextInfo: { color: '#1a73e8' },
   message: { color: '#17221c', fontSize: 14, lineHeight: 20, fontWeight: '500' },
+  transition: { color: '#8a4f00', fontSize: 12, fontWeight: '800' },
+  batchContext: {
+    backgroundColor: '#f1f6f2',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    gap: 2,
+  },
+  batchContextName: { color: '#17221c', fontSize: 13, fontWeight: '800' },
+  batchContextQty: { color: '#536158', fontSize: 12 },
   timestamp: { color: '#849188', fontSize: 11, marginTop: 4 },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 4,
+  },
+  readButton: { paddingVertical: 8, paddingHorizontal: 2 },
+  readButtonText: { color: '#536158', fontSize: 12, fontWeight: '700' },
+  readLabel: { color: '#849188', fontSize: 12, fontWeight: '700' },
+  sellButton: {
+    backgroundColor: '#196a49',
+    borderRadius: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  sellButtonText: { color: '#fff', fontSize: 12, fontWeight: '800' },
   emptyCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -317,4 +437,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-

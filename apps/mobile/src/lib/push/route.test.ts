@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { parsePushPayload, routeForNotification } from './route';
+import { destinationForNotification, parsePushPayload } from './route';
 
 test('scan pushes open scan history', () => {
   const data = { type: 'scan', scan_id: 'scan-1', status: 'completed' };
@@ -10,13 +10,16 @@ test('scan pushes open scan history', () => {
     scanId: 'scan-1',
     status: 'completed',
   });
-  assert.equal(routeForNotification(data), 'History');
+  assert.deepEqual(destinationForNotification(data), { name: 'History' });
 });
 
 test('alert pushes open alerts', () => {
   const data = { type: 'alert', alert_id: 'alert-1' };
   assert.deepEqual(parsePushPayload(data), { type: 'alert', alertId: 'alert-1' });
-  assert.equal(routeForNotification(data), 'Alerts');
+  assert.deepEqual(destinationForNotification(data), {
+    name: 'Alerts',
+    params: { alertId: 'alert-1' },
+  });
 });
 
 test('malformed or foreign payloads are ignored', () => {
@@ -29,6 +32,6 @@ test('malformed or foreign payloads are ignored', () => {
     { type: 'alert', alert_id: '  ' },
     { type: 'promo', url: 'https://example.com' },
   ]) {
-    assert.equal(routeForNotification(data), null);
+    assert.equal(destinationForNotification(data), null);
   }
 });

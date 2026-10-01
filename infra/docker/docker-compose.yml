@@ -99,9 +99,28 @@ services:
       YOLO_CONFIG_DIR: /var/lib/freshlens/yolo
       PUSH_ENABLED: ${PUSH_ENABLED:-true}
       EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      LIFECYCLE_WARNING_LEAD_HOURS: ${LIFECYCLE_WARNING_LEAD_HOURS:-24}
+      LIFECYCLE_MIN_REMAINING_RATIO: ${LIFECYCLE_MIN_REMAINING_RATIO:-0.25}
     volumes:
       - scan_images:/var/lib/freshlens/scans
       - yolo_weights:/var/lib/freshlens/yolo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: ../../packages/ml
+    command: ["celery", "-A", "worker.app", "beat", "--loglevel=info"]
+    environment:
+      DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgresql://freshlens_api_local:freshlens_api_local@postgres:5432/freshlens}
+      DATABASE_SSL_MODE: ${COMPOSE_DATABASE_SSL_MODE:-disable}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      LIFECYCLE_WARNING_LEAD_HOURS: ${LIFECYCLE_WARNING_LEAD_HOURS:-24}
+      LIFECYCLE_MIN_REMAINING_RATIO: ${LIFECYCLE_MIN_REMAINING_RATIO:-0.25}
     depends_on:
       postgres:
         condition: service_healthy

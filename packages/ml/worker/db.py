@@ -1,4 +1,5 @@
 import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import psycopg
@@ -18,14 +19,17 @@ def _connect() -> psycopg.Connection:
     )
 
 
-def _with_vendor_tenant(connection: psycopg.Connection, tenant_id: str) -> None:
+def _with_vendor_tenant(
+    connection: psycopg.Connection, tenant_id: str, user_id: str
+) -> None:
     connection.execute("select set_config('app.tenant_id', %s, true)", (tenant_id,))
+    connection.execute("select set_config('app.user_id', %s, true)", (user_id,))
     connection.execute("select set_config('app.user_role', %s, true)", ("vendor",))
 
 
-def set_status(tenant_id: str, scan_id: str, status: str) -> None:
+def set_status(tenant_id: str, user_id: str, scan_id: str, status: str) -> None:
     with _connect() as connection:
-        _with_vendor_tenant(connection, tenant_id)
+        _with_vendor_tenant(connection, tenant_id, user_id)
         connection.execute(
             """
             update public.scans
@@ -88,28 +92,69 @@ def _ensure_inventory_batch(
     if product_id is None:
         return None, None
 
+    lifecycle = connection.execute(
+        """
+        select
+          rules.fresh_to_medium_days,
+          rules.medium_to_spoiled_days
+        from public.products as products
+        left join public.product_category_shelf_life as rules
+          on rules.category = lower(trim(products.name))
+        where products.id = %s
+        """,
+        (product_id,),
+    ).fetchone()
+    intake = datetime.now(UTC)
+    initial_classification = result.label
+    fresh_to_medium_at = None
+    medium_to_spoiled_at = None
+    if lifecycle is not None:
+        fresh_days = lifecycle["fresh_to_medium_days"]
+        medium_days = lifecycle["medium_to_spoiled_days"]
+        if fresh_days is not None and medium_days is not None:
+            if result.label == "fresh":
+                fresh_to_medium_at = intake + timedelta(days=int(fresh_days))
+                medium_to_spoiled_at = fresh_to_medium_at + timedelta(
+                    days=int(medium_days)
+                )
+            elif result.label == "medium":
+                fresh_to_medium_at = intake
+                medium_to_spoiled_at = intake + timedelta(days=int(medium_days))
+            elif result.label == "spoiled":
+                fresh_to_medium_at = intake
+                medium_to_spoiled_at = intake
+
     batch = connection.execute(
         """
         insert into public.batches (
           tenant_id, product_id, intake_date,
-          quantity_received, quantity_remaining
+          quantity_received, quantity_remaining, initial_classification,
+          fresh_to_medium_at, medium_to_spoiled_at
         )
-        select tenant_id, %s, now(), quantity, quantity
+        select tenant_id, %s, %s, quantity, quantity,
+               %s::public.classification, %s, %s
         from public.scans
         where id = %s
         returning id
         """,
-        (product_id, scan_id),
+        (
+            product_id,
+            intake,
+            initial_classification,
+            fresh_to_medium_at,
+            medium_to_spoiled_at,
+            scan_id,
+        ),
     ).fetchone()
     return product_id, batch["id"] if batch is not None else None
 
 
 def complete(
-    tenant_id: str, scan_id: str, result: ClassificationResult
+    tenant_id: str, user_id: str, scan_id: str, result: ClassificationResult
 ) -> str | None:
     """Persist a completed scan; return the id of a newly raised spoilage alert."""
     with _connect() as connection:
-        _with_vendor_tenant(connection, tenant_id)
+        _with_vendor_tenant(connection, tenant_id, user_id)
         product_id, batch_id = _ensure_inventory_batch(connection, scan_id, result)
         connection.execute(
             """
@@ -152,14 +197,15 @@ def complete(
             alert = connection.execute(
                 """
                 insert into public.alerts (
-                  tenant_id, type, severity, message, product_id, batch_id
+                  tenant_id, type, event_key, severity, message,
+                  product_id, batch_id
                 )
                 select
-                  %s, 'spoilage', 'critical', %s, %s, %s
+                  %s, 'spoilage', 'spoiled_detected', 'critical', %s, %s, %s
                 where not exists (
                   select 1
                   from public.alerts
-                  where type = 'spoilage'
+                  where event_key = 'spoiled_detected'
                     and batch_id = %s
                 )
                 returning id
@@ -171,9 +217,9 @@ def complete(
     return None
 
 
-def active_push_tokens(tenant_id: str) -> list[str]:
+def active_push_tokens(tenant_id: str, user_id: str) -> list[str]:
     with _connect() as connection:
-        _with_vendor_tenant(connection, tenant_id)
+        _with_vendor_tenant(connection, tenant_id, user_id)
         rows = connection.execute(
             """
             select token
@@ -185,11 +231,11 @@ def active_push_tokens(tenant_id: str) -> list[str]:
     return [row["token"] for row in rows]
 
 
-def deactivate_push_tokens(tenant_id: str, tokens: list[str]) -> None:
+def deactivate_push_tokens(tenant_id: str, user_id: str, tokens: list[str]) -> None:
     if not tokens:
         return
     with _connect() as connection:
-        _with_vendor_tenant(connection, tenant_id)
+        _with_vendor_tenant(connection, tenant_id, user_id)
         connection.execute(
             """
             update public.device_tokens
@@ -197,6 +243,19 @@ def deactivate_push_tokens(tenant_id: str, tokens: list[str]) -> None:
             where token = any(%s)
             """,
             (tokens,),
+        )
+
+
+def mark_alert_notification_sent(tenant_id: str, user_id: str, alert_id: str) -> None:
+    with _connect() as connection:
+        _with_vendor_tenant(connection, tenant_id, user_id)
+        connection.execute(
+            """
+            update public.alerts
+            set notification_sent_at = coalesce(notification_sent_at, now())
+            where id = %s
+            """,
+            (alert_id,),
         )
 
 

@@ -1,4 +1,3 @@
-from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import asyncpg
@@ -112,6 +111,19 @@ class SalesService:
                 batch=batch,
                 quantity_remaining=quantity_remaining,
             )
+            if quantity_remaining == 0:
+                await self.connection.execute(
+                    """
+                    update public.alerts
+                    set resolved_at = coalesce(resolved_at, now())
+                    where batch_id = $1
+                      and event_key in (
+                        'fresh_to_medium_warning',
+                        'medium_to_spoiled_warning'
+                      )
+                    """,
+                    item.batch_id,
+                )
             sale_items.append(
                 SaleItem(
                     id=item_row["id"],
@@ -239,24 +251,6 @@ class SalesService:
                 product_id=product_id,
                 batch_id=batch_id,
             )
-
-        intake = batch["intake_date"]
-        shelf_life_days = int(batch["shelf_life_days"])
-        if isinstance(intake, datetime):
-            expiry = intake + timedelta(days=shelf_life_days)
-            now = datetime.now(UTC) if intake.tzinfo else datetime.now()
-            if expiry <= now:
-                await self._insert_alert_once(
-                    tenant_id=tenant_id,
-                    alert_type="aging",
-                    event_key="shelf_life_elapsed",
-                    severity="warning",
-                    message=(
-                        f"{name} has passed its {shelf_life_days}-day shelf life."
-                    ),
-                    product_id=product_id,
-                    batch_id=batch_id,
-                )
 
     async def _insert_alert_once(
         self,

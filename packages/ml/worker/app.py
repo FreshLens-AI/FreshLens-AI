@@ -8,3 +8,10 @@ app = Celery(
     backend=os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1"),
     include=["worker.tasks"],
 )
+
+app.conf.beat_schedule = {
+    "evaluate-batch-lifecycle-hourly": {
+        "task": "enqueue_batch_lifecycle_checks",
+        "schedule": 60 * 60,
+    }
+}

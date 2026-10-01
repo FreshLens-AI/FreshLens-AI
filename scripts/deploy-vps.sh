@@ -45,7 +45,7 @@ done
 "${compose[@]}" ps
 if [[ "$ok" -ne 1 ]]; then
   echo "API health check failed" >&2
-  "${compose[@]}" logs --tail=80 api worker || true
+  "${compose[@]}" logs --tail=80 api worker scheduler || true
   exit 1
 fi
 
