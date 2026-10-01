@@ -41,31 +41,6 @@ insert into public.users (id, tenant_id, role, display_name, email) values
     'admin@example.com'
   );
 
-insert into public.products (
-  id, tenant_id, name, shelf_life_days, low_stock_threshold
-) values
-  (
-    '30000000-0000-4000-8000-000000000001',
-    '20000000-0000-4000-8000-000000000001',
-    'Tomato',
-    5,
-    3
-  ),
-  (
-    '30000000-0000-4000-8000-000000000002',
-    '20000000-0000-4000-8000-000000000002',
-    'Tomato',
-    5,
-    3
-  ),
-  (
-    '30000000-0000-4000-8000-000000000003',
-    '20000000-0000-4000-8000-000000000003',
-    'Tomato',
-    5,
-    3
-  );
-
 insert into public.batches (
   id,
   tenant_id,
@@ -76,14 +51,14 @@ insert into public.batches (
   (
     '40000000-0000-4000-8000-000000000001',
     '20000000-0000-4000-8000-000000000001',
-    '30000000-0000-4000-8000-000000000001',
+    '11111111-1111-4111-8111-111111111201',
     10,
     10
   ),
   (
     '40000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000002',
-    '30000000-0000-4000-8000-000000000002',
+    '11111111-1111-4111-8111-111111111201',
     8,
     8
   );
@@ -97,7 +72,7 @@ insert into public.scans (
     'tenant-a/scan-1.jpg',
     2,
     'pending',
-    '30000000-0000-4000-8000-000000000001',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000001'
   ),
   (
@@ -106,7 +81,7 @@ insert into public.scans (
     'tenant-b/scan-1.jpg',
     1,
     'pending',
-    '30000000-0000-4000-8000-000000000002',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000002'
   );
 
@@ -119,7 +94,7 @@ insert into public.alerts (
     'low_stock',
     'warning',
     'Tomato is low',
-    '30000000-0000-4000-8000-000000000001',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000001'
   ),
   (
@@ -128,7 +103,7 @@ insert into public.alerts (
     'aging',
     'info',
     'Tomato is aging',
-    '30000000-0000-4000-8000-000000000002',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000002'
   );
 
@@ -157,7 +132,7 @@ insert into public.sale_items (
     '71000000-0000-4000-8000-000000000001',
     '20000000-0000-4000-8000-000000000001',
     '70000000-0000-4000-8000-000000000001',
-    '30000000-0000-4000-8000-000000000001',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000001',
     1
   ),
@@ -165,7 +140,7 @@ insert into public.sale_items (
     '71000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000002',
     '70000000-0000-4000-8000-000000000002',
-    '30000000-0000-4000-8000-000000000002',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000002',
     1
   );
@@ -248,8 +223,13 @@ begin
     raise exception 'Tenant A can see another tenant user';
   end if;
   if (select array_agg(id order by id) from public.products)
-    <> array['30000000-0000-4000-8000-000000000001'::uuid] then
-    raise exception 'Tenant A can see another tenant product';
+    <> array[
+      '11111111-1111-4111-8111-111111111201'::uuid,
+      '11111111-1111-4111-8111-111111111202'::uuid,
+      '11111111-1111-4111-8111-111111111203'::uuid,
+      '11111111-1111-4111-8111-111111111204'::uuid
+    ] then
+    raise exception 'Tenant A cannot see the shared catalogue';
   end if;
   if (select count(*) from public.product_category_shelf_life) <> 4 then
     raise exception 'vendor cannot read shared shelf-life rules';
@@ -307,7 +287,7 @@ begin
     'fresh_to_medium_warning',
     'warning',
     'Tomato is nearing medium freshness',
-    '30000000-0000-4000-8000-000000000001',
+    '11111111-1111-4111-8111-111111111201',
     '40000000-0000-4000-8000-000000000001',
     now() + interval '2 days'
   );
@@ -321,7 +301,7 @@ begin
       'fresh_to_medium_warning',
       'warning',
       'Duplicate lifecycle alert',
-      '30000000-0000-4000-8000-000000000001',
+      '11111111-1111-4111-8111-111111111201',
       '40000000-0000-4000-8000-000000000001'
     );
     raise exception 'duplicate lifecycle alert was accepted';
@@ -384,10 +364,10 @@ begin
 
   update public.products
   set name = 'Hijacked Tomato'
-  where id = '30000000-0000-4000-8000-000000000002';
+  where id = '11111111-1111-4111-8111-111111111201';
   get diagnostics affected_rows = row_count;
   if affected_rows <> 0 then
-    raise exception 'vendor updated another tenant product';
+    raise exception 'vendor updated the shared catalogue';
   end if;
 
   update public.scans
@@ -418,8 +398,13 @@ begin
     raise exception 'Tenant B can see another tenant user';
   end if;
   if (select array_agg(id order by id) from public.products)
-    <> array['30000000-0000-4000-8000-000000000002'::uuid] then
-    raise exception 'Tenant B can see another tenant product';
+    <> array[
+      '11111111-1111-4111-8111-111111111201'::uuid,
+      '11111111-1111-4111-8111-111111111202'::uuid,
+      '11111111-1111-4111-8111-111111111203'::uuid,
+      '11111111-1111-4111-8111-111111111204'::uuid
+    ] then
+    raise exception 'Tenant B cannot see the shared catalogue';
   end if;
   if (select array_agg(id order by id) from public.scans)
     <> array['50000000-0000-4000-8000-000000000002'::uuid] then
@@ -531,7 +516,7 @@ begin
   if (select count(*) from public.users) <> 4 then
     raise exception 'platform admin cannot see every identity row';
   end if;
-  if (select count(*) from public.products) <> 3
+  if (select count(*) from public.products) <> 4
     or (select count(*) from public.batches) <> 2
     or (select count(*) from public.scans) <> 2
     or (select count(*) from public.sales) <> 2
@@ -544,15 +529,17 @@ begin
   update public.product_category_shelf_life
   set fresh_to_medium_days = 3, medium_to_spoiled_days = 4
   where category = 'tomato';
-  if (select count(*) from public.products where name = 'Tomato' and shelf_life_days = 7) <> 3 then
-    raise exception 'category rule did not synchronize tenant products';
+  if (select count(*) from public.products where name = 'Tomato' and shelf_life_days = 7) <> 1 then
+    raise exception 'category rule did not synchronize the global product';
   end if;
 
-  insert into public.products (tenant_id, name, shelf_life_days)
-  values ('20000000-0000-4000-8000-000000000001', 'Tomato', 2);
-  if (select count(*) from public.products where name = 'Tomato' and shelf_life_days = 7) <> 4 then
-    raise exception 'new tenant product did not inherit the category rule';
-  end if;
+  begin
+    insert into public.products (name, shelf_life_days)
+    values (' tomato ', 2);
+    raise exception 'duplicate normalized catalogue product was accepted';
+  exception when unique_violation then
+    null;
+  end;
 
   perform public.create_local_auth_shadow(
     '10000000-0000-4000-8000-000000000005', 'new-vendor@example.com'

@@ -67,7 +67,6 @@ class AlertService:
             from public.alerts
             left join public.products
               on products.id = alerts.product_id
-             and products.tenant_id = alerts.tenant_id
             left join public.batches
               on batches.id = alerts.batch_id
              and batches.tenant_id = alerts.tenant_id
@@ -110,7 +109,6 @@ class AlertService:
             from updated
             left join public.products
               on products.id = updated.product_id
-             and products.tenant_id = updated.tenant_id
             left join public.batches
               on batches.id = updated.batch_id
              and batches.tenant_id = updated.tenant_id

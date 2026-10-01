@@ -192,7 +192,6 @@ class SalesService:
                 from public.batches as b
                 join public.products as p
                   on p.id = b.product_id
-                 and p.tenant_id = b.tenant_id
                 where b.id = $1
                 for update of b
                 """,

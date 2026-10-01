@@ -69,7 +69,7 @@ def _ensure_inventory_batch(
         return product_id, batch_id
 
     # An explicitly supplied product wins. Otherwise, only auto-link a
-    # high-confidence identity-v1 label that exactly matches the catalogue.
+    # high-confidence identity-v1 label that exactly matches the shared catalogue.
     if (
         product_id is None
         and result.identity_score is not None

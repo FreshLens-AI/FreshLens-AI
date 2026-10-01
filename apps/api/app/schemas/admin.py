@@ -106,8 +106,6 @@ class AdminProduct(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    tenant_id: UUID
-    tenant_name: str
     name: str
     shelf_life_days: int
     fresh_to_medium_days: int | None = None

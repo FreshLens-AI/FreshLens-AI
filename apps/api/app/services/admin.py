@@ -30,8 +30,6 @@ class AdminProductService:
             """
             select
               products.id,
-              products.tenant_id,
-              tenants.name as tenant_name,
               products.name,
               products.shelf_life_days,
               rules.fresh_to_medium_days,
@@ -44,15 +42,13 @@ class AdminProductService:
                 from public.scans
                 where scans.product_id = products.id
                   and scans.created_at >= date_trunc('month', now())
+                  and ($4::uuid is null or scans.tenant_id = $4)
               ) as scans_this_month,
               count(*) over()::int as total
             from public.products
-            join public.tenants on tenants.id = products.tenant_id
             left join public.product_category_shelf_life as rules
               on rules.category = lower(trim(products.name))
-            where ($3 = '' or products.name ilike '%' || $3 || '%'
-              or tenants.name ilike '%' || $3 || '%')
-              and ($4::uuid is null or products.tenant_id = $4)
+            where ($3 = '' or products.name ilike '%' || $3 || '%')
               and ($5::uuid is null or products.id = $5)
             order by products.updated_at desc, products.name
             limit $1 offset $2

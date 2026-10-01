@@ -125,6 +125,7 @@ jobs:
             infra/db/migrations/0007_user_access_controls.sql \
             infra/db/migrations/0008_batch_lifecycle_alerts.sql \
             infra/db/migrations/0009_worker_tenant_access.sql \
+            infra/db/migrations/0010_global_product_catalog.sql \
             infra/db/local/0020_runtime_login.sql \
             infra/db/tests/rls_isolation.sql
           do

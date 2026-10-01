@@ -22,11 +22,11 @@ in filename order through the Supabase SQL editor or CLI.
   `app_role` and `tenant_id` claims only for admins and active-tenant vendors.
 - `freshlens_api` is a `NOLOGIN`, `NOBYPASSRLS` group for API grants and policies.
 
-`0002_business_tables.sql` adds the mid-eval operational schema:
+`0002_business_tables.sql` adds the original mid-eval operational schema:
 
-- Tenant-scoped `products`, `batches`, `scans`, `sales`, `sale_items`, `alerts`,
-  and `device_tokens`, each with `tenant_id` + RLS in the same migration.
-- Composite FKs `(id, tenant_id)` prevent cross-tenant product/batch links.
+- Tenant-scoped `batches`, `scans`, `sales`, `sale_items`, `alerts`, and
+  `device_tokens`, each with `tenant_id` + RLS in the same migration.
+- Composite FKs `(id, tenant_id)` prevent cross-tenant batch links.
 - `sales (tenant_id, idempotency_key)` is unique so sale retries cannot double-deduct.
 - Vendor policies match `app.tenant_id` and require an active tenant; platform
   admins can read/write all business rows for catalogue/admin workflows.
@@ -37,11 +37,8 @@ reported as freshness confidence and allows unknown inputs to remain unlinked.
 
 `0004_category_shelf_life.sql` adds shared rules for Banana, Cucumber,
 Eggplant, and Tomato. An administrator sets fresh-to-medium and
-medium-to-spoiled durations. Their sum updates each matching tenant product's
-existing `shelf_life_days`, including products added later. Existing aging
-alerts use that combined duration. These rules contain
-no tenant data; tenant products retain their RLS policies. Initial durations
-are unset so the migration does not invent transition times.
+medium-to-spoiled durations. Existing aging alerts use their combined duration.
+Initial durations are unset so the migration does not invent transition times.
 
 `0005_tenant_onboarding.sql` grants admin-only RLS inserts for tenant and vendor
 identity rows.
@@ -50,6 +47,12 @@ identity rows.
 tenant batches and adds idempotent lifecycle event, read, resolution, and push
 delivery fields to tenant alerts. The existing table RLS policies continue to
 isolate every added field by tenant.
+
+`0010_global_product_catalog.sql` converts `products` into shared reference
+data, collapses duplicate tenant copies, preserves operational references, and
+backfills batches for confidently classified completed scans that previously
+had no tenant product to match. Products retain forced RLS; tenant inventory
+remains isolated in `batches` and the other operational tables.
 
 After applying `0001`, enable `public.custom_access_token_hook` under
 **Authentication → Hooks → Custom Access Token**. Existing sessions must sign in
@@ -82,7 +85,9 @@ Docker Compose initializes a new disposable development volume in this order:
 10. `migrations/0009_worker_tenant_access.sql` lets Celery workers complete
     scans without a JWT user id while still requiring an active tenant (and an
     active vendor when `app.user_id` is set).
-11. `local/0020_runtime_login.sql` creates the development-only
+11. `migrations/0010_global_product_catalog.sql` creates the shared catalogue
+    boundary and repairs previously unlinked completed scans.
+12. `local/0020_runtime_login.sql` creates the development-only
    `freshlens_api_local` login and grants it `freshlens_api`.
 
 The API container connects as `freshlens_api_local`, never as the database owner.

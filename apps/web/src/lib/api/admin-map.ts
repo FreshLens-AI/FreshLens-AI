@@ -39,8 +39,6 @@ export interface AdminTenantUserResponse {
 
 export interface AdminProductResponse {
   id: string;
-  tenant_id: string;
-  tenant_name: string;
   name: string;
   shelf_life_days: number;
   fresh_to_medium_days: number | null;
@@ -135,8 +133,6 @@ export function mapAdminTenantUser(row: AdminTenantUserResponse): TenantUser {
 export function mapAdminProduct(row: AdminProductResponse): Product {
   return {
     id: row.id,
-    tenantId: row.tenant_id,
-    tenantName: row.tenant_name,
     name: row.name,
     shelfLifeDays: row.shelf_life_days,
     freshToMediumDays: row.fresh_to_medium_days,

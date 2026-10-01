@@ -46,7 +46,7 @@ export function DashboardOverview({ overview }: { overview: AdminOverview }) {
       <section className="stat-grid" aria-label="Platform summary">
         <StatCard label="Active tenants" value={`${overview.active_tenants}`} helper={`of ${overview.total_tenants} onboarded`} icon={<Building2 size={21} />} />
         <StatCard label="Monthly scans" value={formatNumber(overview.monthly_scans)} helper="aggregate submissions" icon={<ScanLine size={21} />} tone="blue" />
-        <StatCard label="Configured products" value={`${overview.total_products}`} helper="across all tenants" icon={<Leaf size={21} />} tone="amber" />
+        <StatCard label="Catalogue products" value={`${overview.total_products}`} helper="available to every tenant" icon={<Leaf size={21} />} tone="amber" />
         <StatCard label="Active alerts" value={`${overview.active_alerts}`} helper={`${overview.critical_alerts} critical`} icon={<BellRing size={21} />} tone="red" />
       </section>
 

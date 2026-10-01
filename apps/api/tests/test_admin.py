@@ -125,8 +125,6 @@ def test_admin_lists_product_metadata_without_inventory(
     connection.rows = [
         {
             "id": uuid4(),
-            "tenant_id": uuid4(),
-            "tenant_name": "Example Grocer",
             "name": "Tomato",
             "shelf_life_days": 5,
             "low_stock_threshold": 3,
@@ -149,8 +147,9 @@ def test_admin_lists_product_metadata_without_inventory(
         )
         item = response.json()["items"][0]
         assert response.status_code == 200
-        assert item["tenant_name"] == "Example Grocer"
+        assert item["name"] == "Tomato"
         assert item["scans_this_month"] == 8
+        assert "tenant_id" not in item
         assert "quantity_remaining" not in item
         assert "batches" not in item
     finally:

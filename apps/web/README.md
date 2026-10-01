@@ -31,7 +31,7 @@ described in [`../../docs/authentication.md`](../../docs/authentication.md).
 |---|---|
 | `/dashboard` | Platform overview and attention items |
 | `/tenants` | Create tenants and view profiles and monthly aggregates |
-| `/catalogue` | Shared stage durations and live tenant product metadata |
+| `/catalogue` | Shared product catalogue and freshness-stage durations |
 | `/scans` | Aggregate queue and classification activity only |
 | `/alerts` | Live tenant alert signals without batch identifiers |
 | `/analytics` | Live platform and tenant-level aggregate trends |
