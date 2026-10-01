@@ -9,6 +9,7 @@ import { signOutAction } from "@/app/(auth)/actions";
 import { insightNavigation, primaryNavigation } from "@/lib/navigation";
 
 const pageNames = [...primaryNavigation, ...insightNavigation];
+const contentHeightPages = new Set(["/dashboard", "/scans", "/analytics"]);
 
 function NavigationGroup({
   label,
@@ -63,6 +64,7 @@ export function AdminShell({
     pageNames.find(
       (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
     )?.label ?? "Admin";
+  const useContentHeight = contentHeightPages.has(pathname);
 
   return (
     <div className="admin-shell">
@@ -168,7 +170,11 @@ export function AdminShell({
           </div>
         </header>
 
-        <main id="main-content" className="page-content" tabIndex={-1}>
+        <main
+          id="main-content"
+          className={`page-content${useContentHeight ? " page-content--content-height" : ""}`}
+          tabIndex={-1}
+        >
           {children}
         </main>
       </div>
