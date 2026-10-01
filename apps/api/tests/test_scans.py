@@ -30,13 +30,15 @@ class FakeStorage:
 
 class FakePublisher:
     def __init__(self, error: Exception | None = None) -> None:
-        self.calls: list[tuple[UUID, UUID, str]] = []
+        self.calls: list[tuple[UUID, UUID, UUID, str]] = []
         self.error = error
 
-    def publish(self, tenant_id: UUID, scan_id: UUID, image_path: str) -> str:
+    def publish(
+        self, tenant_id: UUID, user_id: UUID, scan_id: UUID, image_path: str
+    ) -> str:
         if self.error is not None:
             raise self.error
-        self.calls.append((tenant_id, scan_id, image_path))
+        self.calls.append((tenant_id, user_id, scan_id, image_path))
         return "task-1"
 
 
@@ -281,10 +283,12 @@ def test_publisher_writes_tenant_namespaced_redis_key(
     monkeypatch.setattr("app.core.jobs.Celery", FakeCelery)
     monkeypatch.setattr("app.core.jobs.Redis", FakeRedis)
     tenant_id = uuid4()
+    user_id = uuid4()
     scan_id = uuid4()
     ClassificationJobPublisher("redis://x", "redis://x").publish(
-        tenant_id, scan_id, "t/s.jpg"
+        tenant_id, user_id, scan_id, "t/s.jpg"
     )
     assert sent["name"] == TASK_NAME
     assert sent["key"] == f"tenant:{tenant_id}:scan:{scan_id}"
     assert sent["value"] == "task-99"
+    assert sent["args"] == [str(tenant_id), str(user_id), str(scan_id), "t/s.jpg"]

@@ -48,13 +48,13 @@ def _post(messages: list[dict]) -> list[dict]:
 
 
 def send_expo_push(
-    tenant_id: str, title: str, body: str, data: dict[str, str]
+    tenant_id: str, user_id: str, title: str, body: str, data: dict[str, str]
 ) -> int:
     """Push to every active device in the tenant; return tickets accepted."""
     if not push_enabled():
         return 0
     try:
-        tokens = db.active_push_tokens(tenant_id)
+        tokens = db.active_push_tokens(tenant_id, user_id)
     except Exception:
         log.exception("push: could not load device tokens")
         return 0
@@ -90,7 +90,7 @@ def send_expo_push(
 
     if stale:
         try:
-            db.deactivate_push_tokens(tenant_id, stale)
+            db.deactivate_push_tokens(tenant_id, user_id, stale)
         except Exception:
             log.exception("push: could not deactivate stale tokens")
     return accepted
@@ -98,6 +98,7 @@ def send_expo_push(
 
 def notify_scan(
     tenant_id: str,
+    user_id: str,
     scan_id: str,
     status: str,
     result: ClassificationResult | None = None,
@@ -109,11 +110,21 @@ def notify_scan(
     else:
         title, body = "Scan failed", "We couldn't classify that scan. Try again."
     return send_expo_push(
-        tenant_id, title, body, {"type": "scan", "scan_id": scan_id, "status": status}
+        tenant_id,
+        user_id,
+        title,
+        body,
+        {"type": "scan", "scan_id": scan_id, "status": status},
     )
 
 
-def notify_alert(tenant_id: str, alert_id: str, message: str) -> int:
+def notify_alert(
+    tenant_id: str, user_id: str, alert_id: str, title: str, message: str
+) -> int:
     return send_expo_push(
-        tenant_id, "Spoilage alert", message, {"type": "alert", "alert_id": alert_id}
+        tenant_id,
+        user_id,
+        title,
+        message,
+        {"type": "alert", "alert_id": alert_id},
     )

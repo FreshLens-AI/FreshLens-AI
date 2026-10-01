@@ -25,6 +25,7 @@ class FakeConnection:
         }
         self.matched_product_id = matched_product_id
         self.batch_inserts = 0
+        self.batch_insert_params = None
         self.alert_inserts = 0
         self.last_update = None
 
@@ -40,6 +41,10 @@ class FakeConnection:
             return FakeCursor()
         if "from public.scans" in normalized and "for update" in normalized:
             return FakeCursor(dict(self.scan))
+        if "left join public.product_category_shelf_life" in normalized:
+            return FakeCursor(
+                {"fresh_to_medium_days": 3, "medium_to_spoiled_days": 2}
+            )
         if "from public.products" in normalized:
             row = (
                 {"id": self.matched_product_id}
@@ -49,6 +54,7 @@ class FakeConnection:
             return FakeCursor(row)
         if normalized.startswith("insert into public.batches"):
             self.batch_inserts += 1
+            self.batch_insert_params = params
             return FakeCursor({"id": "new-batch"})
         if normalized.startswith("update public.scans"):
             self.last_update = params
@@ -80,12 +86,14 @@ def test_completed_identified_scan_creates_one_batch_on_retry(monkeypatch) -> No
     connection = FakeConnection()
     monkeypatch.setattr(db, "_connect", lambda: connection)
 
-    db.complete("tenant-1", "scan-1", _result("Banana"))
-    db.complete("tenant-1", "scan-1", _result("Banana"))
+    db.complete("tenant-1", "user-1", "scan-1", _result("Banana"))
+    db.complete("tenant-1", "user-1", "scan-1", _result("Banana"))
 
     assert connection.scan["product_id"] == "banana-product"
     assert connection.scan["batch_id"] == "new-batch"
     assert connection.batch_inserts == 1
+    assert connection.batch_insert_params[2] == "fresh"
+    assert connection.batch_insert_params[3] < connection.batch_insert_params[4]
     assert connection.alert_inserts == 0
     assert connection.last_update[1] == 0.91
     assert connection.last_update[3:6] == (
@@ -103,7 +111,7 @@ def test_unknown_or_low_confidence_identity_does_not_create_batch(monkeypatch) -
         connection = FakeConnection(matched_product_id=matched_product_id)
         monkeypatch.setattr(db, "_connect", lambda: connection)
 
-        db.complete("tenant-1", "scan-1", result)
+        db.complete("tenant-1", "user-1", "scan-1", result)
 
         assert connection.scan["product_id"] is None
         assert connection.scan["batch_id"] is None
@@ -114,7 +122,7 @@ def test_existing_batch_is_preserved(monkeypatch) -> None:
     connection = FakeConnection(product_id="banana-product", batch_id="existing-batch")
     monkeypatch.setattr(db, "_connect", lambda: connection)
 
-    db.complete("tenant-1", "scan-1", _result("Banana"))
+    db.complete("tenant-1", "user-1", "scan-1", _result("Banana"))
 
     assert connection.scan["batch_id"] == "existing-batch"
     assert connection.batch_inserts == 0
@@ -132,7 +140,7 @@ def test_spoiled_result_creates_critical_alert(monkeypatch) -> None:
         identity_model_version="identity-yolo26n-cls-v1",
     )
 
-    alert_id = db.complete("tenant-1", "scan-1", spoiled)
+    alert_id = db.complete("tenant-1", "user-1", "scan-1", spoiled)
 
     assert connection.alert_inserts == 1
     assert alert_id == "new-alert"
