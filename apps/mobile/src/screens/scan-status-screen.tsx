@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   ApiError,
@@ -222,12 +222,6 @@ export function ScanStatusScreen({
                 <Text style={styles.detailLabel}>Batch Quantity</Text>
                 <Text style={styles.detailVal}>{scan.quantity} units</Text>
               </View>
-              <View style={styles.detailDivider} />
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Reference ID</Text>
-                <Text style={styles.detailVal}>{scan.id.slice(0, 13)}…</Text>
-              </View>
-
               <View style={styles.detailDivider} />
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Timestamp</Text>

@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import type { CameraCapturedPicture } from 'expo-camera';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function QuantityConfirmScreen({
   photo,
@@ -51,15 +52,16 @@ export function QuantityConfirmScreen({
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.topBar}>
-          <Text style={styles.topBarTitle}>Confirm Scan Batch</Text>
-          <Text style={styles.topBarSub}>Step 2 of 2 · AI Freshness Analysis</Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.topBar}>
+            <Text style={styles.topBarTitle}>Confirm Scan Batch</Text>
+            <Text style={styles.topBarSub}>Step 2 of 2 · AI Freshness Analysis</Text>
+          </View>
 
         {/* Photo Preview Card */}
         <View style={styles.photoContainer}>
@@ -136,22 +138,24 @@ export function QuantityConfirmScreen({
           ) : null}
         </View>
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Pressable style={styles.secondaryButton} onPress={onBack}>
-            <Text style={styles.secondaryButtonText}>Retake Photo</Text>
-          </Pressable>
-          <Pressable style={styles.primaryButton} onPress={handleConfirm}>
-            <Text style={styles.primaryButtonText}>Analyze Freshness →</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Actions */}
+          <View style={styles.actions}>
+            <Pressable style={styles.secondaryButton} onPress={onBack}>
+              <Text style={styles.secondaryButtonText}>Retake Photo</Text>
+            </Pressable>
+            <Pressable style={styles.primaryButton} onPress={handleConfirm}>
+              <Text style={styles.primaryButtonText}>Analyze Freshness →</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f7f4' },
+  keyboard: { flex: 1 },
   scrollContent: { padding: 20, gap: 16, paddingBottom: 40 },
   topBar: {
     paddingTop: 10,
@@ -278,4 +282,3 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });
-

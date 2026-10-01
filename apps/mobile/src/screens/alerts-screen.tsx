@@ -2,16 +2,23 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
+  Alert as AlertDialog,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ApiError, listAlerts, markAlertRead, type Alert } from '../lib/api';
+import {
+  ApiError,
+  dismissAlert,
+  listAlerts,
+  markAlertRead,
+  type Alert,
+} from '../lib/api';
 
 type SeverityFilter = 'all' | 'critical' | 'warning' | 'info';
 
@@ -46,6 +53,7 @@ export function AlertsScreen({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<SeverityFilter>('all');
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -86,6 +94,32 @@ export function AlertsScreen({
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not update alert.');
     }
+  }, []);
+
+  const confirmDismiss = useCallback((alert: Alert) => {
+    AlertDialog.alert(
+      'Dismiss this alert?',
+      'It will leave the active feed but remain in alert history.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Dismiss',
+          style: 'destructive',
+          onPress: () => {
+            setDismissingId(alert.id);
+            void dismissAlert(alert.id)
+              .then(() => {
+                setAlerts((items) => items.filter((item) => item.id !== alert.id));
+                setError(null);
+              })
+              .catch((err: unknown) => {
+                setError(err instanceof ApiError ? err.message : 'Could not dismiss alert.');
+              })
+              .finally(() => setDismissingId(null));
+          },
+        },
+      ],
+    );
   }, []);
 
   return (
@@ -251,17 +285,30 @@ export function AlertsScreen({
                     })}
                   </Text>
                   <View style={styles.actionRow}>
-                    {!alert.read_at ? (
+                    <View style={styles.secondaryActions}>
+                      {!alert.read_at ? (
+                        <Pressable
+                          style={styles.readButton}
+                          onPress={() => void acknowledge(alert)}
+                          accessibilityRole="button"
+                        >
+                          <Text style={styles.readButtonText}>Mark as read</Text>
+                        </Pressable>
+                      ) : (
+                        <Text style={styles.readLabel}>Read</Text>
+                      )}
                       <Pressable
-                        style={styles.readButton}
-                        onPress={() => void acknowledge(alert)}
+                        style={styles.dismissButton}
+                        onPress={() => confirmDismiss(alert)}
+                        disabled={dismissingId === alert.id}
                         accessibilityRole="button"
+                        accessibilityLabel={`Dismiss ${alertTitle(alert)}`}
                       >
-                        <Text style={styles.readButtonText}>Mark as read</Text>
+                        <Text style={styles.dismissButtonText}>
+                          {dismissingId === alert.id ? 'Dismissing…' : 'Dismiss'}
+                        </Text>
                       </Pressable>
-                    ) : (
-                      <Text style={styles.readLabel}>Read</Text>
-                    )}
+                    </View>
                     {canSell && alert.product_id && alert.batch_id ? (
                       <Pressable
                         style={styles.sellButton}
@@ -408,9 +455,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 4,
   },
+  secondaryActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   readButton: { paddingVertical: 8, paddingHorizontal: 2 },
   readButtonText: { color: '#536158', fontSize: 12, fontWeight: '700' },
   readLabel: { color: '#849188', fontSize: 12, fontWeight: '700' },
+  dismissButton: { paddingVertical: 8, paddingHorizontal: 2 },
+  dismissButtonText: { color: '#a43e34', fontSize: 12, fontWeight: '800' },
   sellButton: {
     backgroundColor: '#196a49',
     borderRadius: 9,
