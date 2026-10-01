@@ -18,19 +18,22 @@ class SupabaseInviter:
         if not settings.supabase_url or not settings.supabase_service_role_key:
             raise InviteError("Tenant invitations are not configured.", 503)
         self.base_url = f"{settings.supabase_url.rstrip('/')}/auth/v1"
-        self.redirect_url = "freshlens://set-password"
+        self.mobile_redirect_url = "freshlens://set-password"
+        self.tenant_admin_redirect_url = settings.tenant_admin_invite_redirect_url
         self.headers = {
             "apikey": settings.supabase_service_role_key,
             "Authorization": f"Bearer {settings.supabase_service_role_key}",
         }
 
-    async def invite(self, email: str, name: str) -> UUID:
+    async def invite(
+        self, email: str, name: str, *, redirect_url: str | None = None,
+    ) -> UUID:
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 response = await client.post(
                     f"{self.base_url}/invite",
                     headers=self.headers,
-                    params={"redirect_to": self.redirect_url},
+                    params={"redirect_to": redirect_url or self.mobile_redirect_url},
                     json={"email": email, "data": {"name": name}},
                 )
         except httpx.HTTPError as exc:
@@ -54,7 +57,7 @@ class SupabaseInviter:
 
     async def provision_hosted_identity(
         self, tenant_id: UUID, tenant_name: str, user_id: UUID,
-        vendor_name: str, email: str,
+        display_name: str, email: str, role: str = "tenant_admin",
     ) -> None:
         """Mirror local Compose identities where the hosted JWT hook can see them."""
         headers = {**self.headers, "Prefer": "return=minimal"}
@@ -66,20 +69,20 @@ class SupabaseInviter:
                 )
                 tenant.raise_for_status()
                 await self._provision_hosted_user(
-                    client, headers, tenant_id, user_id, vendor_name, email,
+                    client, headers, tenant_id, user_id, display_name, email, role,
                 )
             except httpx.HTTPError as exc:
                 raise InviteError("Could not provision the vendor in Supabase.") from exc
 
     async def _provision_hosted_user(
         self, client: httpx.AsyncClient, headers: dict[str, str], tenant_id: UUID,
-        user_id: UUID, vendor_name: str, email: str,
+        user_id: UUID, display_name: str, email: str, role: str = "vendor",
     ) -> None:
         user = await client.post(
             f"{self.base_url.removesuffix('/auth/v1')}/rest/v1/users",
             headers=headers,
             json={"id": str(user_id), "tenant_id": str(tenant_id),
-                  "role": "vendor", "display_name": vendor_name, "email": email},
+                  "role": role, "display_name": display_name, "email": email},
         )
         user.raise_for_status()
 

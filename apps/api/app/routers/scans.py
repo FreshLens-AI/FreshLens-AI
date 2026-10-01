@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from app.core.database import get_tenant_connection
 from app.core.jobs import ClassificationJobPublisher, get_publisher
 from app.core.storage import ObjectStorageClient, get_storage
-from app.dependencies.auth import require_vendor
+from app.dependencies.auth import require_tenant_member
 from app.schemas.auth import AuthPrincipal
 from app.schemas.scans import Scan, ScanAccepted, ScanList
 from app.services.scans import ScanService
@@ -28,7 +28,7 @@ def _suffix(filename: str | None) -> str:
 async def create_scan(
     image: Annotated[UploadFile, File()],
     quantity: Annotated[int, Form(ge=1)],
-    principal: AuthPrincipal = Depends(require_vendor),
+    principal: AuthPrincipal = Depends(require_tenant_member),
     connection: asyncpg.Connection = Depends(get_tenant_connection),
     storage: ObjectStorageClient = Depends(get_storage),
     jobs: ClassificationJobPublisher = Depends(get_publisher),
@@ -80,7 +80,7 @@ async def create_scan(
 
 @router.get("", response_model=ScanList)
 async def list_scans(
-    _principal: AuthPrincipal = Depends(require_vendor),
+    _principal: AuthPrincipal = Depends(require_tenant_member),
     connection: asyncpg.Connection = Depends(get_tenant_connection),
     limit: int = _LIMIT,
     offset: int = _OFFSET,
@@ -91,7 +91,7 @@ async def list_scans(
 @router.get("/{scan_id}", response_model=Scan)
 async def get_scan(
     scan_id: UUID,
-    _principal: AuthPrincipal = Depends(require_vendor),
+    _principal: AuthPrincipal = Depends(require_tenant_member),
     connection: asyncpg.Connection = Depends(get_tenant_connection),
 ) -> Scan:
     scan = await ScanService(connection).get(scan_id)

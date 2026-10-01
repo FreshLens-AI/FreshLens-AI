@@ -6,8 +6,8 @@ info:
     V1 contract for FreshLens (CS3203 · Group 21 · PID 5).
 
     - Base path for versioned resources: `/api/v1`
-    - Auth: Supabase JWT Bearer on every versioned `/api/v1/*` route;
-      `GET /health` is public
+    - Auth: Supabase JWT Bearer on versioned routes except public tenant
+      application submission; `GET /health` is also public
     - Tenant isolation: auth middleware derives trusted identity from the JWT, and
       the tenant DB transaction sets Postgres `app.tenant_id` on its own connection;
       never trust a client-supplied `tenant_id`
@@ -28,6 +28,8 @@ tags:
   - name: Batches
   - name: Sales
   - name: Admin
+  - name: Tenant applications
+  - name: Tenant workspace
 security:
   - bearerAuth: []
 
@@ -53,7 +55,7 @@ paths:
       operationId: getCurrentUser
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor, platform_admin]
+      x-freshlens-roles: [vendor, tenant_admin, platform_admin]
       responses:
         "200":
           description: Trusted identity derived from the signed Supabase JWT
@@ -137,7 +139,7 @@ paths:
       operationId: createScan
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       requestBody:
         required: true
         content:
@@ -163,7 +165,7 @@ paths:
       operationId: listScans
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       parameters:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
@@ -191,7 +193,7 @@ paths:
       operationId: getScan
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       parameters:
         - $ref: "#/components/parameters/ScanId"
       responses:
@@ -218,7 +220,7 @@ paths:
       operationId: listAlerts
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       parameters:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
@@ -245,7 +247,7 @@ paths:
       operationId: markAlertRead
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       parameters:
         - name: alert_id
           in: path
@@ -277,7 +279,7 @@ paths:
       operationId: registerDevice
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       requestBody:
         required: true
         content:
@@ -305,7 +307,7 @@ paths:
       operationId: listProducts
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       responses:
         "200":
           description: Products available to every active tenant
@@ -325,7 +327,7 @@ paths:
       operationId: listBatches
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       parameters:
         - name: product_id
           in: query
@@ -367,7 +369,7 @@ paths:
       operationId: createSale
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       parameters:
         - name: Idempotency-Key
           in: header
@@ -409,7 +411,7 @@ paths:
       operationId: createVoiceSaleDraft
       security:
         - bearerAuth: []
-      x-freshlens-roles: [vendor]
+      x-freshlens-roles: [vendor, tenant_admin]
       requestBody:
         required: true
         content:
@@ -430,10 +432,236 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationError"
 
+  /api/v1/tenant-applications:
+    post:
+      tags: [Tenant applications]
+      summary: Submit a tenant signup application
+      operationId: submitTenantApplication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantApplicationCreate"
+      responses:
+        "202":
+          description: Application accepted for platform review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantApplicationSubmitted"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/admin/tenant-applications:
+    get:
+      tags: [Tenant applications]
+      summary: List tenant signup applications
+      operationId: listTenantApplications
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/TenantApplicationStatus"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Application review queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantApplicationList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/tenant-applications/{application_id}/approve:
+    post:
+      tags: [Tenant applications]
+      summary: Approve an application, create its tenant, and invite its owner
+      operationId: approveTenantApplication
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: application_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantApplicationReview"
+      responses:
+        "200":
+          description: Approved application linked to its tenant and owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantApplication"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Application is no longer pending or email already exists
+
+  /api/v1/admin/tenant-applications/{application_id}/reject:
+    post:
+      tags: [Tenant applications]
+      summary: Reject a pending tenant application
+      operationId: rejectTenantApplication
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: application_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantApplicationReview"
+      responses:
+        "200":
+          description: Rejected application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantApplication"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Application is no longer pending
+
+  /api/v1/tenant/overview:
+    get:
+      tags: [Tenant workspace]
+      summary: Get the current tenant's operational overview
+      operationId: getTenantOverview
+      x-freshlens-roles: [tenant_admin]
+      responses:
+        "200":
+          description: RLS-scoped tenant totals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantOverview"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/tenant/analytics:
+    get:
+      tags: [Tenant workspace]
+      summary: Get aggregate scan analytics for the current tenant
+      operationId: getTenantAnalytics
+      x-freshlens-roles: [tenant_admin]
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 90, default: 30 }
+      responses:
+        "200":
+          description: Tenant-scoped daily and pipeline totals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAnalytics"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/tenant/users:
+    get:
+      tags: [Tenant workspace]
+      summary: List vendor users in the current tenant
+      operationId: listCurrentTenantUsers
+      x-freshlens-roles: [tenant_admin]
+      responses:
+        "200":
+          description: Current tenant's vendor users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantUserList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [Tenant workspace]
+      summary: Invite a vendor into the current tenant
+      operationId: createCurrentTenantUser
+      x-freshlens-roles: [tenant_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantUserCreate"
+      responses:
+        "201":
+          description: Vendor account mapped and invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantUserCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Email is already registered
+
+  /api/v1/tenant/users/{user_id}/status:
+    patch:
+      tags: [Tenant workspace]
+      summary: Allow or revoke one vendor in the current tenant
+      operationId: updateCurrentTenantUserStatus
+      x-freshlens-roles: [tenant_admin]
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessStatusUpdate"
+      responses:
+        "200":
+          description: Updated vendor access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /api/v1/admin/tenants:
     post:
       tags: [Admin]
-      summary: Create a tenant and email its vendor an invitation
+      summary: Create a tenant and email its tenant admin an invitation
       operationId: createTenant
       security:
         - bearerAuth: []
@@ -446,7 +674,7 @@ paths:
               $ref: "#/components/schemas/TenantCreate"
       responses:
         "201":
-          description: Tenant and vendor mapping created; invitation sent
+          description: Tenant and owner mapping created; invitation sent
           content:
             application/json:
               schema:
@@ -898,7 +1126,81 @@ components:
 
     Role:
       type: string
-      enum: [vendor, platform_admin]
+      enum: [vendor, tenant_admin, platform_admin]
+
+    TenantApplicationStatus:
+      type: string
+      enum: [pending, approved, rejected]
+
+    TenantApplicationCreate:
+      type: object
+      required: [organization_name, applicant_name, applicant_email]
+      additionalProperties: false
+      properties:
+        organization_name: { type: string, minLength: 2, maxLength: 120 }
+        applicant_name: { type: string, minLength: 2, maxLength: 120 }
+        applicant_email: { type: string, format: email, maxLength: 254 }
+        phone:
+          type: [string, "null"]
+          minLength: 5
+          maxLength: 40
+
+    TenantApplicationSubmitted:
+      type: object
+      required: [id, status, message]
+      additionalProperties: false
+      properties:
+        id: { $ref: "#/components/schemas/Uuid" }
+        status: { const: pending }
+        message: { type: string }
+
+    TenantApplicationReview:
+      type: object
+      additionalProperties: false
+      properties:
+        note:
+          type: [string, "null"]
+          maxLength: 1000
+
+    TenantApplication:
+      type: object
+      additionalProperties: false
+      required: [id, organization_name, applicant_name, applicant_email, phone, status, review_note, reviewed_by, approved_tenant_id, approved_user_id, submitted_at, reviewed_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/Uuid" }
+        organization_name: { type: string }
+        applicant_name: { type: string }
+        applicant_email: { type: string, format: email }
+        phone: { type: [string, "null"] }
+        status: { $ref: "#/components/schemas/TenantApplicationStatus" }
+        review_note: { type: [string, "null"] }
+        reviewed_by:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        approved_tenant_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        approved_user_id:
+          oneOf:
+            - $ref: "#/components/schemas/Uuid"
+            - type: "null"
+        submitted_at: { type: string, format: date-time }
+        reviewed_at: { type: [string, "null"], format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    TenantApplicationList:
+      type: object
+      required: [items, total, limit, offset]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TenantApplication" }
+        total: { type: integer, minimum: 0 }
+        limit: { type: integer, minimum: 1 }
+        offset: { type: integer, minimum: 0 }
 
     Classification:
       type: string
@@ -1432,12 +1734,14 @@ components:
 
     TenantCreated:
       type: object
-      required: [id, name, vendor_email, invitation_sent]
+      required: [id, name, owner_user_id, vendor_email, invitation_sent]
       additionalProperties: false
       properties:
         id:
           $ref: "#/components/schemas/Uuid"
         name: { type: string }
+        owner_user_id:
+          $ref: "#/components/schemas/Uuid"
         vendor_email: { type: string, format: email }
         invitation_sent: { type: boolean, const: true }
 
@@ -1527,6 +1831,23 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    TenantOverview:
+      type: object
+      additionalProperties: false
+      required: [tenant_name, tenant_status, team_members, catalogue_products, active_batches, units_in_stock, active_alerts, scans_this_month, fresh_scans_this_month, medium_scans_this_month, spoiled_scans_this_month]
+      properties:
+        tenant_name: { type: string }
+        tenant_status: { type: string, enum: [active, inactive] }
+        team_members: { type: integer, minimum: 0 }
+        catalogue_products: { type: integer, minimum: 0 }
+        active_batches: { type: integer, minimum: 0 }
+        units_in_stock: { type: integer, minimum: 0 }
+        active_alerts: { type: integer, minimum: 0 }
+        scans_this_month: { type: integer, minimum: 0 }
+        fresh_scans_this_month: { type: integer, minimum: 0 }
+        medium_scans_this_month: { type: integer, minimum: 0 }
+        spoiled_scans_this_month: { type: integer, minimum: 0 }
 
     AdminProduct:
       type: object

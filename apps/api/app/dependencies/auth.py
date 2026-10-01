@@ -49,5 +49,17 @@ def require_role(role: AppRole) -> Callable[..., AuthPrincipal]:
     return dependency
 
 
+def require_tenant_member(
+    principal: Annotated[AuthPrincipal, Depends(get_current_principal)],
+) -> AuthPrincipal:
+    if principal.role not in (AppRole.VENDOR, AppRole.TENANT_ADMIN):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This endpoint requires a tenant account.",
+        )
+    return principal
+
+
 require_vendor = require_role(AppRole.VENDOR)
+require_tenant_admin = require_role(AppRole.TENANT_ADMIN)
 require_platform_admin = require_role(AppRole.PLATFORM_ADMIN)

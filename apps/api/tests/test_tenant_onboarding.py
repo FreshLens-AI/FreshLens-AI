@@ -20,7 +20,7 @@ NOW = datetime(2026, 10, 1, tzinfo=UTC)
 class FakeInviter:
     def __init__(self) -> None:
         self.user_id = uuid4()
-        self.invited: tuple[str, str] | None = None
+        self.invited: tuple[str, str, str | None] | None = None
         self.deleted: UUID | None = None
         self.error: InviteError | None = None
         self.hosted: tuple[object, ...] | None = None
@@ -28,10 +28,12 @@ class FakeInviter:
         self.hosted_user: tuple[object, ...] | None = None
         self.hosted_user_deleted: UUID | None = None
 
-    async def invite(self, email: str, name: str) -> UUID:
+    async def invite(
+        self, email: str, name: str, *, redirect_url: str | None = None,
+    ) -> UUID:
         if self.error:
             raise self.error
-        self.invited = (email, name)
+        self.invited = (email, name, redirect_url)
         return self.user_id
 
     async def delete(self, user_id: UUID) -> None:
@@ -69,7 +71,7 @@ class FakeConnection:
         self.inserted_user = values
 
 
-def test_admin_creates_tenant_and_invites_vendor(
+def test_admin_creates_tenant_and_invites_tenant_admin(
     client: TestClient, verifier: StaticVerifier,
 ) -> None:
     verifier.claims = admin_claims()
@@ -91,7 +93,9 @@ def test_admin_creates_tenant_and_invites_vendor(
         assert response.status_code == 201
         assert response.json()["id"] == str(connection.tenant_id)
         assert response.json()["invitation_sent"] is True
-        assert inviter.invited == ("owner@example.com", "Shop Owner")
+        assert inviter.invited == (
+            "owner@example.com", "Shop Owner", "http://localhost:3000/set-password",
+        )
         assert connection.inserted_user == (
             inviter.user_id, connection.tenant_id, "Shop Owner", "owner@example.com",
         )
@@ -152,6 +156,7 @@ def test_local_database_provisioning_mirrors_hosted_identity(monkeypatch) -> Non
 
     monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
         "local_auth_shadow": True,
+        "tenant_admin_invite_redirect_url": "https://web.test/set-password",
     })())
     connection = FakeConnection()
     inviter = FakeInviter()
@@ -161,6 +166,7 @@ def test_local_database_provisioning_mirrors_hosted_identity(monkeypatch) -> Non
     result = asyncio.run(TenantService(connection).create(values, inviter))
     assert inviter.hosted == (
         result.id, "New Grocer", inviter.user_id, "Owner", "owner@example.com",
+        "tenant_admin",
     )
 
 
@@ -169,6 +175,7 @@ def test_failed_local_provisioning_removes_hosted_identity(monkeypatch) -> None:
 
     monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
         "local_auth_shadow": True,
+        "tenant_admin_invite_redirect_url": "https://web.test/set-password",
     })())
     connection = FakeConnection()
     connection.fail = True
@@ -198,6 +205,7 @@ def test_supabase_invite_uses_mobile_password_link(monkeypatch) -> None:
     monkeypatch.setattr(tenant_invites, "get_settings", lambda: type("Settings", (), {
         "supabase_url": "https://example.supabase.co",
         "supabase_service_role_key": "server-secret",
+        "tenant_admin_invite_redirect_url": "https://web.test/set-password",
     })())
     monkeypatch.setattr(tenant_invites.httpx, "AsyncClient", lambda **kwargs: real_client(
         transport=transport, **kwargs,
@@ -278,7 +286,7 @@ def test_admin_invites_and_lists_user_under_existing_tenant(
         assert response.status_code == 201
         assert response.json()["tenant_id"] == str(connection.tenant_id)
         assert response.json()["invitation_sent"] is True
-        assert inviter.invited == ("member@example.com", "Team Member")
+        assert inviter.invited == ("member@example.com", "Team Member", None)
 
         listed = client.get(
             f"/api/v1/admin/tenants/{connection.tenant_id}/users",
