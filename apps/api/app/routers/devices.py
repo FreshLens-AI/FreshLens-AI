@@ -2,7 +2,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.database import get_tenant_connection
-from app.dependencies.auth import require_vendor
+from app.dependencies.auth import require_tenant_member
 from app.schemas.auth import AuthPrincipal
 from app.schemas.devices import Device, RegisterDeviceRequest
 from app.services.devices import DeviceService
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/v1/devices", tags=["Devices"])
 @router.post("", response_model=Device)
 async def register_device(
     request: RegisterDeviceRequest,
-    principal: AuthPrincipal = Depends(require_vendor),
+    principal: AuthPrincipal = Depends(require_tenant_member),
     connection: asyncpg.Connection = Depends(get_tenant_connection),
 ) -> Device:
     if principal.tenant_id is None:

@@ -17,10 +17,10 @@ Webhooks signature, resolves the account in the application database through
 `public.resolve_access_token_claims` (migration 0006), and returns these
 server-controlled FreshLens claims:
 
-| Claim | Vendor | Platform admin |
-|---|---|---|
-| `app_role` | `vendor` | `platform_admin` |
-| `tenant_id` | Required tenant UUID | Absent |
+| Claim | Vendor | Tenant admin | Platform admin |
+|---|---|---|---|
+| `app_role` | `vendor` | `tenant_admin` | `platform_admin` |
+| `tenant_id` | Required tenant UUID | Required tenant UUID | Absent |
 
 Authorization never reads `user_metadata`, request bodies, query parameters, or
 client storage for these values. Every runtime also requires Supabase's standard
@@ -32,8 +32,8 @@ claims before accepting the application role.
 1. Create a Supabase project with asymmetric JWT signing keys (the default for
    new projects).
 2. In **Authentication → Providers**, keep Email/Password enabled, disable public
-   user signup, and leave anonymous sign-ins disabled. V1 accounts are created
-   manually by a project owner.
+   Auth user signup, and leave anonymous sign-ins disabled. The public FreshLens
+   application form does not create an Auth account before approval.
 3. Apply `infra/db/migrations/0001_auth_tenancy.sql` through the Supabase SQL
    editor or CLI.
 4. In **Authentication → Hooks → Custom Access Token**, choose **HTTPS** and
@@ -77,19 +77,19 @@ queries. Keep it server-only if a later administrative workflow requires it.
 
 ## Provision accounts
 
-Platform admins can create a tenant in the web **Tenants** page with the store
-name, vendor contact name, and email. From a tenant's detail page they can also
-invite additional vendor users into that existing tenant. FastAPI calls
-Supabase Auth Admin to invite each vendor, then inserts the tenant/user mapping
-under admin RLS. The invitation contains a one-time link; no password is
-emailed. Opening it in an installed FreshLens mobile build lets the vendor set a
-password and then sign in. The mobile login screen can also email a password
-reset link. Public signup stays disabled.
+An applicant submits organization and owner details through the public web
+form. This creates only a protected `tenant_applications` row. A platform admin
+reviews the queue; approval atomically creates the tenant mapping, assigns the
+owner the `tenant_admin` role, and sends a one-time web password-setup link.
+Rejected applications never create tenants or Auth users. A tenant admin can
+then invite and revoke ordinary `vendor` users only within the tenant from the
+tenant workspace. Platform admins retain the same cross-tenant controls.
 
-Set `SUPABASE_SERVICE_ROLE_KEY` only on the FastAPI server. Add
-`freshlens://set-password` to **Authentication → URL Configuration → Redirect
-URLs** in the Supabase project, and configure SMTP for delivery to real tenant
-email addresses. The installed mobile build must include the `freshlens` URL
+Set `SUPABASE_SERVICE_ROLE_KEY` only on the FastAPI server. Set
+`TENANT_ADMIN_INVITE_REDIRECT_URL` to the deployed web `/set-password` URL and
+allow it under **Authentication → URL Configuration → Redirect URLs**. Also
+allow `freshlens://set-password` for vendor invitations and configure SMTP for
+real addresses. The installed mobile build must include the `freshlens` URL
 scheme; Expo Go is not a stable target for these email links. Invitation and
 recovery links expire according to Supabase's email OTP expiration setting.
 Local Compose uses `LOCAL_AUTH_SHADOW=true`: onboarding writes the same tenant
@@ -162,13 +162,15 @@ policies must apply the same active-tenant-and-user gate.
    the query. It verifies that both the user and tenant remain active, then RLS
    prevents cross-tenant or revoked-user reads and writes.
 
-Platform admins may use explicitly designed admin and aggregate endpoints only.
+Tenant admins use the web workspace for their own RLS-scoped aggregates and
+vendor accounts; they may also use normal tenant operations. Platform admins
+may use explicitly designed admin and aggregate endpoints only.
 Future business-table RLS policies must not add a platform-admin override for raw
 scans, images, batches, quantities, or inventory.
 
 `tenants` and `users` are identity-boundary exceptions to the general
 tenant-column rule. `tenants` is the isolation root and has no `tenant_id`;
-`users.tenant_id` is required for `vendor` and must be null for
+`users.tenant_id` is required for `vendor` and `tenant_admin`, and must be null for
 `platform_admin`. All vendor operational tables still require a non-null
 `tenant_id` and RLS in the same migration.
 

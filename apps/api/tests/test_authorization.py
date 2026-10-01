@@ -3,7 +3,11 @@ from uuid import uuid4
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
-from app.dependencies.auth import require_platform_admin, require_vendor
+from app.dependencies.auth import (
+    require_platform_admin,
+    require_tenant_member,
+    require_vendor,
+)
 from app.main import app
 from app.schemas.auth import AuthPrincipal
 from tests.conftest import StaticVerifier
@@ -24,6 +28,14 @@ def _install_test_routes() -> None:
         @app.get("/api/v1/test/admin")
         async def admin_only(
             principal: AuthPrincipal = Depends(require_platform_admin),
+        ) -> dict[str, str]:
+            return {"role": principal.role.value}
+
+    if "/api/v1/test/tenant-member" not in route_paths:
+
+        @app.get("/api/v1/test/tenant-member")
+        async def tenant_member(
+            principal: AuthPrincipal = Depends(require_tenant_member),
         ) -> dict[str, str]:
             return {"role": principal.role.value}
 
@@ -67,6 +79,26 @@ def test_admin_cannot_call_vendor_route(
         headers={"Authorization": "Bearer valid"},
     )
     assert response.status_code == 403
+
+
+def test_tenant_admin_can_call_tenant_member_route(
+    client: TestClient,
+    verifier: StaticVerifier,
+) -> None:
+    verifier.claims = {
+        "sub": str(uuid4()),
+        "app_role": "tenant_admin",
+        "tenant_id": str(uuid4()),
+        "role": "authenticated",
+        "session_id": str(uuid4()),
+        "is_anonymous": False,
+    }
+    response = client.get(
+        "/api/v1/test/tenant-member",
+        headers={"Authorization": "Bearer valid"},
+    )
+    assert response.status_code == 200
+    assert response.json()["role"] == "tenant_admin"
 
 
 def test_role_dependencies_inherit_bearer_openapi_security() -> None:

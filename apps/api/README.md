@@ -18,8 +18,8 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - Health: [http://localhost:8000/health](http://localhost:8000/health)
 - Swagger: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-Every `/api/v1/*` route requires a Supabase access token. Verify a configured
-session with:
+Every `/api/v1/*` route except public tenant-application submission requires a
+Supabase access token. Verify a configured session with:
 
 ```bash
 curl http://localhost:8000/api/v1/auth/me \
@@ -36,7 +36,8 @@ transaction-local PostgreSQL RLS context on that same connection.
 The admin web uses platform-admin-only endpoints backed by `get_admin_connection`:
 
 - `GET /api/v1/admin/tenants` returns tenant profiles and monthly aggregates.
-- `POST /api/v1/admin/tenants` creates a tenant and sends its vendor a Supabase
+- `GET /api/v1/admin/tenant-applications` returns the signup review queue.
+- Approval creates the tenant owner as `tenant_admin` and sends a web
   password-setup invitation. Requires server-only `SUPABASE_SERVICE_ROLE_KEY`.
 - `GET /api/v1/admin/products` returns shared product metadata without inventory rows.
 - `GET /api/v1/admin/shelf-life-rules` lists the four shared category rules.
@@ -47,6 +48,10 @@ The admin web uses platform-admin-only endpoints backed by `get_admin_connection
 
 The read responses deliberately omit scan images, individual scan records,
 quantities, batches, and inventory details.
+
+Tenant admins use `/api/v1/tenant/overview`, `/analytics`, and `/users`. These
+routes derive the tenant exclusively from the signed JWT and run under tenant
+RLS; no tenant ID is accepted from the client.
 
 ## Docker Compose
 

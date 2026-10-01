@@ -43,6 +43,13 @@ def admin_claims() -> dict[str, object]:
     }
 
 
+def tenant_admin_claims() -> dict[str, object]:
+    claims = vendor_claims()
+    claims["app_role"] = "tenant_admin"
+    claims["email"] = "owner@example.com"
+    return claims
+
+
 def test_health_remains_public(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
@@ -93,6 +100,20 @@ def test_admin_has_no_vendor_tenant(
     assert response.status_code == 200
     assert response.json()["role"] == "platform_admin"
     assert response.json()["tenant_id"] is None
+
+
+def test_tenant_admin_identity_keeps_tenant_context(
+    client: TestClient,
+    verifier: StaticVerifier,
+) -> None:
+    verifier.claims = tenant_admin_claims()
+    response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer verified-token"},
+    )
+    assert response.status_code == 200
+    assert response.json()["role"] == "tenant_admin"
+    assert response.json()["tenant_id"] == verifier.claims["tenant_id"]
 
 
 def test_standard_supabase_role_is_not_an_application_role(

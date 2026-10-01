@@ -7,6 +7,7 @@ from app.middleware.auth import SupabaseAuthMiddleware
 from app.routers import (
     admin,
     alerts,
+    applications,
     auth,
     auth_hooks,
     catalog,
@@ -14,6 +15,7 @@ from app.routers import (
     health,
     sales,
     scans,
+    tenant,
 )
 
 settings = get_settings()
@@ -43,6 +45,8 @@ app.include_router(sales.router)
 app.include_router(alerts.router)
 app.include_router(devices.router)
 app.include_router(admin.router)
+app.include_router(applications.router)
+app.include_router(tenant.router)
 
 
 @app.get("/")

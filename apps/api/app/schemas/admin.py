@@ -54,6 +54,7 @@ class TenantCreate(BaseModel):
 class TenantCreated(BaseModel):
     id: UUID
     name: str
+    owner_user_id: UUID
     vendor_email: str
     invitation_sent: bool
 

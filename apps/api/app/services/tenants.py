@@ -34,13 +34,18 @@ class TenantService:
 
     async def create(self, values: TenantCreate, inviter: SupabaseInviter) -> TenantCreated:
         email = values.vendor_email.lower()
-        user_id = await inviter.invite(email, values.vendor_name)
+        settings = get_settings()
+        user_id = await inviter.invite(
+            email, values.vendor_name,
+            redirect_url=settings.tenant_admin_invite_redirect_url,
+        )
         tenant_id = uuid4()
-        local_shadow = get_settings().local_auth_shadow
+        local_shadow = settings.local_auth_shadow
         try:
             if local_shadow:
                 await inviter.provision_hosted_identity(
                     tenant_id, values.name, user_id, values.vendor_name, email,
+                    "tenant_admin",
                 )
                 await self.connection.execute(
                     "select public.create_local_auth_shadow($1, $2)", user_id, email,
@@ -51,7 +56,7 @@ class TenantService:
             )
             await self.connection.execute(
                 """insert into public.users (id, tenant_id, role, display_name, email)
-                   values ($1, $2, 'vendor', $3, $4)""",
+                   values ($1, $2, 'tenant_admin', $3, $4)""",
                 user_id, tenant_id, values.vendor_name, email,
             )
         except Exception:
@@ -66,7 +71,8 @@ class TenantService:
                 logger.exception("Could not remove invited Auth user after tenant insert failed")
             raise
         return TenantCreated(
-            id=tenant_id, name=values.name, vendor_email=email, invitation_sent=True,
+            id=tenant_id, name=values.name, owner_user_id=user_id,
+            vendor_email=email, invitation_sent=True,
         )
 
     async def create_user(
@@ -234,8 +240,9 @@ class TenantService:
               select users.display_name, users.email
               from public.users
               where users.tenant_id = tenants.id
-                and users.role = 'vendor'
-              order by users.created_at
+                and users.role in ('tenant_admin', 'vendor')
+              order by case when users.role = 'tenant_admin' then 0 else 1 end,
+                       users.created_at
               limit 1
             ) primary_contact on true
             where ($3 = '' or tenants.name ilike '%' || $3 || '%'
