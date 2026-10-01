@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   BellRing,
   Boxes,
-  Building2,
   ScanLine,
   ShieldCheck,
   Users,
@@ -30,18 +29,15 @@ import { TenantAccessManagement } from "./tenant-access-management";
 
 export function TenantDetail({
   tenantId,
-  productTotal,
   users,
 }: {
   tenantId: string;
-  productTotal: number;
   users: TenantUser[];
 }) {
-  const { tenants, products } = useAdminData();
+  const { tenants } = useAdminData();
   const tenant = tenants.find((item) => item.id === tenantId);
 
   if (!tenant) notFound();
-  const tenantProducts = products.filter((product) => product.tenantId === tenantId);
 
   const classificationRows = [
     {
@@ -100,11 +96,11 @@ export function TenantDetail({
           tone={tenant.activeAlerts > 0 ? "amber" : "green"}
         />
         <StatCard
-          label="Catalogue coverage"
-          value={formatNumber(tenant.catalogueCoverage)}
-          helper="Configured produce types"
-          icon={<Building2 size={20} aria-hidden="true" />}
-          tone="green"
+          label="Team members"
+          value={formatNumber(tenant.memberCount)}
+          helper="Vendor accounts"
+          icon={<Users size={20} aria-hidden="true" />}
+          tone="blue"
         />
       </section>
 
@@ -183,22 +179,6 @@ export function TenantDetail({
         tenantStatus={tenant.status}
         users={users}
       />
-
-      <Card>
-        <CardHeader title="Configured products" description={`${productTotal} product${productTotal === 1 ? "" : "s"} in this tenant's catalogue`} />
-        {tenantProducts.length ? <div className="table-wrap">
-          <table>
-            <thead><tr><th>Product</th><th>Shelf life</th><th>Low-stock threshold</th><th>Monthly scans</th></tr></thead>
-            <tbody>{tenantProducts.map((product) => <tr key={product.id}>
-              <td><Link href={`/catalogue/${product.id}`} className="text-link">{product.name}</Link></td>
-              <td>{product.shelfLifeDays} days</td>
-              <td>{formatNumber(product.lowStockThreshold)}</td>
-              <td>{formatNumber(product.scansThisMonth)}</td>
-            </tr>)}</tbody>
-          </table>
-        </div> : <p className={styles.aggregateNote}>No products configured for this tenant.</p>}
-        {productTotal > tenantProducts.length ? <p className={styles.aggregateNote}><Link href={`/catalogue?tenant=${tenant.id}`} className="text-link">View all {productTotal} products</Link></p> : null}
-      </Card>
     </div>
   );
 }
