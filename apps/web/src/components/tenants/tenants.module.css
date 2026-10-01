@@ -10,8 +10,99 @@
 .createForm label { display: grid; gap: 0.35rem; flex: 1 1 12rem; font-size: 0.8rem; font-weight: 700; }
 .createForm input { min-height: 2.75rem; padding: 0.65rem 0.8rem; border: 1px solid #dce5dd; border-radius: 0.7rem; font: inherit; }
 .createForm button { min-height: 2.75rem; }
-.createCard .createError { color: #b91c1c; }
-.createCard .createSuccess { color: #047857; }
+.createError { color: #b91c1c; font-size: 0.82rem; }
+.createSuccess { color: #047857; font-size: 0.82rem; }
+
+.accessStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.accessCard,
+.membersCard {
+  padding: 1.25rem;
+}
+
+.accessAction {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.memberCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #52605a;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.memberInviteForm {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(16rem, 1.35fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid var(--border, #dce5dd);
+  border-radius: 0.85rem;
+  background: #f8faf8;
+}
+
+.memberInviteForm label {
+  display: grid;
+  gap: 0.35rem;
+  color: #52605a;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.memberInviteForm input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border, #dce5dd);
+  border-radius: 0.7rem;
+  color: var(--foreground, #17211d);
+  background: #fff;
+  font: inherit;
+}
+
+.memberInviteForm input:focus {
+  border-color: var(--brand, #167356);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(22 115 86 / 14%);
+}
+
+.memberInviteForm > p {
+  grid-column: 1 / -1;
+}
+
+.memberTable {
+  min-width: 44rem;
+}
+
+.memberEmail {
+  display: block;
+  margin-top: 0.2rem;
+  color: #718078;
+}
+
+.userAccessForm {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  min-width: 7rem;
+}
+
+.noMembers {
+  padding: 1.25rem 0 0.25rem;
+  color: #65736a;
+  font-size: 0.88rem;
+}
 
 .srOnly {
   position: absolute;
@@ -431,5 +522,14 @@
 
   .detailCard {
     padding: 1rem;
+  }
+
+  .accessCard,
+  .membersCard {
+    padding: 1rem;
+  }
+
+  .memberInviteForm {
+    grid-template-columns: 1fr;
   }
 }

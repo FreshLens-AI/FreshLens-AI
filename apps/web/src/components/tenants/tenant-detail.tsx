@@ -22,16 +22,20 @@ import {
   formatPercent,
 } from "@/lib/formatters";
 import { useAdminData } from "@/store/admin-data-provider";
+import type { TenantUser } from "@/types/domain";
 
 import styles from "./tenants.module.css";
 import { TenantStatusBadge } from "./tenant-status-badge";
+import { TenantAccessManagement } from "./tenant-access-management";
 
 export function TenantDetail({
   tenantId,
   productTotal,
+  users,
 }: {
   tenantId: string;
   productTotal: number;
+  users: TenantUser[];
 }) {
   const { tenants, products } = useAdminData();
   const tenant = tenants.find((item) => item.id === tenantId);
@@ -172,6 +176,13 @@ export function TenantDetail({
           </div>
         </Card>
       </div>
+
+      <TenantAccessManagement
+        tenantId={tenant.id}
+        tenantName={tenant.name}
+        tenantStatus={tenant.status}
+        users={users}
+      />
 
       <Card>
         <CardHeader title="Configured products" description={`${productTotal} product${productTotal === 1 ? "" : "s"} in this tenant's catalogue`} />

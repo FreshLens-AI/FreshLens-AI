@@ -5,6 +5,7 @@ import type {
   PipelineSummary,
   Product,
   Tenant,
+  TenantUser,
   TrendPoint,
 } from "@/types/domain";
 
@@ -24,6 +25,16 @@ export interface AdminTenantResponse {
   medium_scans_this_month: number;
   spoiled_scans_this_month: number;
   active_alerts: number;
+}
+
+export interface AdminTenantUserResponse {
+  id: string;
+  tenant_id: string;
+  display_name: string;
+  email: string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AdminProductResponse {
@@ -106,6 +117,18 @@ export function mapAdminTenant(row: AdminTenantResponse): Tenant {
         : 0,
     classificationMix,
     activeAlerts: row.active_alerts,
+  };
+}
+
+export function mapAdminTenantUser(row: AdminTenantUserResponse): TenantUser {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    displayName: row.display_name,
+    email: row.email,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 

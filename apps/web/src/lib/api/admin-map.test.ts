@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { mapAdminData, mapAdminTenant } from "./admin-map";
+import { mapAdminData, mapAdminTenant, mapAdminTenantUser } from "./admin-map";
 
 const tenant = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -51,6 +51,21 @@ describe("admin API mapping", () => {
     assert.equal(mapped.lastActiveAt, null);
     assert.equal(mapped.completedClassifications, 0);
     assert.deepEqual(mapped.classificationMix, { fresh: 0, medium: 0, spoiled: 0 });
+  });
+
+  it("maps tenant users and preserves their access status", () => {
+    const mapped = mapAdminTenantUser({
+      id: "11111111-1111-4111-8111-111111111501",
+      tenant_id: tenant.id,
+      display_name: "Team Member",
+      email: "member@example.com",
+      status: "inactive",
+      created_at: "2026-08-04T00:00:00Z",
+      updated_at: "2026-08-05T00:00:00Z",
+    });
+    assert.equal(mapped.tenantId, tenant.id);
+    assert.equal(mapped.displayName, "Team Member");
+    assert.equal(mapped.status, "inactive");
   });
 
   it("builds the complete web snapshot from admin responses", () => {
