@@ -267,6 +267,34 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /api/v1/alerts/{alert_id}/dismiss:
+    patch:
+      tags: [Alerts]
+      summary: Dismiss one tenant alert from the active feed
+      description: Marks the alert read and resolved. The row remains available in alert history.
+      operationId: dismissAlert
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor, tenant_admin]
+      parameters:
+        - name: alert_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      responses:
+        "200":
+          description: Dismissed tenant alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /api/v1/devices:
     post:
       tags: [Devices]
@@ -1598,6 +1626,23 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Uuid"
             - type: "null"
+        event_key:
+          type: [string, "null"]
+        product_name:
+          type: [string, "null"]
+        quantity_received:
+          type: [integer, "null"]
+        quantity_remaining:
+          type: [integer, "null"]
+        transition_at:
+          type: [string, "null"]
+          format: date-time
+        read_at:
+          type: [string, "null"]
+          format: date-time
+        resolved_at:
+          type: [string, "null"]
+          format: date-time
 
     RegisterDeviceRequest:
       type: object
