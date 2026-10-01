@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import type { CameraCapturedPicture } from 'expo-camera';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError, submitScan } from '../lib/api';
 import { QuantityConfirmScreen } from './quantity-confirm-screen';
@@ -64,10 +65,10 @@ export function ScanFlowScreen({ onDone }: { onDone: () => void }) {
 
   if (step.name === 'submitting') {
     return (
-      <View style={styles.loading}>
+      <SafeAreaView style={styles.loading}>
         <ActivityIndicator size="large" color="#196a49" />
         <Text style={styles.hint}>Submitting scan…</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 

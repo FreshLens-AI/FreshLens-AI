@@ -3,12 +3,13 @@ import {
   ActivityIndicator,
   Image,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { CameraView, useCameraPermissions, type CameraCapturedPicture } from 'expo-camera';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function ScanCaptureScreen({
   onImageAccepted,
@@ -64,6 +65,7 @@ export function ScanCaptureScreen({
   if (preview) {
     return (
       <View style={styles.previewContainer}>
+        <StatusBar style="light" />
         <Image source={{ uri: preview.uri }} style={styles.previewImage} />
         
         {/* Preview Header Overlay */}
@@ -100,6 +102,7 @@ export function ScanCaptureScreen({
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <CameraView ref={cameraRef} style={styles.camera} facing="back">
         {/* Top Header HUD */}
         <SafeAreaView style={styles.topHud}>
@@ -425,4 +428,3 @@ const styles = StyleSheet.create({
   },
   usePhotoBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '800' },
 });
-

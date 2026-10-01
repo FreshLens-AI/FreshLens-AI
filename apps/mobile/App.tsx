@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from './src/auth/auth-provider';
 import { configureNotificationHandler } from './src/lib/push/register';
@@ -14,8 +14,8 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
+        <StatusBar style="dark" />
         <AuthGate />
-        <StatusBar style="light" />
       </AuthProvider>
     </SafeAreaProvider>
   );

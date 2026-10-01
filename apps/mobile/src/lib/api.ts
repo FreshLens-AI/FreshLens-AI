@@ -293,6 +293,11 @@ export async function markAlertRead(alertId: string): Promise<Alert> {
   return parseJsonOrThrow<Alert>(res);
 }
 
+export async function dismissAlert(alertId: string): Promise<Alert> {
+  const res = await apiFetch(`api/v1/alerts/${alertId}/dismiss`, { method: 'PATCH' });
+  return parseJsonOrThrow<Alert>(res);
+}
+
 export interface RegisteredDevice {
   id: string;
   platform: 'ios' | 'android';

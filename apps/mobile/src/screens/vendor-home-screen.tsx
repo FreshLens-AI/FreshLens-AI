@@ -1,16 +1,15 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../auth/auth-provider';
 import { listAlerts, listProducts, listScans } from '../lib/api';
@@ -91,13 +90,6 @@ export function VendorHomeScreen({ navigation }: Props) {
       >
         {/* Welcome Card */}
         <View style={styles.heroCard}>
-          <View style={styles.heroBadgeRow}>
-            <View style={styles.onlinePill}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>Connected</Text>
-            </View>
-
-          </View>
           <Text style={styles.heroTitle}>Produce Dashboard</Text>
           <Text style={styles.heroCopy}>
             Logged in as{' '}
@@ -142,9 +134,6 @@ export function VendorHomeScreen({ navigation }: Props) {
             <View style={styles.actionTitleRow}>
               <Text style={styles.primaryActionTitle}>Scan Produce</Text>
             </View>
-            <Text style={styles.primaryActionSubtitle}>
-              Photograph produce to inspect freshness score & classification
-            </Text>
           </View>
           <Text style={styles.chevronPrimary}>›</Text>
         </Pressable>
@@ -160,9 +149,6 @@ export function VendorHomeScreen({ navigation }: Props) {
               <Text style={styles.gridIconEmoji}>🛒</Text>
             </View>
             <Text style={styles.gridCardTitle}>Record Sale</Text>
-            <Text style={styles.gridCardSubtitle}>
-              Deduct inventory batch stock in real-time
-            </Text>
           </Pressable>
 
           <Pressable
@@ -181,9 +167,6 @@ export function VendorHomeScreen({ navigation }: Props) {
                 </View>
               ) : null}
             </View>
-            <Text style={styles.gridCardSubtitle}>
-              Spoilage warnings & low stock thresholds
-            </Text>
           </Pressable>
         </View>
 
@@ -255,37 +238,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  heroBadgeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  onlinePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(126, 217, 164, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 6,
-  },
-  onlineDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#7ed9a4',
-  },
-  onlineText: { color: '#7ed9a4', fontSize: 11, fontWeight: '700' },
-  tenantPill: {
-    color: '#a8c4b4',
-    fontSize: 11,
-    fontWeight: '600',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
   heroTitle: {
     color: '#fff',
     fontSize: 24,
@@ -350,12 +302,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   aiTagText: { color: '#0d3427', fontSize: 10, fontWeight: '800' },
-  primaryActionSubtitle: {
-    color: '#c9e8d4',
-    fontSize: 12,
-    lineHeight: 16,
-    marginTop: 4,
-  },
   chevronPrimary: { color: '#fff', fontSize: 26, fontWeight: '300' },
   actionsGrid: {
     flexDirection: 'row',
@@ -373,6 +319,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+    alignItems: 'center',
   },
   gridIconCircle: {
     width: 40,
@@ -386,7 +333,9 @@ const styles = StyleSheet.create({
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 6,
+    width: '100%',
   },
   gridCardTitle: {
     color: '#17221c',
@@ -400,12 +349,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   alertBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  gridCardSubtitle: {
-    color: '#627067',
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 4,
-  },
   historyCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
