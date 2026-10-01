@@ -60,6 +60,7 @@ services:
       SUPABASE_JWT_AUDIENCE: ${SUPABASE_JWT_AUDIENCE:-authenticated}
       SUPABASE_JWT_CLOCK_SKEW_SECONDS: ${SUPABASE_JWT_CLOCK_SKEW_SECONDS:-30}
       LOCAL_AUTH_SHADOW: ${LOCAL_AUTH_SHADOW:-true}
+      TENANT_ADMIN_INVITE_REDIRECT_URL: ${TENANT_ADMIN_INVITE_REDIRECT_URL:-http://localhost:3000/set-password}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002}
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0

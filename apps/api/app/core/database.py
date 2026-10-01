@@ -4,7 +4,7 @@ import asyncpg
 from fastapi import Depends, HTTPException, status
 
 from app.core.config import get_settings
-from app.dependencies.auth import require_platform_admin, require_vendor
+from app.dependencies.auth import require_platform_admin, require_tenant_member
 from app.schemas.auth import AppRole, AuthPrincipal
 
 FRESHLENS_API_ROLE = "freshlens_api"
@@ -109,8 +109,20 @@ async def get_auth_hook_connection() -> AsyncIterator[asyncpg.Connection]:
         await connection.close()
 
 
+async def get_public_connection() -> AsyncIterator[asyncpg.Connection]:
+    """Yield a restricted transaction with no identity context."""
+
+    connection = await connect_database()
+    try:
+        await assert_safe_database_role(connection)
+        async with connection.transaction():
+            yield connection
+    finally:
+        await connection.close()
+
+
 async def get_tenant_connection(
-    principal: AuthPrincipal = Depends(require_vendor),
+    principal: AuthPrincipal = Depends(require_tenant_member),
 ) -> AsyncIterator[asyncpg.Connection]:
     """Yield one transaction whose RLS tenant came only from the verified JWT."""
 

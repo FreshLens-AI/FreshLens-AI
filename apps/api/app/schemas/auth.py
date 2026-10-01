@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 class AppRole(StrEnum):
     VENDOR = "vendor"
+    TENANT_ADMIN = "tenant_admin"
     PLATFORM_ADMIN = "platform_admin"
 
 

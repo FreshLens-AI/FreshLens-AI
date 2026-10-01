@@ -127,8 +127,8 @@ def principal_from_claims(claims: Mapping[str, Any]) -> AuthPrincipal:
     except (TypeError, ValueError) as exc:
         raise AuthorizationContextError("Invalid tenant context.") from exc
 
-    if role is AppRole.VENDOR and tenant_id is None:
-        raise AuthorizationContextError("Vendor account has no tenant context.")
+    if role in (AppRole.VENDOR, AppRole.TENANT_ADMIN) and tenant_id is None:
+        raise AuthorizationContextError("Tenant account has no tenant context.")
     if role is AppRole.PLATFORM_ADMIN and tenant_id is not None:
         raise AuthorizationContextError(
             "Admin account cannot use a vendor tenant context."

@@ -4,7 +4,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from app.core.database import get_tenant_connection
-from app.dependencies.auth import require_vendor
+from app.dependencies.auth import require_tenant_member
 from app.schemas.auth import AuthPrincipal
 from app.schemas.sales import CreateSaleRequest, Sale
 from app.services.sales import (
@@ -23,7 +23,7 @@ async def create_sale(
     idempotency_key: Annotated[
         str, Header(alias="Idempotency-Key", min_length=1, max_length=255)
     ],
-    principal: AuthPrincipal = Depends(require_vendor),
+    principal: AuthPrincipal = Depends(require_tenant_member),
     connection: asyncpg.Connection = Depends(get_tenant_connection),
 ) -> Sale:
     if principal.tenant_id is None:
