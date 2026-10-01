@@ -7,7 +7,6 @@ import {
   Boxes,
   Building2,
   ScanLine,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -162,14 +161,6 @@ export function TenantDetail({
               </div>
             ))}
           </div> : <p className={styles.aggregateNote}>No completed classifications this month.</p>}
-          <div className={styles.aggregateNote}>
-            <ShieldCheck size={19} aria-hidden="true" />
-            <p>
-              These percentages are aggregated summaries. Platform administrators
-              cannot inspect the tenant&apos;s individual scans, images, batches, or
-              inventory records from this workspace.
-            </p>
-          </div>
         </Card>
       </div>
 
