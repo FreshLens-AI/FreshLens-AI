@@ -25,7 +25,7 @@ export function VendorLoginScreen() {
 
   async function submit() {
     if (!email.includes('@') || !password) {
-      setValidation('Please enter your vendor email and password.');
+      setValidation('Please enter your FreshLens email and password.');
       return;
     }
     setValidation(null);
@@ -39,7 +39,7 @@ export function VendorLoginScreen() {
 
   async function sendReset() {
     if (!email.includes('@')) {
-      setValidation('Enter your vendor email address.');
+      setValidation('Enter your FreshLens email address.');
       return;
     }
     setValidation(null);
@@ -83,7 +83,7 @@ export function VendorLoginScreen() {
               : 'Enter your credentials to access your store workspace.'}</Text>
 
             {resetRequested ? <Text style={styles.successText}>
-              If this address has a vendor account, a reset link is on its way. Open it on a device with FreshLens installed.
+              If this address has a FreshLens account, a reset link is on its way. Open it on a device with FreshLens installed.
             </Text> : null}
 
             {validation || message ? (
@@ -95,7 +95,7 @@ export function VendorLoginScreen() {
 
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Vendor Email</Text>
+              <Text style={styles.inputLabel}>Email</Text>
               <View style={styles.inputWrap}>
                 <TextInput
                   style={styles.input}
