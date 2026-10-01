@@ -4,7 +4,10 @@ insert into auth.users (id, email) values
   ('10000000-0000-4000-8000-000000000001', 'vendor-a@example.com'),
   ('10000000-0000-4000-8000-000000000002', 'vendor-b@example.com'),
   ('10000000-0000-4000-8000-000000000003', 'inactive@example.com'),
-  ('10000000-0000-4000-8000-000000000004', 'admin@example.com');
+  ('10000000-0000-4000-8000-000000000004', 'admin@example.com'),
+  ('10000000-0000-4000-8000-000000000006', 'tenant-admin@example.com'),
+  ('10000000-0000-4000-8000-000000000007', 'invited-vendor@example.com'),
+  ('10000000-0000-4000-8000-000000000008', 'forbidden-admin@example.com');
 
 insert into public.tenants (id, name, status) values
   ('20000000-0000-4000-8000-000000000001', 'Tenant A', 'active'),
@@ -39,6 +42,13 @@ insert into public.users (id, tenant_id, role, display_name, email) values
     'platform_admin',
     'Platform Admin',
     'admin@example.com'
+  ),
+  (
+    '10000000-0000-4000-8000-000000000006',
+    '20000000-0000-4000-8000-000000000001',
+    'tenant_admin',
+    'Tenant Admin',
+    'tenant-admin@example.com'
   );
 
 insert into public.batches (
@@ -202,9 +212,40 @@ begin
   if (select count(*) from public.product_category_shelf_life) <> 0 then
     raise exception 'shelf-life rules were exposed without request context';
   end if;
+  if (select count(*) from public.tenant_applications) <> 0 then
+    raise exception 'RLS exposed tenant applications without admin context';
+  end if;
 end
 $no_context$;
 rollback;
+
+-- Anonymous HTTP requests use the restricted API role and only receive access
+-- to the narrow submission function, not the underlying applications table.
+begin;
+set local role freshlens_api_local;
+select public.submit_tenant_application(
+  'Pending Grocer', 'Pending Owner', 'OWNER@EXAMPLE.COM', '+94 77 123 4567'
+);
+select public.submit_tenant_application(
+  'Ignored duplicate', 'Ignored Owner', 'owner@example.com', null
+);
+do $public_application$
+begin
+  if (select count(*) from public.tenant_applications) <> 0 then
+    raise exception 'public application submitter read protected rows';
+  end if;
+
+  begin
+    insert into public.tenant_applications (
+      organization_name, applicant_name, applicant_email
+    ) values ('Unauthorized', 'Unauthorized', 'unauthorized@example.com');
+    raise exception 'public application submitter inserted directly';
+  exception when insufficient_privilege then
+    null;
+  end;
+end
+$public_application$;
+commit;
 
 -- Tenant A sees only Tenant A and its own tenant members.
 begin;
@@ -219,7 +260,10 @@ begin
     raise exception 'Tenant A can see another tenant';
   end if;
   if (select array_agg(id order by id) from public.users)
-    <> array['10000000-0000-4000-8000-000000000001'::uuid] then
+    <> array[
+      '10000000-0000-4000-8000-000000000001'::uuid,
+      '10000000-0000-4000-8000-000000000006'::uuid
+    ] then
     raise exception 'Tenant A can see another tenant user';
   end if;
   if (select array_agg(id order by id) from public.products)
@@ -381,6 +425,59 @@ end
 $tenant_a_cannot_update$;
 rollback;
 
+-- A tenant admin inherits normal tenant operations but can only provision and
+-- revoke ordinary vendors within the tenant from its signed claims.
+begin;
+set local role freshlens_api_local;
+select set_config('app.user_role', 'tenant_admin', true);
+select set_config('app.user_id', '10000000-0000-4000-8000-000000000006', true);
+select set_config('app.tenant_id', '20000000-0000-4000-8000-000000000001', true);
+do $tenant_admin$
+declare
+  affected_rows bigint;
+begin
+  if (select count(*) from public.tenants) <> 1
+    or (select count(*) from public.products) <> 4
+    or (select count(*) from public.scans) <> 1 then
+    raise exception 'tenant admin cannot use its tenant workspace';
+  end if;
+
+  insert into public.users (id, tenant_id, role, display_name, email)
+  values (
+    '10000000-0000-4000-8000-000000000007',
+    '20000000-0000-4000-8000-000000000001',
+    'vendor', 'Invited Vendor', 'invited-vendor@example.com'
+  );
+
+  update public.users set status = 'inactive'
+  where id = '10000000-0000-4000-8000-000000000001';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 1 then
+    raise exception 'tenant admin could not revoke its vendor';
+  end if;
+
+  update public.users set status = 'inactive'
+  where id = '10000000-0000-4000-8000-000000000006';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 0 then
+    raise exception 'tenant admin changed a tenant-admin identity';
+  end if;
+
+  begin
+    insert into public.users (id, tenant_id, role, display_name, email)
+    values (
+      '10000000-0000-4000-8000-000000000008',
+      '20000000-0000-4000-8000-000000000001',
+      'tenant_admin', 'Forbidden Admin', 'forbidden-admin@example.com'
+    );
+    raise exception 'tenant admin created another tenant admin';
+  exception when insufficient_privilege then
+    null;
+  end;
+end
+$tenant_admin$;
+rollback;
+
 -- Tenant B receives the symmetric isolation guarantee.
 begin;
 set local role freshlens_api_local;
@@ -513,8 +610,11 @@ begin
   if (select count(*) from public.tenants) <> 3 then
     raise exception 'platform admin cannot see every tenant';
   end if;
-  if (select count(*) from public.users) <> 4 then
+  if (select count(*) from public.users) <> 5 then
     raise exception 'platform admin cannot see every identity row';
+  end if;
+  if (select count(*) from public.tenant_applications) <> 1 then
+    raise exception 'platform admin cannot review pending tenant applications';
   end if;
   if (select count(*) from public.products) <> 4
     or (select count(*) from public.batches) <> 2
@@ -565,6 +665,15 @@ begin
   if affected_rows <> 1 then
     raise exception 'platform admin tenant update affected % rows', affected_rows;
   end if;
+
+  update public.tenant_applications
+  set status = 'rejected', reviewed_by = public.current_app_user_id(),
+      reviewed_at = now(), updated_at = now(), review_note = 'Not eligible'
+  where applicant_email = 'owner@example.com';
+  get diagnostics affected_rows = row_count;
+  if affected_rows <> 1 then
+    raise exception 'platform admin could not reject a tenant application';
+  end if;
 end
 $platform_admin$;
 rollback;
@@ -578,6 +687,7 @@ declare
   active_claims jsonb;
   inactive_claims jsonb;
   admin_claims jsonb;
+  tenant_admin_claims jsonb;
 begin
   active_claims := public.custom_access_token_hook(
     jsonb_build_object(
@@ -615,6 +725,18 @@ begin
   if admin_claims #>> '{claims,app_role}' <> 'platform_admin'
     or (admin_claims -> 'claims') ? 'tenant_id' then
     raise exception 'platform admin claim shape is invalid';
+  end if;
+
+  tenant_admin_claims := public.custom_access_token_hook(
+    jsonb_build_object(
+      'user_id', '10000000-0000-4000-8000-000000000006',
+      'claims', jsonb_build_object('sub', '10000000-0000-4000-8000-000000000006')
+    )
+  );
+  if tenant_admin_claims #>> '{claims,app_role}' <> 'tenant_admin'
+    or tenant_admin_claims #>> '{claims,tenant_id}'
+      <> '20000000-0000-4000-8000-000000000001' then
+    raise exception 'tenant admin claim shape is invalid';
   end if;
 end
 $hook_assertions$;

@@ -21,6 +21,7 @@ services:
       - ../db/migrations/0008_batch_lifecycle_alerts.sql:/docker-entrypoint-initdb.d/0019b_batch_lifecycle_alerts.sql:ro
       - ../db/migrations/0009_worker_tenant_access.sql:/docker-entrypoint-initdb.d/0019c_worker_tenant_access.sql:ro
       - ../db/migrations/0010_global_product_catalog.sql:/docker-entrypoint-initdb.d/0019d_global_product_catalog.sql:ro
+      - ../db/migrations/0011_tenant_self_service.sql:/docker-entrypoint-initdb.d/0019e_tenant_self_service.sql:ro
       - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
       - ../db/local/0030_demo_catalogue.sql:/docker-entrypoint-initdb.d/0030_demo_catalogue.sql:ro
     healthcheck:
