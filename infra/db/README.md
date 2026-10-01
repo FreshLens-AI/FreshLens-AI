@@ -79,7 +79,10 @@ Docker Compose initializes a new disposable development volume in this order:
 8. `migrations/0007_user_access_controls.sql` adds tenant/user access controls.
 9. `migrations/0008_batch_lifecycle_alerts.sql` adds batch lifecycle deadlines
    and idempotent alert delivery state.
-10. `local/0020_runtime_login.sql` creates the development-only
+10. `migrations/0009_worker_tenant_access.sql` lets Celery workers complete
+    scans without a JWT user id while still requiring an active tenant (and an
+    active vendor when `app.user_id` is set).
+11. `local/0020_runtime_login.sql` creates the development-only
    `freshlens_api_local` login and grants it `freshlens_api`.
 
 The API container connects as `freshlens_api_local`, never as the database owner.

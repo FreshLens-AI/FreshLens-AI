@@ -124,6 +124,7 @@ jobs:
             infra/db/migrations/0006_http_access_token_hook.sql \
             infra/db/migrations/0007_user_access_controls.sql \
             infra/db/migrations/0008_batch_lifecycle_alerts.sql \
+            infra/db/migrations/0009_worker_tenant_access.sql \
             infra/db/local/0020_runtime_login.sql \
             infra/db/tests/rls_isolation.sql
           do
