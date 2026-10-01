@@ -78,12 +78,13 @@ queries. Keep it server-only if a later administrative workflow requires it.
 ## Provision accounts
 
 Platform admins can create a tenant in the web **Tenants** page with the store
-name, vendor contact name, and email. FastAPI calls Supabase Auth Admin to invite
-the vendor, then inserts the tenant and vendor mapping under admin RLS. The
-invitation contains a one-time link; no password is emailed. Opening it in an
-installed FreshLens mobile build lets the vendor set a password and then sign in.
-The mobile login screen can also email a password reset link. Public signup stays
-disabled.
+name, vendor contact name, and email. From a tenant's detail page they can also
+invite additional vendor users into that existing tenant. FastAPI calls
+Supabase Auth Admin to invite each vendor, then inserts the tenant/user mapping
+under admin RLS. The invitation contains a one-time link; no password is
+emailed. Opening it in an installed FreshLens mobile build lets the vendor set a
+password and then sign in. The mobile login screen can also email a password
+reset link. Public signup stays disabled.
 
 Set `SUPABASE_SERVICE_ROLE_KEY` only on the FastAPI server. Add
 `freshlens://set-password` to **Authentication → URL Configuration → Redirect
@@ -134,14 +135,16 @@ Confirm that each `insert ... select` affected one row. The user must sign in
 again after provisioning or any role/tenant change so Supabase issues a token
 containing the updated claims.
 
-Marking a tenant inactive immediately hides its `tenants` and `users` rows from
-vendor queries, including queries made with an already-issued token containing
-the old claims. The custom access-token hook also stops issuing `app_role` and
-`tenant_id` for that tenant. Revoke its users' active Supabase sessions as a
-defense-in-depth and UX cleanup step so clients are forced back to login; the
-identity-table RLS boundary does not wait for token expiry or revocation.
-Platform admins are not tenant-scoped and remain available. Future operational
-table policies must apply the same active-tenant gate.
+Platform admins can revoke or restore an entire tenant, or one vendor user in a
+tenant. Marking either record inactive immediately hides all tenant data from
+that vendor, including queries made with an already-issued token containing the
+old claims. Tenant revocation affects every user mapped to the tenant; user
+revocation affects only that identity. The custom access-token hook also stops
+issuing `app_role` and `tenant_id` while either status is inactive. Revoke active
+Supabase sessions as an optional defense-in-depth and UX cleanup step; the RLS
+boundary and API database dependency do not wait for token expiry. Platform
+admins are not tenant-scoped and remain available. Future operational table
+policies must apply the same active-tenant-and-user gate.
 
 ## Runtime flow
 
@@ -156,7 +159,8 @@ table policies must apply the same active-tenant gate.
 6. The tenant database dependency opens a transaction and sets `app.tenant_id`,
    `app.user_id`, and
    `app.user_role` transaction-locally on the same database connection used by
-   the query. RLS then prevents cross-tenant reads and writes.
+   the query. It verifies that both the user and tenant remain active, then RLS
+   prevents cross-tenant or revoked-user reads and writes.
 
 Platform admins may use explicitly designed admin and aggregate endpoints only.
 Future business-table RLS policies must not add a platform-admin override for raw

@@ -410,6 +410,60 @@ end
 $inactive_tenant$;
 rollback;
 
+-- User-level revocation blocks an already-issued vendor context even while the
+-- tenant remains active, and prevents the hook from issuing future claims.
+update public.users
+set status = 'inactive'
+where id = '10000000-0000-4000-8000-000000000001';
+
+begin;
+set local role freshlens_api_local;
+select set_config('app.user_role', 'vendor', true);
+select set_config('app.user_id', '10000000-0000-4000-8000-000000000001', true);
+select set_config('app.tenant_id', '20000000-0000-4000-8000-000000000001', true);
+do $inactive_user$
+begin
+  if public.current_vendor_has_access() then
+    raise exception 'inactive user retained vendor access';
+  end if;
+  if (select count(*) from public.tenants) <> 0
+    or (select count(*) from public.users) <> 0
+    or (select count(*) from public.products) <> 0
+    or (select count(*) from public.scans) <> 0 then
+    raise exception 'inactive user context exposed tenant data';
+  end if;
+end
+$inactive_user$;
+rollback;
+
+begin;
+set local role supabase_auth_admin;
+do $inactive_user_hook$
+declare
+  claims jsonb;
+begin
+  claims := public.custom_access_token_hook(
+    jsonb_build_object(
+      'user_id', '10000000-0000-4000-8000-000000000001',
+      'claims', jsonb_build_object(
+        'sub', '10000000-0000-4000-8000-000000000001',
+        'app_role', 'vendor',
+        'tenant_id', '20000000-0000-4000-8000-000000000001'
+      )
+    )
+  );
+  if (claims -> 'claims') ? 'app_role'
+    or (claims -> 'claims') ? 'tenant_id' then
+    raise exception 'inactive user retained application claims';
+  end if;
+end
+$inactive_user_hook$;
+rollback;
+
+update public.users
+set status = 'active'
+where id = '10000000-0000-4000-8000-000000000001';
+
 -- Platform admins can inspect all identity rows and perform the update allowed
 -- by policy. The transaction is rolled back so later assertions stay stable.
 begin;
