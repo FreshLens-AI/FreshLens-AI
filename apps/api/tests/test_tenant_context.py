@@ -162,3 +162,70 @@ def test_database_connection_disables_statement_cache_and_configures_ssl(
         "ssl": "require",
         "statement_cache_size": 0,
     }
+
+
+def test_init_pool_creates_pool_and_caches_role_check(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+    role_checks = {"count": 0}
+
+    class FakePoolConnection:
+        async def fetchrow(self, query: str, required_role: str) -> dict[str, object]:
+            role_checks["count"] += 1
+            return {
+                "role_name": "freshlens_api_local",
+                "is_superuser": False,
+                "bypasses_rls": False,
+                "is_freshlens_api": True,
+            }
+
+    class FakePoolAcquire:
+        async def __aenter__(self) -> FakePoolConnection:
+            return FakePoolConnection()
+
+        async def __aexit__(self, *args: object) -> None:
+            return None
+
+    class FakePool:
+        def acquire(self) -> FakePoolAcquire:
+            return FakePoolAcquire()
+
+        async def close(self) -> None:
+            captured["closed"] = True
+
+    async def fake_create_pool(url: str, **kwargs: object) -> FakePool:
+        captured["url"] = url
+        captured.update(kwargs)
+        return FakePool()
+
+    settings = Settings(
+        database_url="postgresql://freshlens_api_local:test@localhost/freshlens",
+        database_ssl_mode="require",
+        database_pool_min_size=2,
+        database_pool_max_size=8,
+    )
+    monkeypatch.setattr(database, "get_settings", lambda: settings)
+    monkeypatch.setattr(database.asyncpg, "create_pool", fake_create_pool)
+    monkeypatch.setattr(database, "_pool", None)
+    monkeypatch.setattr(database, "_role_verified", False)
+
+    async def run() -> None:
+        await database.init_pool()
+        assert database._pool is not None
+        assert database._role_verified is True
+        assert role_checks["count"] == 1
+        await database.ensure_safe_database_role(FakePoolConnection())  # type: ignore[arg-type]
+        assert role_checks["count"] == 1
+        await database.close_pool()
+        assert database._pool is None
+        assert database._role_verified is False
+        assert captured["closed"] is True
+
+    asyncio.run(run())
+
+    assert captured["url"] == settings.database_url
+    assert captured["ssl"] == "require"
+    assert captured["statement_cache_size"] == 0
+    assert captured["min_size"] == 2
+    assert captured["max_size"] == 8
