@@ -3,13 +3,13 @@ import * as Crypto from 'expo-crypto';
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   ApiError,
@@ -180,7 +180,6 @@ export function ManualSaleScreen({
       <View style={styles.topBar}>
         <View>
           <Text style={styles.topBarTitle}>Record Confirmed Sale</Text>
-          <Text style={styles.topBarSub}>Idempotent Inventory Ledger</Text>
         </View>
         <Pressable onPress={onDone} style={styles.cancelBtn} accessibilityRole="button">
           <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -254,7 +253,6 @@ export function ManualSaleScreen({
                       >
                         <View style={{ flex: 1 }}>
                           <Text style={styles.batchDate}>Intake: {dateStr}</Text>
-                          <Text style={styles.batchSub}>ID: {item.id.slice(0, 8)}…</Text>
                         </View>
                         <View
                           style={[
@@ -371,7 +369,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0d3427',
   },
   topBarTitle: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  topBarSub: { color: '#a8c4b4', fontSize: 11, marginTop: 1 },
   cancelBtn: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     paddingVertical: 6,
@@ -464,7 +461,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f5ed',
   },
   batchDate: { fontSize: 14, fontWeight: '700', color: '#17221c' },
-  batchSub: { fontSize: 11, color: '#849188', marginTop: 2 },
   stockPill: {
     paddingHorizontal: 10,
     paddingVertical: 5,

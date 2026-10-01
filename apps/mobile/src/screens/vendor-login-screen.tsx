@@ -4,13 +4,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../auth/auth-provider';
 
@@ -53,6 +54,7 @@ export function VendorLoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" />
       <KeyboardAvoidingView
         style={styles.keyboard}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -165,7 +167,7 @@ export function VendorLoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#061a13' },
+  safeArea: { flex: 1, backgroundColor: '#047857' },
   keyboard: { flex: 1 },
   scrollContent: {
     padding: 24,
