@@ -67,7 +67,7 @@ async def create_scan(
         ) from exc
 
     try:
-        jobs.publish(tenant_id, scan.id, scan.image_path)
+        jobs.publish(tenant_id, principal.user_id, scan.id, scan.image_path)
     except Exception as exc:
         await service.mark_failed(scan.id)
         raise HTTPException(
