@@ -1,4 +1,5 @@
 import asyncio
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -13,6 +14,8 @@ from app.services.tenants import TenantService
 from tests.conftest import StaticVerifier
 from tests.test_auth import admin_claims, vendor_claims
 
+NOW = datetime(2026, 10, 1, tzinfo=UTC)
+
 
 class FakeInviter:
     def __init__(self) -> None:
@@ -22,6 +25,8 @@ class FakeInviter:
         self.error: InviteError | None = None
         self.hosted: tuple[object, ...] | None = None
         self.hosted_deleted: tuple[UUID, UUID] | None = None
+        self.hosted_user: tuple[object, ...] | None = None
+        self.hosted_user_deleted: UUID | None = None
 
     async def invite(self, email: str, name: str) -> UUID:
         if self.error:
@@ -37,6 +42,12 @@ class FakeInviter:
 
     async def delete_hosted_identity(self, tenant_id: UUID, user_id: UUID) -> None:
         self.hosted_deleted = (tenant_id, user_id)
+
+    async def provision_hosted_user(self, *values: object) -> None:
+        self.hosted_user = values
+
+    async def delete_hosted_user(self, user_id: UUID) -> None:
+        self.hosted_user_deleted = user_id
 
 
 class FakeConnection:
@@ -197,3 +208,150 @@ def test_supabase_invite_uses_mobile_password_link(monkeypatch) -> None:
     assert requests[0].url.path == "/auth/v1/invite"
     assert requests[0].url.params["redirect_to"] == "freshlens://set-password"
     assert requests[0].headers["authorization"] == "Bearer server-secret"
+
+
+class TenantUserConnection:
+    def __init__(self) -> None:
+        self.tenant_id = uuid4()
+        self.user_id = uuid4()
+        self.user_status = "active"
+
+    def user_row(self) -> dict[str, object]:
+        return {
+            "id": self.user_id,
+            "tenant_id": self.tenant_id,
+            "display_name": "Team Member",
+            "email": "member@example.com",
+            "status": self.user_status,
+            "created_at": NOW,
+            "updated_at": NOW,
+        }
+
+    async def fetchrow(self, query: str, *values: object):
+        if "select id from public.tenants" in query:
+            return {"id": self.tenant_id} if values[0] == self.tenant_id else None
+        if "insert into public.users" in query:
+            self.user_id = values[0]
+            return self.user_row()
+        if "update public.tenants" in query:
+            if values[0] != self.tenant_id:
+                return None
+            return {"id": self.tenant_id, "status": values[1], "updated_at": NOW}
+        if "update public.users" in query:
+            if values[0] != self.tenant_id or values[1] != self.user_id:
+                return None
+            self.user_status = str(values[2])
+            return self.user_row()
+        raise AssertionError(query)
+
+    async def fetchval(self, query: str, *values: object) -> bool:
+        assert "select exists" in query
+        return values[0] == self.tenant_id
+
+    async def fetch(self, query: str, *values: object):
+        assert "from public.users" in query
+        return [self.user_row()] if values[0] == self.tenant_id else []
+
+    async def execute(self, query: str, *values: object) -> None:
+        if "create_local_auth_shadow" not in query:
+            raise AssertionError(query)
+
+
+def test_admin_invites_and_lists_user_under_existing_tenant(
+    client: TestClient, verifier: StaticVerifier,
+) -> None:
+    verifier.claims = admin_claims()
+    connection = TenantUserConnection()
+    inviter = FakeInviter()
+
+    async def connection_override():
+        yield connection
+
+    app.dependency_overrides[get_admin_connection] = connection_override
+    app.dependency_overrides[get_inviter] = lambda: inviter
+    try:
+        response = client.post(
+            f"/api/v1/admin/tenants/{connection.tenant_id}/users",
+            headers={"Authorization": "Bearer valid"},
+            json={"display_name": " Team Member ", "email": "MEMBER@EXAMPLE.COM"},
+        )
+        assert response.status_code == 201
+        assert response.json()["tenant_id"] == str(connection.tenant_id)
+        assert response.json()["invitation_sent"] is True
+        assert inviter.invited == ("member@example.com", "Team Member")
+
+        listed = client.get(
+            f"/api/v1/admin/tenants/{connection.tenant_id}/users",
+            headers={"Authorization": "Bearer valid"},
+        )
+        assert listed.status_code == 200
+        assert listed.json()["total"] == 1
+        assert listed.json()["items"][0]["email"] == "member@example.com"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_admin_revokes_tenant_and_individual_user_access(
+    client: TestClient, verifier: StaticVerifier,
+) -> None:
+    verifier.claims = admin_claims()
+    connection = TenantUserConnection()
+
+    async def connection_override():
+        yield connection
+
+    app.dependency_overrides[get_admin_connection] = connection_override
+    try:
+        tenant_response = client.patch(
+            f"/api/v1/admin/tenants/{connection.tenant_id}/status",
+            headers={"Authorization": "Bearer valid"},
+            json={"status": "inactive"},
+        )
+        assert tenant_response.status_code == 200
+        assert tenant_response.json()["status"] == "inactive"
+
+        user_response = client.patch(
+            f"/api/v1/admin/tenants/{connection.tenant_id}/users/"
+            f"{connection.user_id}/status",
+            headers={"Authorization": "Bearer valid"},
+            json={"status": "inactive"},
+        )
+        assert user_response.status_code == 200
+        assert user_response.json()["status"] == "inactive"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_local_user_invitation_mirrors_only_the_new_hosted_user(monkeypatch) -> None:
+    from app.services import tenants
+
+    monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
+        "local_auth_shadow": True,
+    })())
+    connection = TenantUserConnection()
+    inviter = FakeInviter()
+    values = tenants.TenantUserCreate(
+        display_name="Team Member", email="member@example.com",
+    )
+
+    result = asyncio.run(
+        TenantService(connection).create_user(connection.tenant_id, values, inviter)
+    )
+
+    assert result.tenant_id == connection.tenant_id
+    assert inviter.hosted_user == (
+        connection.tenant_id, inviter.user_id, "Team Member", "member@example.com",
+    )
+    assert inviter.hosted is None
+
+
+def test_vendor_cannot_manage_tenant_users(
+    client: TestClient, verifier: StaticVerifier,
+) -> None:
+    verifier.claims = vendor_claims()
+    tenant_id = uuid4()
+    response = client.get(
+        f"/api/v1/admin/tenants/{tenant_id}/users",
+        headers={"Authorization": "Bearer valid"},
+    )
+    assert response.status_code == 403

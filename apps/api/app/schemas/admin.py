@@ -7,6 +7,8 @@ from typing import Literal
 from app.schemas.alerts import AlertSeverity, AlertType
 from app.schemas.scans import ScanStatus
 
+AccessStatus = Literal["active", "inactive"]
+
 
 class Tenant(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -54,6 +56,50 @@ class TenantCreated(BaseModel):
     name: str
     vendor_email: str
     invitation_sent: bool
+
+
+class TenantUserCreate(BaseModel):
+    display_name: str = Field(min_length=1, max_length=120)
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=254)
+
+    @field_validator("display_name", "email")
+    @classmethod
+    def normalize(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Value must not be blank")
+        return normalized
+
+
+class TenantUser(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    tenant_id: UUID
+    display_name: str
+    email: str
+    status: AccessStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class TenantUserCreated(TenantUser):
+    invitation_sent: bool
+
+
+class TenantUserList(BaseModel):
+    items: list[TenantUser]
+    total: int
+
+
+class AccessStatusUpdate(BaseModel):
+    status: AccessStatus
+
+
+class TenantStatusUpdateResult(BaseModel):
+    id: UUID
+    status: AccessStatus
+    updated_at: datetime
 
 
 class AdminProduct(BaseModel):
