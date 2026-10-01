@@ -26,7 +26,8 @@ alter table public.alerts
   );
 
 update public.alerts
-set event_key = 'legacy_' || type::text
+set event_key = 'legacy_' || type::text,
+    notification_sent_at = created_at
 where event_key is null;
 
 -- Preserve one alert per lifecycle event while allowing separate warnings for
