@@ -58,7 +58,7 @@ Push is best-effort notification. Missing a push does not change persisted alert
 
 Manual sale is one product, one vendor-selected batch, one positive quantity, and explicit confirmation.
 
-1. Mobile loads tenant products and batches under RLS.
+1. Mobile loads the shared product catalogue and tenant-owned batches under RLS.
 2. Vendor confirms the line.
 3. Mobile calls `POST /api/v1/sales` with an `Idempotency-Key`.
 4. `SalesService` locks selected batch rows, validates remaining stock, writes `sales` / `sale_items`, deducts quantities, evaluates low stock, and commits atomically.

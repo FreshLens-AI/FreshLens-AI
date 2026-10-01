@@ -15,7 +15,7 @@ For each quality attribute class in the SRS, this section names the architectura
 | Requirement theme | Mechanism |
 |---|---|
 | Authenticated API access | Supabase JWT validation on protected routes |
-| Tenant isolation (NFR-SEC-003) | `app.tenant_id` + Postgres RLS on every business table |
+| Tenant isolation (NFR-SEC-003) | `app.tenant_id` + Postgres RLS on tenant-owned tables; forced RLS on shared catalogue data |
 | No tenant id from body | Middleware reads claims only |
 | Redis key safety (NFR-SEC-006) | `tenant:{tenant_id}:...` namespaces |
 | LLM cannot mutate inventory (NFR-SEC-007) | Voice-draft endpoint is read-only toward stock; no DB credentials for the model |

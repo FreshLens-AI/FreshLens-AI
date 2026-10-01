@@ -31,7 +31,7 @@ Version 1 includes:
 - FreshLens Two-Tier Classifier (FL-2TC): Tier 1 identifies produce type; Tier 2 labels it `fresh`, `medium`, or `spoiled` (a stub classifier is acceptable at mid-evaluation)
 - Manual sale entry for the mid-evaluation, where the vendor selects one product and one active batch, enters a quantity, reviews the item, and explicitly confirms the sale
 - Voice-assisted sale entry for final V1, where device speech-to-text and a provider-neutral LLM parser may draft multiple products for vendor correction, batch selection, and explicit confirmation
-- Multi-tenant isolation through PostgreSQL Row-Level Security (`tenant_id` on every business table)
+- Multi-tenant isolation through PostgreSQL Row-Level Security (`tenant_id` on every tenant-owned table; forced RLS on shared catalogue data)
 - Low-stock alerts and static aging alerts based on administrator-configured shelf-life days
 - Core entities: tenants, users, products, scans, batches, sales, sale items, alerts
 

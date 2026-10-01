@@ -135,7 +135,7 @@ The mobile application shall allow the vendor to record a sale manually by selec
 | | |
 |--|--|
 | Inputs | Authenticated vendor session; one selected product; one selected active batch for that product; positive `quantity_sold` |
-| Processing | Load tenant-scoped products and active batches; validate the quantity; show the product, batch, and quantity for review; require explicit confirmation; submit exactly one confirmed item to `POST /api/v1/sales`; make retries safe by reusing the idempotency key for the same attempted sale |
+| Processing | Load shared catalogue products and tenant-scoped active batches; validate the quantity; show the product, batch, and quantity for review; require explicit confirmation; submit exactly one confirmed item to `POST /api/v1/sales`; make retries safe by reusing the idempotency key for the same attempted sale |
 | Outputs | Confirmed sale result and updated quantity on success; clear validation or insufficient-stock error without a partial deduction; retry-safe outcome when the same request is submitted again |
 
 ---

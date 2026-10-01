@@ -32,7 +32,7 @@ Physical deployment, container topology, and detailed sequence diagrams belong i
 4. Classify produce (identify and freshness) asynchronously and persist results.
 5. List scans and show classification and freshness score to the vendor.
 6. Maintain batches and inventory quantities linked to scans where applicable.
-7. List tenant-scoped products and active batches for sale entry.
+7. List shared catalogue products and tenant-scoped active batches for sale entry.
 8. Record confirmed sales through one stock-deduction path and evaluate low-stock alerts from the committed post-sale quantities.
 9. Raise and list low-stock and static aging alerts.
 10. Let platform admins manage tenants, vendor profiles, and product catalogues, and view aggregated analytics (V1 graded scope as implemented for demos).
@@ -50,7 +50,7 @@ Physical deployment, container topology, and detailed sequence diagrams belong i
 | ------------------------ |-------------|
 | Approved stack           | FastAPI, PostgreSQL + RLS, Supabase Auth, Next.js, Expo, Celery + Redis, Cloudflare R2, Docker Compose |
 | Async inference only     | No CNN inside API request handlers |
-| Tenant isolation         | Every business table has `tenant_id` + RLS in the same migration |
+| Tenant isolation         | Every tenant-owned table has `tenant_id` + RLS; shared catalogue tables use forced RLS |
 | Redis namespacing        | Keys use `tenant:{tenant_id}:...` |
 | V1 scan model            | One product type per photo; quantity is vendor-confirmed |
 | Course calendar          | Mid-eval may use stub ML; real FL-2TC by Progress Review 2 / final |

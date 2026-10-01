@@ -17,7 +17,7 @@ This section records the goals that drive FreshLens V1 architecture and the cons
 
 ### 3.2.1 Multi-tenancy via PostgreSQL RLS
 
-Constraint: Every business table carries `tenant_id`, and RLS policies use `current_setting('app.tenant_id')` in the same migration that creates the table (DR-001 through DR-012).
+Constraint: Every tenant-owned business table carries `tenant_id`, and RLS policies use `current_setting('app.tenant_id')` in the same migration that creates the table (DR-001 through DR-012). Shared catalogue reference tables use forced RLS without tenant rows.
 
 Consequence: API middleware must set `app.tenant_id` from the validated JWT before business queries. Application-level tenant filters are defense in depth only.
 
