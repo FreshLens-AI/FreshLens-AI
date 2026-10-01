@@ -1,4 +1,4 @@
-export type AppRole = "vendor" | "platform_admin";
+export type AppRole = "vendor" | "tenant_admin" | "platform_admin";
 
 export interface AuthContext {
   userId: string;
@@ -32,8 +32,11 @@ export function parseAuthClaims(claims: unknown): AuthContext | null {
     return null;
   }
   if (!UUID_PATTERN.test(userId) || !UUID_PATTERN.test(sessionId)) return null;
-  if (role !== "vendor" && role !== "platform_admin") return null;
-  if (role === "vendor" && (!tenantId || !UUID_PATTERN.test(tenantId))) {
+  if (role !== "vendor" && role !== "tenant_admin" && role !== "platform_admin") {
+    return null;
+  }
+  if ((role === "vendor" || role === "tenant_admin") &&
+      (!tenantId || !UUID_PATTERN.test(tenantId))) {
     return null;
   }
   if (role === "platform_admin" && tenantId !== null) return null;
@@ -45,7 +48,7 @@ export function parseAuthClaims(claims: unknown): AuthContext | null {
       ? metadata.display_name.trim()
       : "";
   const displayName =
-    metadataName || email?.split("@")[0] || "Platform administrator";
+    metadataName || email?.split("@")[0] || "FreshLens user";
 
   return { userId, role, tenantId, email, displayName };
 }

@@ -16,12 +16,12 @@ export function CreateTenantForm() {
     <Card className={styles.createCard}>
       <div>
         <h2>Create tenant</h2>
-        <p>The contact will receive an email link to set a password in the vendor app.</p>
+        <p>The owner becomes the tenant administrator and receives a web password-setup link.</p>
       </div>
       <form action={action} className={styles.createForm}>
         <label>Tenant name<input name="name" required maxLength={120} placeholder="Example Grocer" /></label>
-        <label>Contact name<input name="vendor_name" required maxLength={120} placeholder="Store owner" /></label>
-        <label>Contact email<input name="vendor_email" type="email" required maxLength={254} placeholder="owner@example.com" /></label>
+        <label>Owner name<input name="vendor_name" required maxLength={120} placeholder="Store owner" /></label>
+        <label>Owner email<input name="vendor_email" type="email" required maxLength={254} placeholder="owner@example.com" /></label>
         <Button type="submit" disabled={pending}>{pending ? "Creating…" : "Create and invite"}</Button>
       </form>
       {state.message ? <p role={state.status === "error" ? "alert" : "status"}

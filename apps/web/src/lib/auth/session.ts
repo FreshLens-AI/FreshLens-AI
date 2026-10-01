@@ -23,3 +23,10 @@ export async function requirePlatformAdmin() {
   if (auth.role !== "platform_admin") redirect("/access-denied");
   return auth;
 }
+
+export async function requireTenantAdmin() {
+  const auth = await getAuthContext();
+  if (!auth) redirect("/login");
+  if (auth.role !== "tenant_admin") redirect("/access-denied");
+  return auth;
+}

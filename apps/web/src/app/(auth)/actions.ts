@@ -51,15 +51,15 @@ export async function loginAction(
 
   const { data, error: claimsError } = await supabase.auth.getClaims();
   const auth = claimsError ? null : parseAuthClaims(data?.claims);
-  if (!auth || auth.role !== "platform_admin") {
+  if (!auth || auth.role === "vendor") {
     await supabase.auth.signOut({ scope: "local" });
     return {
       message:
-        "This account does not have platform administrator access. Contact a FreshLens owner.",
+        "Vendor accounts use the FreshLens mobile app. Contact your tenant administrator if you need help.",
     };
   }
 
-  redirect("/dashboard");
+  redirect(auth.role === "platform_admin" ? "/dashboard" : "/workspace");
 }
 
 export async function signOutAction() {

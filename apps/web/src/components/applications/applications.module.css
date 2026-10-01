@@ -1,0 +1,13 @@
+.grid { display: grid; gap: 14px; }
+.application { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(240px, 1fr) auto; align-items: center; gap: 24px; padding: 20px; }
+.date { color: var(--ink-muted); font-size: 11px; }
+.application h2 { margin-top: 4px; font-size: 18px; letter-spacing: -0.02em; }
+.owner { margin-top: 3px; color: var(--ink-soft); font-size: 13px; }
+.contact { display: grid; gap: 7px; color: var(--ink-soft); font-size: 12px; }
+.contact span { display: flex; align-items: center; gap: 7px; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.decisionForm { display: grid; gap: 5px; }
+.error, .success { max-width: 180px; font-size: 11px; }
+.error { color: var(--red-700); }
+.success { color: var(--brand-700); }
+@media (max-width: 900px) { .application { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } }
