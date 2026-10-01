@@ -10,10 +10,10 @@ export default function AccessDeniedPage() {
         <span className="auth-message-card__brand"><Sprout size={19} /> FreshLens</span>
         <span className="auth-message-card__icon"><ShieldX size={30} /></span>
         <p className="auth-message-card__eyebrow">Access restricted</p>
-        <h1>Administrator role required</h1>
+        <h1>This workspace is not available</h1>
         <p>
-          This session is valid, but it is not provisioned for the platform
-          administration workspace.
+          Your session is valid, but its signed role does not allow this
+          workspace. Vendor accounts continue in the FreshLens mobile app.
         </p>
         <form action={signOutAction}>
           <button type="submit" className="auth-message-card__primary">

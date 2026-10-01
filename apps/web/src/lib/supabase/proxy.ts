@@ -9,6 +9,8 @@ import {
 
 const PUBLIC_PATHS = new Set([
   "/login",
+  "/signup",
+  "/set-password",
   "/access-denied",
   "/session-expired",
 ]);
@@ -100,11 +102,17 @@ export async function updateSession(request: NextRequest) {
       hadAuthCookie ? "session-expired" : undefined,
     );
   }
-  if (!isPublicPath && auth?.role !== "platform_admin") {
+  const isTenantWorkspace = pathname === "/workspace" || pathname.startsWith("/workspace/");
+  if (isTenantWorkspace && auth?.role !== "tenant_admin") {
     return redirectWithSession(request, supabaseResponse, "/access-denied");
   }
-  if (pathname === "/login" && auth?.role === "platform_admin") {
-    return redirectWithSession(request, supabaseResponse, "/dashboard");
+  if (!isPublicPath && pathname !== "/" && !isTenantWorkspace && auth?.role !== "platform_admin") {
+    return redirectWithSession(request, supabaseResponse, "/access-denied");
+  }
+  if (pathname === "/login" && auth) {
+    const destination = auth.role === "platform_admin" ? "/dashboard"
+      : auth.role === "tenant_admin" ? "/workspace" : "/access-denied";
+    return redirectWithSession(request, supabaseResponse, destination);
   }
 
   return supabaseResponse;

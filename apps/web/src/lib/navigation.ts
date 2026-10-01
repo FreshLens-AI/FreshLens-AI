@@ -1,6 +1,7 @@
 import {
   BellRing,
   ChartNoAxesCombined,
+  ClipboardList,
   Gauge,
   Leaf,
   ScanLine,
@@ -10,6 +11,7 @@ import {
 export const primaryNavigation = [
   { label: "Overview", href: "/dashboard", icon: Gauge },
   { label: "Tenants", href: "/tenants", icon: Store },
+  { label: "Applications", href: "/applications", icon: ClipboardList },
   { label: "Catalogue", href: "/catalogue", icon: Leaf },
 ];
 

@@ -34,7 +34,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
             type="email"
             autoComplete="username"
             inputMode="email"
-            placeholder="Enter your admin email"
+            placeholder="Enter your email"
             aria-invalid={Boolean(state.fieldErrors?.email)}
             aria-describedby={
               state.fieldErrors?.email ? "admin-email-error" : undefined
@@ -95,7 +95,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
             Signing in…
           </>
         ) : (
-          "Sign in to admin workspace"
+          "Sign in"
         )}
       </button>
     </form>

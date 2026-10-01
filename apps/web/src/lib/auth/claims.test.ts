@@ -46,6 +46,21 @@ describe("parseAuthClaims", () => {
     );
   });
 
+  it("accepts a tenant admin only with a valid tenant", () => {
+    assert.equal(
+      parseAuthClaims({
+        ...AUTHENTICATED_IDENTITY,
+        app_role: "tenant_admin",
+        tenant_id: TENANT_ID,
+      })?.role,
+      "tenant_admin",
+    );
+    assert.equal(
+      parseAuthClaims({ ...AUTHENTICATED_IDENTITY, app_role: "tenant_admin" }),
+      null,
+    );
+  });
+
   it("rejects unknown, anonymous, and malformed identities", () => {
     assert.equal(
       parseAuthClaims({
