@@ -11,12 +11,18 @@ from app.schemas.admin import (
     AdminAnalytics,
     AdminOverview,
     AdminProductList,
+    AccessStatusUpdate,
     CategoryShelfLife,
     CategoryShelfLifeUpdate,
     ProductCategory,
     TenantCreate,
     TenantCreated,
     TenantList,
+    TenantStatusUpdateResult,
+    TenantUser,
+    TenantUserCreate,
+    TenantUserCreated,
+    TenantUserList,
 )
 from app.schemas.auth import AuthPrincipal
 from app.schemas.alerts import AlertSeverity, AlertType
@@ -27,7 +33,11 @@ from app.services.admin import (
     CategoryShelfLifeService,
     AdminOverviewService,
 )
-from app.services.tenants import TenantService
+from app.services.tenants import (
+    TenantNotFoundError,
+    TenantService,
+    TenantUserNotFoundError,
+)
 from app.services.tenant_invites import InviteError, SupabaseInviter, get_inviter
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
@@ -78,6 +88,71 @@ async def list_tenants(
         limit=limit, offset=offset, search=search.strip(),
         status=status, tenant_id=tenant_id,
     )
+
+
+@router.post(
+    "/tenants/{tenant_id}/users",
+    response_model=TenantUserCreated,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_tenant_user(
+    tenant_id: UUID,
+    values: TenantUserCreate,
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+    inviter: SupabaseInviter = Depends(get_inviter),
+) -> TenantUserCreated:
+    try:
+        return await TenantService(connection).create_user(tenant_id, values, inviter)
+    except TenantNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Tenant not found.") from exc
+    except InviteError as exc:
+        raise HTTPException(exc.status_code, str(exc)) from exc
+
+
+@router.get("/tenants/{tenant_id}/users", response_model=TenantUserList)
+async def list_tenant_users(
+    tenant_id: UUID,
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+) -> TenantUserList:
+    try:
+        return await TenantService(connection).list_users(tenant_id)
+    except TenantNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Tenant not found.") from exc
+
+
+@router.patch(
+    "/tenants/{tenant_id}/status", response_model=TenantStatusUpdateResult,
+)
+async def update_tenant_status(
+    tenant_id: UUID,
+    values: AccessStatusUpdate,
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+) -> TenantStatusUpdateResult:
+    try:
+        return await TenantService(connection).update_status(tenant_id, values.status)
+    except TenantNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Tenant not found.") from exc
+
+
+@router.patch(
+    "/tenants/{tenant_id}/users/{user_id}/status", response_model=TenantUser,
+)
+async def update_tenant_user_status(
+    tenant_id: UUID,
+    user_id: UUID,
+    values: AccessStatusUpdate,
+    _principal: AuthPrincipal = Depends(require_platform_admin),
+    connection: asyncpg.Connection = Depends(get_admin_connection),
+) -> TenantUser:
+    try:
+        return await TenantService(connection).update_user_status(
+            tenant_id, user_id, values.status,
+        )
+    except TenantUserNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Tenant user not found.") from exc
 
 
 @router.get("/products", response_model=AdminProductList)

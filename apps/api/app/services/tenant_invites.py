@@ -65,15 +65,44 @@ class SupabaseInviter:
                     headers=headers, json={"id": str(tenant_id), "name": tenant_name},
                 )
                 tenant.raise_for_status()
-                user = await client.post(
-                    f"{self.base_url.removesuffix('/auth/v1')}/rest/v1/users",
-                    headers=headers,
-                    json={"id": str(user_id), "tenant_id": str(tenant_id),
-                          "role": "vendor", "display_name": vendor_name, "email": email},
+                await self._provision_hosted_user(
+                    client, headers, tenant_id, user_id, vendor_name, email,
                 )
-                user.raise_for_status()
             except httpx.HTTPError as exc:
                 raise InviteError("Could not provision the vendor in Supabase.") from exc
+
+    async def _provision_hosted_user(
+        self, client: httpx.AsyncClient, headers: dict[str, str], tenant_id: UUID,
+        user_id: UUID, vendor_name: str, email: str,
+    ) -> None:
+        user = await client.post(
+            f"{self.base_url.removesuffix('/auth/v1')}/rest/v1/users",
+            headers=headers,
+            json={"id": str(user_id), "tenant_id": str(tenant_id),
+                  "role": "vendor", "display_name": vendor_name, "email": email},
+        )
+        user.raise_for_status()
+
+    async def provision_hosted_user(
+        self, tenant_id: UUID, user_id: UUID, vendor_name: str, email: str,
+    ) -> None:
+        headers = {**self.headers, "Prefer": "return=minimal"}
+        async with httpx.AsyncClient(timeout=15) as client:
+            try:
+                await self._provision_hosted_user(
+                    client, headers, tenant_id, user_id, vendor_name, email,
+                )
+            except httpx.HTTPError as exc:
+                raise InviteError("Could not provision the vendor in Supabase.") from exc
+
+    async def delete_hosted_user(self, user_id: UUID) -> None:
+        base = self.base_url.removesuffix('/auth/v1')
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.delete(
+                f"{base}/rest/v1/users", headers=self.headers,
+                params={"id": f"eq.{user_id}"},
+            )
+            response.raise_for_status()
 
     async def delete_hosted_identity(self, tenant_id: UUID, user_id: UUID) -> None:
         base = self.base_url.removesuffix('/auth/v1')

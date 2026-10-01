@@ -461,6 +461,142 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /api/v1/admin/tenants/{tenant_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Allow or revoke access for every user in a tenant
+      operationId: updateTenantStatus
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessStatusUpdate"
+      responses:
+        "200":
+          description: Updated tenant access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantStatusUpdateResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Tenant not found
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/admin/tenants/{tenant_id}/users:
+    get:
+      tags: [Admin]
+      summary: List vendor users in a tenant
+      operationId: listTenantUsers
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      responses:
+        "200":
+          description: Tenant user list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantUserList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Tenant not found
+    post:
+      tags: [Admin]
+      summary: Invite a new vendor user into an existing tenant
+      operationId: createTenantUser
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantUserCreate"
+      responses:
+        "201":
+          description: User mapped to the tenant and invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantUserCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Tenant not found
+        "409":
+          description: Email is already registered
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/admin/tenants/{tenant_id}/users/{user_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Allow or revoke one tenant user's access
+      operationId: updateTenantUserStatus
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [platform_admin]
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+        - name: user_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessStatusUpdate"
+      responses:
+        "200":
+          description: Updated user access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Tenant user not found
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   /api/v1/admin/products:
     get:
       tags: [Admin]
@@ -1253,6 +1389,93 @@ components:
         name: { type: string }
         vendor_email: { type: string, format: email }
         invitation_sent: { type: boolean, const: true }
+
+    TenantUserCreate:
+      type: object
+      required: [display_name, email]
+      additionalProperties: false
+      properties:
+        display_name: { type: string, minLength: 1, maxLength: 120 }
+        email: { type: string, format: email, maxLength: 254 }
+
+    TenantUser:
+      type: object
+      required: [id, tenant_id, display_name, email, status, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_id:
+          $ref: "#/components/schemas/Uuid"
+        display_name: { type: string }
+        email: { type: string, format: email }
+        status:
+          type: string
+          enum: [active, inactive]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TenantUserCreated:
+      type: object
+      required: [id, tenant_id, display_name, email, status, created_at, updated_at, invitation_sent]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        tenant_id:
+          $ref: "#/components/schemas/Uuid"
+        display_name: { type: string }
+        email: { type: string, format: email }
+        status:
+          type: string
+          enum: [active, inactive]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        invitation_sent: { type: boolean, const: true }
+
+    TenantUserList:
+      type: object
+      required: [items, total]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantUser"
+        total:
+          type: integer
+          minimum: 0
+
+    AccessStatusUpdate:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [active, inactive]
+
+    TenantStatusUpdateResult:
+      type: object
+      required: [id, status, updated_at]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: "#/components/schemas/Uuid"
+        status:
+          type: string
+          enum: [active, inactive]
+        updated_at:
+          type: string
+          format: date-time
 
     AdminProduct:
       type: object

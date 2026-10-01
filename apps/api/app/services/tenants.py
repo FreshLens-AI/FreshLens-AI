@@ -3,10 +3,29 @@ import logging
 from uuid import UUID, uuid4
 
 from app.core.config import get_settings
-from app.schemas.admin import Tenant, TenantCreate, TenantCreated, TenantList
+from app.schemas.admin import (
+    AccessStatus,
+    Tenant,
+    TenantCreate,
+    TenantCreated,
+    TenantList,
+    TenantStatusUpdateResult,
+    TenantUser,
+    TenantUserCreate,
+    TenantUserCreated,
+    TenantUserList,
+)
 from app.services.tenant_invites import SupabaseInviter
 
 logger = logging.getLogger(__name__)
+
+
+class TenantNotFoundError(Exception):
+    pass
+
+
+class TenantUserNotFoundError(Exception):
+    pass
 
 
 class TenantService:
@@ -49,6 +68,108 @@ class TenantService:
         return TenantCreated(
             id=tenant_id, name=values.name, vendor_email=email, invitation_sent=True,
         )
+
+    async def create_user(
+        self, tenant_id: UUID, values: TenantUserCreate, inviter: SupabaseInviter,
+    ) -> TenantUserCreated:
+        tenant = await self.connection.fetchrow(
+            "select id from public.tenants where id = $1", tenant_id,
+        )
+        if tenant is None:
+            raise TenantNotFoundError
+
+        email = values.email.lower()
+        user_id = await inviter.invite(email, values.display_name)
+        local_shadow = get_settings().local_auth_shadow
+        try:
+            if local_shadow:
+                await inviter.provision_hosted_user(
+                    tenant_id, user_id, values.display_name, email,
+                )
+                await self.connection.execute(
+                    "select public.create_local_auth_shadow($1, $2)", user_id, email,
+                )
+            row = await self.connection.fetchrow(
+                """
+                insert into public.users (
+                  id, tenant_id, role, display_name, email
+                ) values ($1, $2, 'vendor', $3, $4)
+                returning id, tenant_id, display_name, email, status,
+                          created_at, updated_at
+                """,
+                user_id, tenant_id, values.display_name, email,
+            )
+        except Exception:
+            if local_shadow:
+                try:
+                    await inviter.delete_hosted_user(user_id)
+                except Exception:
+                    logger.exception(
+                        "Could not remove hosted user after tenant-user insert failed"
+                    )
+            try:
+                await inviter.delete(user_id)
+            except Exception:
+                logger.exception(
+                    "Could not remove invited Auth user after tenant-user insert failed"
+                )
+            raise
+        return TenantUserCreated.model_validate(
+            {**dict(row), "invitation_sent": True}
+        )
+
+    async def list_users(self, tenant_id: UUID) -> TenantUserList:
+        tenant_exists = await self.connection.fetchval(
+            "select exists(select 1 from public.tenants where id = $1)", tenant_id,
+        )
+        if not tenant_exists:
+            raise TenantNotFoundError
+        rows = await self.connection.fetch(
+            """
+            select id, tenant_id, display_name, email, status, created_at, updated_at
+            from public.users
+            where tenant_id = $1 and role = 'vendor'
+            order by created_at, display_name
+            """,
+            tenant_id,
+        )
+        return TenantUserList(
+            items=[TenantUser.model_validate(dict(row)) for row in rows],
+            total=len(rows),
+        )
+
+    async def update_status(
+        self, tenant_id: UUID, new_status: AccessStatus,
+    ) -> TenantStatusUpdateResult:
+        row = await self.connection.fetchrow(
+            """
+            update public.tenants
+            set status = $2, updated_at = now()
+            where id = $1
+            returning id, status, updated_at
+            """,
+            tenant_id, new_status,
+        )
+        if row is None:
+            raise TenantNotFoundError
+        return TenantStatusUpdateResult.model_validate(dict(row))
+
+    async def update_user_status(
+        self, tenant_id: UUID, user_id: UUID, new_status: AccessStatus,
+    ) -> TenantUser:
+        row = await self.connection.fetchrow(
+            """
+            update public.users
+            set status = $3, updated_at = now()
+            where id = $2 and tenant_id = $1 and role = 'vendor'
+            returning id, tenant_id, display_name, email, status,
+                      created_at, updated_at
+            """,
+            tenant_id, user_id, new_status,
+        )
+        if row is None:
+            raise TenantUserNotFoundError
+        return TenantUser.model_validate(dict(row))
 
     async def list(
         self, *, limit: int, offset: int, search: str = "",
