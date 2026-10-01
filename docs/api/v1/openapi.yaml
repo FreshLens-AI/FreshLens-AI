@@ -213,8 +213,8 @@ paths:
       tags: [Alerts]
       summary: List alerts for the current tenant
       description: |
-        Minimal list for mobile/admin shells. May return an empty array until
-        aging/low-stock alert rules (#19) land.
+        Returns tenant-scoped, actionable inventory alerts. Active alerts are
+        returned by default; resolved history can be requested explicitly.
       operationId: listAlerts
       security:
         - bearerAuth: []
@@ -222,6 +222,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
+        - name: active_only
+          in: query
+          required: false
+          schema: { type: boolean, default: true }
       responses:
         "200":
           description: Tenant-scoped alerts
@@ -233,6 +237,33 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+
+  /api/v1/alerts/{alert_id}/read:
+    patch:
+      tags: [Alerts]
+      summary: Mark one tenant alert as read
+      operationId: markAlertRead
+      security:
+        - bearerAuth: []
+      x-freshlens-roles: [vendor]
+      parameters:
+        - name: alert_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Uuid" }
+      responses:
+        "200":
+          description: Updated tenant alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/v1/devices:
     post:
@@ -1191,6 +1222,25 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Uuid"
             - type: "null"
+        event_key:
+          type: [string, "null"]
+        product_name:
+          type: [string, "null"]
+        quantity_received:
+          type: [integer, "null"]
+          minimum: 0
+        quantity_remaining:
+          type: [integer, "null"]
+          minimum: 0
+        transition_at:
+          type: [string, "null"]
+          format: date-time
+        read_at:
+          type: [string, "null"]
+          format: date-time
+        resolved_at:
+          type: [string, "null"]
+          format: date-time
         batch_id:
           oneOf:
             - $ref: "#/components/schemas/Uuid"

@@ -231,6 +231,7 @@ class SalesService:
             await self._insert_alert_once(
                 tenant_id=tenant_id,
                 alert_type="low_stock",
+                event_key="low_stock",
                 severity=severity,
                 message=(
                     f"{name} is at or below the low-stock threshold "
@@ -249,6 +250,7 @@ class SalesService:
                 await self._insert_alert_once(
                     tenant_id=tenant_id,
                     alert_type="aging",
+                    event_key="shelf_life_elapsed",
                     severity="warning",
                     message=(
                         f"{name} has passed its {shelf_life_days}-day shelf life."
@@ -262,6 +264,7 @@ class SalesService:
         *,
         tenant_id: UUID,
         alert_type: str,
+        event_key: str,
         severity: str,
         message: str,
         product_id: UUID,
@@ -271,12 +274,12 @@ class SalesService:
             """
             select 1
             from public.alerts
-            where type = $1::public.alert_type
+            where event_key = $1
               and product_id = $2
               and batch_id = $3
             limit 1
             """,
-            alert_type,
+            event_key,
             product_id,
             batch_id,
         )
@@ -285,19 +288,21 @@ class SalesService:
         await self.connection.execute(
             """
             insert into public.alerts (
-              tenant_id, type, severity, message, product_id, batch_id
+              tenant_id, type, event_key, severity, message, product_id, batch_id
             )
             values (
               $1,
               $2::public.alert_type,
-              $3::public.alert_severity,
-              $4,
+              $3,
+              $4::public.alert_severity,
               $5,
-              $6
+              $6,
+              $7
             )
             """,
             tenant_id,
             alert_type,
+            event_key,
             severity,
             message,
             product_id,

@@ -281,6 +281,56 @@ begin
 end
 $tenant_a$;
 
+do $tenant_a_lifecycle$
+begin
+  update public.batches
+  set initial_classification = 'fresh',
+      fresh_to_medium_at = now() + interval '2 days',
+      medium_to_spoiled_at = now() + interval '5 days'
+  where id = '40000000-0000-4000-8000-000000000001';
+
+  if not exists (
+    select 1 from public.batches
+    where id = '40000000-0000-4000-8000-000000000001'
+      and initial_classification = 'fresh'
+      and fresh_to_medium_at < medium_to_spoiled_at
+  ) then
+    raise exception 'Tenant A could not store its batch lifecycle snapshot';
+  end if;
+
+  insert into public.alerts (
+    tenant_id, type, event_key, severity, message, product_id, batch_id,
+    transition_at
+  ) values (
+    '20000000-0000-4000-8000-000000000001',
+    'aging',
+    'fresh_to_medium_warning',
+    'warning',
+    'Tomato is nearing medium freshness',
+    '30000000-0000-4000-8000-000000000001',
+    '40000000-0000-4000-8000-000000000001',
+    now() + interval '2 days'
+  );
+
+  begin
+    insert into public.alerts (
+      tenant_id, type, event_key, severity, message, product_id, batch_id
+    ) values (
+      '20000000-0000-4000-8000-000000000001',
+      'aging',
+      'fresh_to_medium_warning',
+      'warning',
+      'Duplicate lifecycle alert',
+      '30000000-0000-4000-8000-000000000001',
+      '40000000-0000-4000-8000-000000000001'
+    );
+    raise exception 'duplicate lifecycle alert was accepted';
+  exception when unique_violation then
+    null;
+  end;
+end
+$tenant_a_lifecycle$;
+
 do $tenant_a_cannot_update$
 declare
   affected_rows bigint;

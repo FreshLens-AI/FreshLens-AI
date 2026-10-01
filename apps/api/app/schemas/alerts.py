@@ -28,6 +28,13 @@ class Alert(BaseModel):
     created_at: datetime
     batch_id: UUID | None = None
     product_id: UUID | None = None
+    event_key: str | None = None
+    product_name: str | None = None
+    quantity_received: int | None = None
+    quantity_remaining: int | None = None
+    transition_at: datetime | None = None
+    read_at: datetime | None = None
+    resolved_at: datetime | None = None
 
 
 class AlertList(BaseModel):
