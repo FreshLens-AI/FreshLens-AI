@@ -116,7 +116,7 @@ def test_sale_deducts_and_emits_low_stock_alert() -> None:
     assert ("low_stock", "warning") in db.alerts
 
 
-def test_sale_emits_aging_alert_for_expired_batch() -> None:
+def test_sale_leaves_time_based_aging_to_the_periodic_worker() -> None:
     product_id, batch_id = uuid4(), uuid4()
     db = SalesDb()
     db.batches[batch_id] = {
@@ -136,7 +136,7 @@ def test_sale_emits_aging_alert_for_expired_batch() -> None:
             request=_request(product_id, batch_id, 1),
         )
     )
-    assert ("aging", "warning") in db.alerts
+    assert ("aging", "warning") not in db.alerts
 
 
 def test_sale_rejects_product_batch_mismatch() -> None:

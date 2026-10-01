@@ -149,6 +149,15 @@ python -m training.evaluate_freshness \
   --output ../../runs/freshness/freshness-yolo26n-cls-v1/test-metrics.json
 ```
 
+## Scheduled batch lifecycle alerts
+
+The Compose `scheduler` runs Celery Beat hourly. It fans out one tenant-scoped
+task per active tenant; each task evaluates unsold batch deadlines under RLS,
+creates idempotent fresh-to-medium and medium-to-spoiled alerts, and retries
+pending Expo push delivery. `LIFECYCLE_WARNING_LEAD_HOURS` defaults to `24`, and
+`LIFECYCLE_MIN_REMAINING_RATIO` defaults to `0.25` to avoid noisy warnings for
+nearly sold-out batches.
+
 ## SnapStock-AI / Fahad et al. (CMC 2022) Dataset & Colab Training
 
 To eliminate the cross-domain generalization gap and provide dense sample strata across all 3 freshness stages (`fresh`, `medium`, `spoiled`), the pipeline integrates the **SnapStock-AI** Hugging Face dataset (`SnapStock-AI/snapstock-freshness-dataset-v2`).
