@@ -43,28 +43,78 @@ class AlertService:
     def __init__(self, connection: asyncpg.Connection) -> None:
         self.connection = connection
 
-    async def list(self, *, limit: int, offset: int) -> AlertList:
+    async def list(
+        self, *, limit: int, offset: int, active_only: bool = True
+    ) -> AlertList:
         rows = await self.connection.fetch(
             """
             select
-              id,
-              type::text as type,
-              message,
-              severity::text as severity,
-              created_at,
-              batch_id,
-              product_id,
+              alerts.id,
+              alerts.type::text as type,
+              alerts.message,
+              alerts.severity::text as severity,
+              alerts.created_at,
+              alerts.batch_id,
+              alerts.product_id,
+              alerts.event_key,
+              products.name as product_name,
+              batches.quantity_received,
+              batches.quantity_remaining,
+              alerts.transition_at,
+              alerts.read_at,
+              alerts.resolved_at,
               count(*) over()::int as total
             from public.alerts
-            order by created_at desc
+            left join public.products
+              on products.id = alerts.product_id
+             and products.tenant_id = alerts.tenant_id
+            left join public.batches
+              on batches.id = alerts.batch_id
+             and batches.tenant_id = alerts.tenant_id
+            where (not $3::boolean or alerts.resolved_at is null)
+            order by alerts.created_at desc
             limit $1 offset $2
             """,
             limit,
             offset,
+            active_only,
         )
-        items = [
-            Alert.model_validate({key: row[key] for key in Alert.model_fields})
-            for row in rows
-        ]
+        items = [Alert.model_validate(dict(row)) for row in rows]
         total = int(rows[0]["total"]) if rows else 0
         return AlertList(items=items, total=total, limit=limit, offset=offset)
+
+    async def mark_read(self, alert_id: UUID) -> Alert | None:
+        row = await self.connection.fetchrow(
+            """
+            with updated as (
+              update public.alerts
+              set read_at = coalesce(read_at, now())
+              where id = $1
+              returning *
+            )
+            select
+              updated.id,
+              updated.type::text as type,
+              updated.message,
+              updated.severity::text as severity,
+              updated.created_at,
+              updated.batch_id,
+              updated.product_id,
+              updated.event_key,
+              products.name as product_name,
+              batches.quantity_received,
+              batches.quantity_remaining,
+              updated.transition_at,
+              updated.read_at,
+              updated.resolved_at
+            from updated
+            left join public.products
+              on products.id = updated.product_id
+             and products.tenant_id = updated.tenant_id
+            left join public.batches
+              on batches.id = updated.batch_id
+             and batches.tenant_id = updated.tenant_id
+            """,
+            alert_id,
+        )
+        return Alert.model_validate(dict(row)) if row is not None else None

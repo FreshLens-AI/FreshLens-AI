@@ -18,6 +18,7 @@ services:
       - ../db/migrations/0005_tenant_onboarding.sql:/docker-entrypoint-initdb.d/0018_tenant_onboarding.sql:ro
       - ../db/migrations/0006_http_access_token_hook.sql:/docker-entrypoint-initdb.d/0019_http_access_token_hook.sql:ro
       - ../db/migrations/0007_user_access_controls.sql:/docker-entrypoint-initdb.d/0019a_user_access_controls.sql:ro
+      - ../db/migrations/0008_batch_lifecycle_alerts.sql:/docker-entrypoint-initdb.d/0019b_batch_lifecycle_alerts.sql:ro
       - ../db/local/0020_runtime_login.sql:/docker-entrypoint-initdb.d/0020_runtime_login.sql:ro
       - ../db/local/0030_demo_catalogue.sql:/docker-entrypoint-initdb.d/0030_demo_catalogue.sql:ro
     healthcheck:

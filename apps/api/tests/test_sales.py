@@ -64,7 +64,7 @@ class SalesDb:
         if "update public.batches" in compact:
             self.updates.append((args[0], args[1]))  # type: ignore[arg-type]
         if "insert into public.alerts" in compact:
-            self.alerts.append((str(args[1]), str(args[2])))
+            self.alerts.append((str(args[1]), str(args[3])))
 
 
 def test_sale_rejects_oversell() -> None:
@@ -295,6 +295,28 @@ def test_vendor_lists_products_and_alerts(
                 ]
             return []
 
+        async def fetchrow(
+            self, query: str, *args: object
+        ) -> dict[str, object] | None:
+            if "update public.alerts" not in query:
+                return None
+            return {
+                "id": args[0],
+                "type": "aging",
+                "message": "Banana is nearing medium freshness",
+                "severity": "warning",
+                "created_at": NOW,
+                "batch_id": uuid4(),
+                "product_id": uuid4(),
+                "event_key": "fresh_to_medium_warning",
+                "product_name": "Banana",
+                "quantity_received": 10,
+                "quantity_remaining": 8,
+                "transition_at": NOW + timedelta(days=1),
+                "read_at": NOW,
+                "resolved_at": None,
+            }
+
     async def override_connection():
         yield ListDb()
 
@@ -313,5 +335,13 @@ def test_vendor_lists_products_and_alerts(
         assert products.json()["items"][0]["name"] == "Tomato"
         assert alerts.status_code == 200
         assert alerts.json()["items"][0]["type"] == "aging"
+        alert_id = alerts.json()["items"][0]["id"]
+        read = client.patch(
+            f"/api/v1/alerts/{alert_id}/read",
+            headers={"Authorization": "Bearer valid"},
+        )
+        assert read.status_code == 200
+        assert read.json()["event_key"] == "fresh_to_medium_warning"
+        assert read.json()["read_at"] is not None
     finally:
         app.dependency_overrides.clear()
