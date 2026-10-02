@@ -44,6 +44,13 @@ class Settings(BaseSettings):
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/1"
     scan_storage_dir: str = "./data/scans"
+    gemini_api_key: str = ""
+    voice_parser_model: str = "gemini-3.5-flash-lite"
+    voice_parser_thinking_level: Literal["minimal", "low", "medium", "high"] = (
+        "minimal"
+    )
+    voice_parser_timeout_seconds: float = 10.0
+    voice_draft_rate_limit_per_minute: int = 20
 
     @model_validator(mode="after")
     def require_database_tls_in_production(self) -> Self:

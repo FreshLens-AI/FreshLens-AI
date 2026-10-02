@@ -180,10 +180,11 @@ async def get_public_connection() -> AsyncIterator[asyncpg.Connection]:
             yield connection
 
 
-async def get_tenant_connection(
-    principal: AuthPrincipal = Depends(require_tenant_member),
+@asynccontextmanager
+async def tenant_transaction(
+    principal: AuthPrincipal,
 ) -> AsyncIterator[asyncpg.Connection]:
-    """Yield one transaction whose RLS tenant came only from the verified JWT."""
+    """One transaction whose RLS tenant came only from the verified JWT."""
 
     async with acquired_connection() as connection:
         await ensure_safe_database_role(connection)
@@ -205,6 +206,15 @@ async def get_tenant_connection(
             raise
         else:
             await transaction.commit()
+
+
+async def get_tenant_connection(
+    principal: AuthPrincipal = Depends(require_tenant_member),
+) -> AsyncIterator[asyncpg.Connection]:
+    """Yield a tenant transaction that lasts for the whole request."""
+
+    async with tenant_transaction(principal) as connection:
+        yield connection
 
 
 async def get_admin_connection(
