@@ -28,6 +28,12 @@ if grep -qE '^CLASSIFIER=stub([[:space:]]|$)' "$ENV_FILE" \
   echo "==> Using stub worker override (CLASSIFIER=stub)"
 fi
 
+if grep -qE '^API_DOMAIN=.+' "$ENV_FILE" \
+  && [[ -f "$COMPOSE_DIR/compose.prod.yml" ]]; then
+  compose+=(-f compose.prod.yml)
+  echo "==> Using HTTPS edge (compose.prod.yml)"
+fi
+
 cd "$COMPOSE_DIR"
 echo "==> Building and starting stack"
 "${compose[@]}" up -d --build --remove-orphans
