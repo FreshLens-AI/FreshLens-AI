@@ -3,7 +3,6 @@ from uuid import UUID
 
 import asyncpg
 
-from app.core.config import get_settings
 from app.schemas.admin import TenantCreate
 from app.schemas.applications import (
     TenantApplication,
@@ -95,11 +94,6 @@ class TenantApplicationService:
                 created.id, created.owner_user_id,
             )
         except Exception:
-            if get_settings().local_auth_shadow:
-                try:
-                    await inviter.delete_hosted_identity(created.id, created.owner_user_id)
-                except Exception:
-                    logger.exception("Could not clean up hosted approved tenant")
             try:
                 await inviter.delete(created.owner_user_id)
             except Exception:

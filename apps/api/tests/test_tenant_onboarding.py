@@ -23,10 +23,6 @@ class FakeInviter:
         self.invited: tuple[str, str, str | None] | None = None
         self.deleted: UUID | None = None
         self.error: InviteError | None = None
-        self.hosted: tuple[object, ...] | None = None
-        self.hosted_deleted: tuple[UUID, UUID] | None = None
-        self.hosted_user: tuple[object, ...] | None = None
-        self.hosted_user_deleted: UUID | None = None
 
     async def invite(
         self, email: str, name: str, *, redirect_url: str | None = None,
@@ -39,17 +35,6 @@ class FakeInviter:
     async def delete(self, user_id: UUID) -> None:
         self.deleted = user_id
 
-    async def provision_hosted_identity(self, *values: object) -> None:
-        self.hosted = values
-
-    async def delete_hosted_identity(self, tenant_id: UUID, user_id: UUID) -> None:
-        self.hosted_deleted = (tenant_id, user_id)
-
-    async def provision_hosted_user(self, *values: object) -> None:
-        self.hosted_user = values
-
-    async def delete_hosted_user(self, user_id: UUID) -> None:
-        self.hosted_user_deleted = user_id
 
 
 class FakeConnection:
@@ -57,11 +42,13 @@ class FakeConnection:
         self.tenant_id: UUID | None = None
         self.inserted_user: tuple[object, ...] | None = None
         self.fail = False
+        self.shadow: tuple[object, ...] | None = None
 
     async def execute(self, query: str, *values: object) -> None:
         if self.fail:
             raise RuntimeError("database unavailable")
         if "create_local_auth_shadow" in query:
+            self.shadow = values
             return
         if "insert into public.tenants" in query:
             self.tenant_id = values[0]
@@ -151,7 +138,7 @@ def test_failed_database_provisioning_removes_invited_user() -> None:
     assert inviter.deleted == inviter.user_id
 
 
-def test_local_database_provisioning_mirrors_hosted_identity(monkeypatch) -> None:
+def test_local_database_provisioning_uses_only_auth_and_application_database(monkeypatch) -> None:
     from app.services import tenants
 
     monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
@@ -164,13 +151,12 @@ def test_local_database_provisioning_mirrors_hosted_identity(monkeypatch) -> Non
         name="New Grocer", vendor_name="Owner", vendor_email="owner@example.com",
     )
     result = asyncio.run(TenantService(connection).create(values, inviter))
-    assert inviter.hosted == (
-        result.id, "New Grocer", inviter.user_id, "Owner", "owner@example.com",
-        "tenant_admin",
-    )
+    assert connection.shadow == (inviter.user_id, "owner@example.com")
+    assert result.owner_user_id == inviter.user_id
+    assert connection.tenant_id == result.id
 
 
-def test_failed_local_provisioning_removes_hosted_identity(monkeypatch) -> None:
+def test_failed_local_provisioning_removes_auth_user(monkeypatch) -> None:
     from app.services import tenants
 
     monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
@@ -185,8 +171,6 @@ def test_failed_local_provisioning_removes_hosted_identity(monkeypatch) -> None:
     )
     with pytest.raises(RuntimeError, match="database unavailable"):
         asyncio.run(TenantService(connection).create(values, inviter))
-    assert inviter.hosted_deleted is not None
-    assert inviter.hosted_deleted[1] == inviter.user_id
     assert inviter.deleted == inviter.user_id
 
 
@@ -223,6 +207,7 @@ class TenantUserConnection:
         self.tenant_id = uuid4()
         self.user_id = uuid4()
         self.user_status = "active"
+        self.shadow: tuple[object, ...] | None = None
 
     def user_row(self) -> dict[str, object]:
         return {
@@ -261,8 +246,8 @@ class TenantUserConnection:
         return [self.user_row()] if values[0] == self.tenant_id else []
 
     async def execute(self, query: str, *values: object) -> None:
-        if "create_local_auth_shadow" not in query:
-            raise AssertionError(query)
+        assert "create_local_auth_shadow" in query
+        self.shadow = values
 
 
 def test_admin_invites_and_lists_user_under_existing_tenant(
@@ -330,7 +315,7 @@ def test_admin_revokes_tenant_and_individual_user_access(
         app.dependency_overrides.clear()
 
 
-def test_local_user_invitation_mirrors_only_the_new_hosted_user(monkeypatch) -> None:
+def test_local_user_invitation_creates_local_auth_shadow(monkeypatch) -> None:
     from app.services import tenants
 
     monkeypatch.setattr(tenants, "get_settings", lambda: type("Settings", (), {
@@ -347,10 +332,7 @@ def test_local_user_invitation_mirrors_only_the_new_hosted_user(monkeypatch) -> 
     )
 
     assert result.tenant_id == connection.tenant_id
-    assert inviter.hosted_user == (
-        connection.tenant_id, inviter.user_id, "Team Member", "member@example.com",
-    )
-    assert inviter.hosted is None
+    assert connection.shadow == (inviter.user_id, "member@example.com")
 
 
 def test_vendor_cannot_manage_tenant_users(

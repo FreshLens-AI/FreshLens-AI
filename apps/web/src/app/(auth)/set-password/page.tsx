@@ -25,7 +25,7 @@ export default function SetPasswordPage() {
           <header className={styles.cardHeader}>
             <span><KeyRound size={12} /> Invitation verified</span>
             <h2 id="password-heading">Create your password</h2>
-            <p>Use at least 8 characters. The eye button lets you verify what you entered.</p>
+            <p>Use at least 8 characters.</p>
           </header>
           <SetPasswordForm />
         </div>

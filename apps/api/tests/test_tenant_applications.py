@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.database import get_admin_connection, get_public_connection
@@ -31,6 +32,7 @@ class ApplicationConnection:
             "updated_at": NOW,
         }
         self.inserted_user_query = ""
+        self.fail_review = False
 
     async def fetchval(self, query: str, *values: object):
         if "submit_tenant_application" in query:
@@ -45,6 +47,8 @@ class ApplicationConnection:
         if "for update" in query:
             return self.row
         if "update public.tenant_applications" in query:
+            if self.fail_review:
+                raise RuntimeError("review update failed")
             self.row.update(
                 status="approved" if "'approved'" in query else "rejected",
                 reviewed_by=values[1], review_note=values[2],
@@ -66,6 +70,7 @@ class FakeInviter:
     def __init__(self) -> None:
         self.user_id = uuid4()
         self.redirect_url: str | None = None
+        self.deleted: UUID | None = None
 
     async def invite(
         self, email: str, name: str, *, redirect_url: str | None = None,
@@ -74,7 +79,7 @@ class FakeInviter:
         return self.user_id
 
     async def delete(self, user_id: UUID) -> None:
-        pass
+        self.deleted = user_id
 
 
 def test_public_can_submit_but_cannot_list_applications(client: TestClient) -> None:
@@ -101,9 +106,14 @@ def test_public_can_submit_but_cannot_list_applications(client: TestClient) -> N
         app.dependency_overrides.clear()
 
 
+@pytest.mark.parametrize("local_shadow", [False, True])
 def test_platform_admin_approves_application_and_invites_tenant_owner(
-    client: TestClient, verifier: StaticVerifier,
+    client: TestClient, verifier: StaticVerifier, monkeypatch, local_shadow: bool,
 ) -> None:
+    monkeypatch.setattr("app.services.tenants.get_settings", lambda: type("Settings", (), {
+        "local_auth_shadow": local_shadow,
+        "tenant_admin_invite_redirect_url": "freshlens://set-password",
+    })())
     verifier.claims = admin_claims()
     connection = ApplicationConnection()
     inviter = FakeInviter()
@@ -132,3 +142,23 @@ def test_platform_admin_approves_application_and_invites_tenant_owner(
         assert inviter.redirect_url == "freshlens://set-password"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_failed_approval_removes_invited_auth_user(monkeypatch) -> None:
+    import asyncio
+
+    from app.schemas.applications import TenantApplicationReview
+    from app.services.applications import TenantApplicationService
+
+    monkeypatch.setattr("app.services.tenants.get_settings", lambda: type("Settings", (), {
+        "local_auth_shadow": True,
+        "tenant_admin_invite_redirect_url": "freshlens://set-password",
+    })())
+    connection = ApplicationConnection()
+    connection.fail_review = True
+    inviter = FakeInviter()
+    with pytest.raises(RuntimeError, match="review update failed"):
+        asyncio.run(TenantApplicationService(connection).approve(
+            connection.id, uuid4(), TenantApplicationReview(), inviter,
+        ))
+    assert inviter.deleted == inviter.user_id
