@@ -18,7 +18,7 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://ygeywiukeeewfgwdssvs.supabase.co",
         "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_T0_KdrQiTH2DeZ66kushLg_Nc1B0NlV",
-        "EXPO_PUBLIC_API_URL": "http://172.198.64.148:8000"
+        "EXPO_PUBLIC_API_URL": "https://freshlens.critico.live"
       }
     },
     "production": {

@@ -153,6 +153,17 @@ export function VendorHomeScreen({ navigation }: Props) {
 
           <Pressable
             style={styles.gridCard}
+            onPress={() => navigation.navigate('VoiceSale')}
+            accessibilityRole="button"
+          >
+            <View style={[styles.gridIconCircle, { backgroundColor: '#eef6f0' }]}>
+              <Text style={styles.gridIconEmoji}>🎤</Text>
+            </View>
+            <Text style={styles.gridCardTitle}>Voice Sale</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.gridCard}
             onPress={() => navigation.navigate('Alerts')}
             accessibilityRole="button"
           >
