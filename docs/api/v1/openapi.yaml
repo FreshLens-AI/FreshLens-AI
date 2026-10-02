@@ -435,7 +435,9 @@ paths:
       description: |
         Returns an untrusted draft and never changes inventory. The vendor must
         resolve every product, select a batch for every item, and confirm the
-        final sale through `POST /api/v1/sales`.
+        final sale through `POST /api/v1/sales`. Only transcript text and the
+        tenant's in-stock product names are sent to the external LLM parser;
+        neither the transcript nor the draft is stored.
       operationId: createVoiceSaleDraft
       security:
         - bearerAuth: []
@@ -459,6 +461,22 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "422":
           $ref: "#/components/responses/ValidationError"
+        "429":
+          description: Per-tenant voice draft rate limit exceeded; see Retry-After
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Parser not configured, timed out, or returned invalid output; use manual entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/v1/tenant-applications:
     post:
