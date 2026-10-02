@@ -3,6 +3,7 @@ import { File as ExpoFile } from 'expo-file-system';
 
 import { reportSessionExpired } from './auth/session-events';
 import { getSupabaseClient } from './supabase';
+import type { SaleItemPayload, VoiceSaleDraft } from './voice-sale';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -262,24 +263,44 @@ export async function createSale(input: {
   quantitySold: number;
   idempotencyKey: string;
 }): Promise<Sale> {
+  return submitSale({
+    source: 'manual',
+    idempotencyKey: input.idempotencyKey,
+    items: [
+      {
+        product_id: input.productId,
+        batch_id: input.batchId,
+        quantity_sold: input.quantitySold,
+      },
+    ],
+  });
+}
+
+/** The only stock-deduction path — POST /api/v1/sales. */
+export async function submitSale(input: {
+  source: 'manual' | 'voice';
+  items: SaleItemPayload[];
+  idempotencyKey: string;
+}): Promise<Sale> {
   const res = await apiFetch('api/v1/sales', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Idempotency-Key': input.idempotencyKey,
     },
-    body: JSON.stringify({
-      source: 'manual',
-      items: [
-        {
-          product_id: input.productId,
-          batch_id: input.batchId,
-          quantity_sold: input.quantitySold,
-        },
-      ],
-    }),
+    body: JSON.stringify({ source: input.source, items: input.items }),
   });
   return parseJsonOrThrow<Sale>(res);
+}
+
+/** Untrusted, non-mutating draft — POST /api/v1/sales/voice-draft. */
+export async function createVoiceSaleDraft(transcript: string): Promise<VoiceSaleDraft> {
+  const res = await apiFetch('api/v1/sales/voice-draft', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript }),
+  });
+  return parseJsonOrThrow<VoiceSaleDraft>(res);
 }
 
 export async function listAlerts(): Promise<Alert[]> {

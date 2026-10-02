@@ -10,7 +10,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "FreshLens needs camera access to scan produce freshness."
+        "NSCameraUsageDescription": "FreshLens needs camera access to scan produce freshness.",
+        "NSMicrophoneUsageDescription": "FreshLens uses the microphone so you can record sales by voice."
       }
     },
     "android": {
@@ -31,6 +32,17 @@
     "plugins": [
       "expo-secure-store",
       [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "FreshLens uses the microphone so you can record sales by voice.",
+          "speechRecognitionPermission": "FreshLens converts your speech to text to draft sales.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.tts"
+          ]
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "FreshLens needs camera access to scan produce freshness."
@@ -41,14 +53,6 @@
         {
           "color": "#0d3427",
           "defaultChannel": "default"
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
         }
       ]
     ],

@@ -14,11 +14,13 @@ import { ManualSaleScreen } from '../screens/manual-sale-screen';
 import { ScanFlowScreen } from '../screens/scan-flow-screen';
 import { ScanHistoryScreen } from '../screens/scan-history-screen';
 import { VendorHomeScreen } from '../screens/vendor-home-screen';
+import { VoiceSaleScreen } from '../screens/voice-sale-screen';
 
 export type VendorStackParamList = {
   Home: undefined;
   Scan: undefined;
   Sale: { productId?: string; batchId?: string } | undefined;
+  VoiceSale: undefined;
   Alerts: { alertId?: string } | undefined;
   History: undefined;
 };
@@ -95,6 +97,17 @@ export function VendorNavigator() {
               initialProductId={route.params?.productId}
               initialBatchId={route.params?.batchId}
               onDone={() => navigation.navigate('Home')}
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen
+          name="VoiceSale"
+          options={{ presentation: 'fullScreenModal', headerShown: false }}
+        >
+          {({ navigation }) => (
+            <VoiceSaleScreen
+              onDone={() => navigation.navigate('Home')}
+              onManual={() => navigation.replace('Sale')}
             />
           )}
         </Stack.Screen>
