@@ -5,8 +5,8 @@ PostgreSQL RLS as the authoritative tenant boundary.
 
 Supabase Auth is the identity provider only. Roles, tenants and all business
 data live in the application database, which is the Compose `postgres`
-container on the VPS. The Supabase project's own database holds no FreshLens
-tables.
+container on the VPS. The Supabase project's own database is not used for
+FreshLens account mappings or business queries.
 
 ## Identity contract
 
@@ -34,8 +34,9 @@ claims before accepting the application role.
 2. In **Authentication → Providers**, keep Email/Password enabled, disable public
    Auth user signup, and leave anonymous sign-ins disabled. The public FreshLens
    application form does not create an Auth account before approval.
-3. Apply `infra/db/migrations/0001_auth_tenancy.sql` through the Supabase SQL
-   editor or CLI.
+3. Apply the numbered migrations in `infra/db/migrations` to the application
+   database. Compose initializes these on a new database volume; existing
+   volumes require applying new migrations explicitly.
 4. In **Authentication → Hooks → Custom Access Token**, choose **HTTPS** and
    set the URL to the public API over TLS, for example
    `https://freshlens-admin.vercel.app/api/v1/auth/hooks/access-token` (the
@@ -92,15 +93,17 @@ and vendor invitations. Configure SMTP for real addresses. The installed EAS
 build includes the `freshlens` URL scheme; Expo Go is not a stable target for
 these email links. Invitation and
 recovery links expire according to Supabase's email OTP expiration setting.
-Local Compose uses `LOCAL_AUTH_SHADOW=true`: onboarding writes the same tenant
-and vendor identity to hosted Supabase for its JWT hook and to the disposable
-local database for RLS tests and local API use. Hosted database deployments
-leave this false and write only through the restricted database role.
+Local Compose uses `LOCAL_AUTH_SHADOW=true` to insert the invited Auth user's
+ID and email into the local `auth.users` mirror required by the application
+profile's foreign key. It does not copy tenants or profiles to Supabase.
+The HTTPS access-token hook resolves roles and tenant IDs exclusively from the
+application database. Deployments using hosted Supabase as the application
+database leave the flag false because Auth already creates the referenced row.
+When upgrading an existing Compose database for tenant-admin onboarding, also
+refresh `public.create_local_auth_shadow` from
+`infra/db/local/0020_runtime_login.sql`; the older definition permits only
+platform admins to provision the local mirror.
 
-With the HTTPS access-token hook (migration 0006), the API resolves these claims
-from the application database, so the hosted Supabase copy written by
-`LOCAL_AUTH_SHADOW=true` becomes redundant. Keep the flag on for Compose for now:
-it also writes the local `auth.users` mirror that `public.users` references.
 Manual mapping still works: run the SQL below **in the application database**
 (the VPS `postgres` container) after inserting `(id, email)` into the local
 `auth.users` mirror, or use `scripts/provision-local-vendor.sh <uuid> <email>`.

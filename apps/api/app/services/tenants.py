@@ -43,10 +43,6 @@ class TenantService:
         local_shadow = settings.local_auth_shadow
         try:
             if local_shadow:
-                await inviter.provision_hosted_identity(
-                    tenant_id, values.name, user_id, values.vendor_name, email,
-                    "tenant_admin",
-                )
                 await self.connection.execute(
                     "select public.create_local_auth_shadow($1, $2)", user_id, email,
                 )
@@ -60,11 +56,6 @@ class TenantService:
                 user_id, tenant_id, values.vendor_name, email,
             )
         except Exception:
-            if local_shadow:
-                try:
-                    await inviter.delete_hosted_identity(tenant_id, user_id)
-                except Exception:
-                    logger.exception("Could not remove hosted identity after tenant insert failed")
             try:
                 await inviter.delete(user_id)
             except Exception:
@@ -89,9 +80,6 @@ class TenantService:
         local_shadow = get_settings().local_auth_shadow
         try:
             if local_shadow:
-                await inviter.provision_hosted_user(
-                    tenant_id, user_id, values.display_name, email,
-                )
                 await self.connection.execute(
                     "select public.create_local_auth_shadow($1, $2)", user_id, email,
                 )
@@ -106,13 +94,6 @@ class TenantService:
                 user_id, tenant_id, values.display_name, email,
             )
         except Exception:
-            if local_shadow:
-                try:
-                    await inviter.delete_hosted_user(user_id)
-                except Exception:
-                    logger.exception(
-                        "Could not remove hosted user after tenant-user insert failed"
-                    )
             try:
                 await inviter.delete(user_id)
             except Exception:
