@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
-import { ChartNoAxesCombined, Gauge, LogOut, Menu, RefreshCw, Sprout, Users, X } from "lucide-react";
+import { Boxes, ShoppingBasket, ChartNoAxesCombined, Gauge, LogOut, Menu, RefreshCw, Sprout, Users, X } from "lucide-react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 
 const navigation = [
   { label: "Overview", href: "/workspace", icon: Gauge },
+  { label: "Stock", href: "/workspace/stock", icon: Boxes },
+  { label: "Sales", href: "/workspace/sales", icon: ShoppingBasket },
   { label: "Analytics", href: "/workspace/analytics", icon: ChartNoAxesCombined },
   { label: "Team", href: "/workspace/team", icon: Users },
 ];
