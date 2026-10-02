@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     supabase_jwt_audience: str = "authenticated"
     supabase_jwt_clock_skew_seconds: int = 30
     supabase_auth_hook_secret: str = ""
-    tenant_admin_invite_redirect_url: str = "http://localhost:3000/set-password"
+    tenant_admin_invite_redirect_url: str = "freshlens://set-password"
     cors_origins: str = (
         "http://localhost:3000,http://localhost:3001,http://localhost:3002"
     )

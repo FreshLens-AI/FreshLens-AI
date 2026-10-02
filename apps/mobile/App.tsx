@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +8,7 @@ import { configureNotificationHandler } from './src/lib/push/register';
 import { VendorNavigator } from './src/navigation/vendor-navigator';
 import { VendorLoginScreen } from './src/screens/vendor-login-screen';
 import { PasswordSetupScreen } from './src/screens/password-setup-screen';
+import { TenantApplicationScreen } from './src/screens/tenant-application-screen';
 
 configureNotificationHandler();
 
@@ -23,6 +25,11 @@ export default function App() {
 
 function AuthGate() {
   const { status } = useAuth();
+  const [showTenantApplication, setShowTenantApplication] = useState(false);
+
+  useEffect(() => {
+    if (status !== 'unauthenticated') setShowTenantApplication(false);
+  }, [status]);
 
   if (status === 'loading') {
     return (
@@ -47,7 +54,10 @@ function AuthGate() {
 
   if (status === 'password-setup') return <PasswordSetupScreen />;
   if (status === 'authenticated') return <VendorNavigator />;
-  return <VendorLoginScreen />;
+  if (showTenantApplication) {
+    return <TenantApplicationScreen onBackToSignIn={() => setShowTenantApplication(false)} />;
+  }
+  return <VendorLoginScreen onApplyForTenant={() => setShowTenantApplication(true)} />;
 }
 
 const styles = StyleSheet.create({

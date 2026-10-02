@@ -1,10 +1,14 @@
 # FreshLens vendor mobile
 
-Expo mobile client for authenticated vendor workflows. Supabase sessions are
+Expo mobile client for tenant applications and authenticated vendor workflows. Supabase sessions are
 stored in chunked Expo SecureStore values, and only signed `vendor` identities
-with a valid `tenant_id` can enter the application.
+or `tenant_admin` identities with a valid `tenant_id` can enter the application.
 
-Vendors invited by a platform admin receive a `freshlens://set-password` link.
+Before sign-in, a store owner can submit the reviewed tenant application form.
+It calls the public `POST /api/v1/tenant-applications` endpoint and does not
+create an Auth account or choose a tenant. Approval remains a platform-admin
+action. Approved tenant owners and invited vendors receive a
+`freshlens://set-password` link.
 The login screen also offers **Forgot password?**; both email flows open a
 password form in an installed mobile build, then return to sign in. Configure
 this redirect URL in Supabase Auth and use a development or release build rather
@@ -44,6 +48,14 @@ After sign-in, the app registers its Expo push token with `POST /api/v1/devices`
 
 - EAS project: `1397c863-…` (`extra.eas.projectId` in `app.json`). Android package: `com.sathurshnau.mobile`.
 - Firebase project: `freshlense-dc779`. Android app ID: `1:1052849430249:android:754cca2b042ba8dd205a78`.
+
+EAS cloud builders cannot read gitignored `.env` files. Keep
+`EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL`, and
+`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` populated in each applicable EAS
+environment with `eas env:set`; these embedded client values are not secrets.
+Use HTTPS for the production API. The preview profile retains its Android demo
+values inline. The `freshlens` scheme in `app.json` is compiled into every EAS
+build so approval emails can return to the password-setup screen.
 
 `google-services.json` is gitignored. To set up a machine or EAS project once:
 

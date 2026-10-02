@@ -13,7 +13,7 @@
     "preweb": "npm run env:check",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/lib/auth/*.test.ts src/lib/push/*.test.ts"
+    "test": "tsx --test src/lib/*.test.ts src/lib/auth/*.test.ts src/lib/push/*.test.ts"
   },
   "dependencies": {
     "@react-navigation/native": "^7.3.16",
