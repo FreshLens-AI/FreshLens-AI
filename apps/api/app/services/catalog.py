@@ -27,11 +27,16 @@ class CatalogService:
     ) -> BatchList:
         rows = await self.connection.fetch(
             """
-            select id, product_id, intake_date, quantity_remaining
-            from public.batches
-            where ($1::uuid is null or product_id = $1)
-              and (not $2::boolean or quantity_remaining > 0)
-            order by intake_date
+            select b.id, b.product_id, b.intake_date, b.quantity_remaining,
+              p.name as product_name, b.quantity_received,
+              b.fresh_to_medium_at, b.medium_to_spoiled_at,
+              case when b.medium_to_spoiled_at <= now() then 'spoiled'
+                   when b.fresh_to_medium_at <= now() then 'medium'
+                   else b.initial_classification::text end as current_freshness
+            from public.batches b join public.products p on p.id = b.product_id
+            where ($1::uuid is null or b.product_id = $1)
+              and (not $2::boolean or b.quantity_remaining > 0)
+            order by b.medium_to_spoiled_at nulls last, b.intake_date, b.id
             """,
             product_id,
             active_only,

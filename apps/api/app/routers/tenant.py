@@ -14,7 +14,7 @@ from app.schemas.admin import (
     TenantUserList,
 )
 from app.schemas.auth import AuthPrincipal
-from app.schemas.tenant import TenantOverview
+from app.schemas.tenant import SalesHistory, TenantOverview
 from app.services.admin import AdminAnalyticsService
 from app.services.tenant_invites import InviteError, SupabaseInviter, get_inviter
 from app.services.tenants import TenantService, TenantUserNotFoundError
@@ -81,3 +81,14 @@ async def update_tenant_user_status(
         )
     except TenantUserNotFoundError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Tenant user not found.") from exc
+
+
+@router.get("/sales", response_model=SalesHistory)
+async def get_tenant_sales(
+    _principal: AuthPrincipal = Depends(require_tenant_admin),
+    connection: asyncpg.Connection = Depends(get_tenant_connection),
+    days: int = Query(30, ge=1, le=90),
+    limit: int = Query(25, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+) -> SalesHistory:
+    return await TenantWorkspaceService(connection).sales(days=days, limit=limit, offset=offset)
