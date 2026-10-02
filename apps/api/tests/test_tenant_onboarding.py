@@ -94,7 +94,7 @@ def test_admin_creates_tenant_and_invites_tenant_admin(
         assert response.json()["id"] == str(connection.tenant_id)
         assert response.json()["invitation_sent"] is True
         assert inviter.invited == (
-            "owner@example.com", "Shop Owner", "http://localhost:3000/set-password",
+            "owner@example.com", "Shop Owner", "freshlens://set-password",
         )
         assert connection.inserted_user == (
             inviter.user_id, connection.tenant_id, "Shop Owner", "owner@example.com",

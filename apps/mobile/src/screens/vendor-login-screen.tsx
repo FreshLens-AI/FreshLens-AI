@@ -15,7 +15,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../auth/auth-provider';
 
-export function VendorLoginScreen() {
+interface VendorLoginScreenProps {
+  onApplyForTenant: () => void;
+}
+
+export function VendorLoginScreen({ onApplyForTenant }: VendorLoginScreenProps) {
   const { message, signIn, requestPasswordReset } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -158,6 +162,20 @@ export function VendorLoginScreen() {
               <Text style={styles.switchModeText}>{forgotPassword ? 'Back to sign in' : 'Forgot password?'}</Text>
             </Pressable>
 
+            {!forgotPassword ? (
+              <View style={styles.applicationSection}>
+                <Text style={styles.applicationCopy}>Need FreshLens for your store?</Text>
+                <Pressable
+                  onPress={onApplyForTenant}
+                  disabled={pending}
+                  accessibilityRole="button"
+                  style={styles.applicationButton}
+                >
+                  <Text style={styles.applicationButtonText}>Apply for a tenant account</Text>
+                </Pressable>
+              </View>
+            ) : null}
+
 
           </View>
         </ScrollView>
@@ -248,6 +266,16 @@ const styles = StyleSheet.create({
   successText: { color: '#047857', fontSize: 13, lineHeight: 19, marginBottom: 16 },
   switchMode: { alignItems: 'center', padding: 12, marginTop: 8 },
   switchModeText: { color: '#047857', fontSize: 14, fontWeight: '700' },
+  applicationSection: {
+    alignItems: 'center',
+    borderTopColor: '#e2e8f0',
+    borderTopWidth: 1,
+    marginTop: 8,
+    paddingTop: 18,
+  },
+  applicationCopy: { color: '#64748b', fontSize: 12, marginBottom: 4 },
+  applicationButton: { paddingHorizontal: 12, paddingVertical: 8 },
+  applicationButtonText: { color: '#047857', fontSize: 14, fontWeight: '800' },
   inputGroup: { marginBottom: 16 },
   inputLabel: { color: '#334155', fontSize: 13, fontWeight: '700', marginBottom: 6 },
   inputWrap: {

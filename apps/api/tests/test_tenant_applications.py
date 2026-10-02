@@ -129,6 +129,6 @@ def test_platform_admin_approves_application_and_invites_tenant_owner(
         assert approved.status_code == 200
         assert approved.json()["status"] == "approved"
         assert "'tenant_admin'" in connection.inserted_user_query
-        assert inviter.redirect_url == "http://localhost:3000/set-password"
+        assert inviter.redirect_url == "freshlens://set-password"
     finally:
         app.dependency_overrides.clear()

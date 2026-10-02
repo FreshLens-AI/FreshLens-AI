@@ -80,17 +80,17 @@ queries. Keep it server-only if a later administrative workflow requires it.
 An applicant submits organization and owner details through the public web
 form. This creates only a protected `tenant_applications` row. A platform admin
 reviews the queue; approval atomically creates the tenant mapping, assigns the
-owner the `tenant_admin` role, and sends a one-time web password-setup link.
+owner the `tenant_admin` role, and sends a one-time mobile password-setup link.
 Rejected applications never create tenants or Auth users. A tenant admin can
 then invite and revoke ordinary `vendor` users only within the tenant from the
 tenant workspace. Platform admins retain the same cross-tenant controls.
 
 Set `SUPABASE_SERVICE_ROLE_KEY` only on the FastAPI server. Set
-`TENANT_ADMIN_INVITE_REDIRECT_URL` to the deployed web `/set-password` URL and
-allow it under **Authentication → URL Configuration → Redirect URLs**. Also
-allow `freshlens://set-password` for vendor invitations and configure SMTP for
-real addresses. The installed mobile build must include the `freshlens` URL
-scheme; Expo Go is not a stable target for these email links. Invitation and
+`TENANT_ADMIN_INVITE_REDIRECT_URL=freshlens://set-password` and allow that URL
+under **Authentication → URL Configuration → Redirect URLs** for tenant-owner
+and vendor invitations. Configure SMTP for real addresses. The installed EAS
+build includes the `freshlens` URL scheme; Expo Go is not a stable target for
+these email links. Invitation and
 recovery links expire according to Supabase's email OTP expiration setting.
 Local Compose uses `LOCAL_AUTH_SHADOW=true`: onboarding writes the same tenant
 and vendor identity to hosted Supabase for its JWT hook and to the disposable
