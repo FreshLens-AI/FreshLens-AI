@@ -60,3 +60,9 @@ docs/design/latex/
 .superpowers/
 docs/superpowers/
 .vercel
+
+# Local agent coordination and tool caches
+.agents/HANDOFF.md
+.wrangler/
+.cloudflare/
+*.apk
