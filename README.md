@@ -67,6 +67,10 @@ Supabase setup and account provisioning.
 
 ## Team workflow
 
+Test and build entry points for the course submission are documented in
+[`submission/README.md`](submission/README.md): `bash scripts/test.sh` and
+`bash scripts/build.sh`.
+
 - **Branching:** GitHub Flow — `feat/*`, `fix/*`, `chore/*` off `main`
 - **Tasks:** GitHub Issues linked to the org Project board
 - **Reviews:** See [CONTRIBUTING.md](CONTRIBUTING.md)

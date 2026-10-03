@@ -32,6 +32,9 @@ wandb/
 # Local object storage (ObjectStorageClient)
 /data/
 
+# Generated submission artifacts (manual PDFs and other exports)
+/output/
+
 # IDE / OS
 .idea/
 .vscode/
