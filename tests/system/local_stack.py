@@ -77,7 +77,7 @@ class LocalStack:
     def start(self):
         self.output.mkdir(parents=True, exist_ok=True)
         print("Starting disposable PostgreSQL 16 + Redis; host ports bind only to loopback.", flush=True)
-        _, pg_port = self.container("postgres:16.14-alpine", 5432,
+        pg_container, pg_port = self.container("postgres:16.14-alpine", 5432,
                                    "--tmpfs", "/var/lib/postgresql/data",
                                    "-e", "POSTGRES_USER=freshlens", "-e", "POSTGRES_PASSWORD=freshlens",
                                    "-e", "POSTGRES_DB=freshlens_test")
@@ -91,12 +91,16 @@ class LocalStack:
                 if attempt == 59:
                     raise
                 time.sleep(0.5)
+        files = [ROOT / "infra/db/local/0000_supabase_compat.sql",
+                 *sorted((ROOT / "infra/db/migrations").glob("*.sql")),
+                 ROOT / "infra/db/local/0020_runtime_login.sql"]
+        for path in files:
+            # psql respects each statement's transaction boundary, including the
+            # enum addition before BEGIN in migration 0011.
+            subprocess.run(["docker", "exec", "-i", pg_container, "psql", "-X",
+                            "-U", "freshlens", "-d", "freshlens_test", "-v", "ON_ERROR_STOP=1"],
+                           input=path.read_text(), text=True, stdout=subprocess.DEVNULL, check=True)
         with psycopg.connect(owner_dsn, autocommit=True) as db:
-            files = [ROOT / "infra/db/local/0000_supabase_compat.sql",
-                     *sorted((ROOT / "infra/db/migrations").glob("*.sql")),
-                     ROOT / "infra/db/local/0020_runtime_login.sql"]
-            for path in files:
-                db.execute(path.read_text())
             self.seed(db)
 
         _, redis_port = self.container("redis:7.4-alpine", 6379, "--tmpfs", "/data")
@@ -178,9 +182,11 @@ class LocalStack:
         config_path.touch(mode=0o600)
         config_path.write_text(json.dumps(self.config))
         self.config_path = config_path
-        metadata = dict(started=datetime.now(timezone.utc).isoformat(),
-                        commit=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-                        changes=subprocess.check_output(["git", "status", "--short"], cwd=ROOT, text=True),
+        commit, changes = "source archive", "Git metadata unavailable"
+        if (ROOT / ".git").exists():
+            commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+            changes = subprocess.check_output(["git", "status", "--short"], cwd=ROOT, text=True)
+        metadata = dict(started=datetime.now(timezone.utc).isoformat(), commit=commit, changes=changes,
                         api=base_url, postgres="16.14-alpine", redis="7.4-alpine", api_workers=1,
                         classifier="stub-v0", auth="local RS256/JWKS fixture; real application verification",
                         python=sys.version.split()[0])
@@ -190,6 +196,7 @@ class LocalStack:
 
     def seed(self, db):
         actors = {}
+        product_id = str(db.execute("select id from public.products where name='Tomato'").fetchone()[0])
         for label in ("a", "b", "admin"):
             user_id = str(uuid4())
             tenant_id = str(uuid4()) if label != "admin" else None
@@ -201,9 +208,7 @@ class LocalStack:
                        (user_id, tenant_id, role, f"{label}@test.invalid", f"Test {label}"))
             actor = dict(user_id=user_id, tenant_id=tenant_id, role=role)
             if tenant_id:
-                product_id, batch_id = str(uuid4()), str(uuid4())
-                db.execute("insert into public.products(id,tenant_id,name,shelf_life_days,low_stock_threshold) values (%s,%s,%s,7,2)",
-                           (product_id, tenant_id, "Tomato"))
+                batch_id = str(uuid4())
                 db.execute("insert into public.batches(id,tenant_id,product_id,quantity_received,quantity_remaining) values (%s,%s,%s,1000000,1000000)",
                            (batch_id, tenant_id, product_id))
                 actor.update(product_id=product_id, batch_id=batch_id)

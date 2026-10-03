@@ -53,7 +53,7 @@ npm --prefix apps/mobile ci
 ```
 
 The database runner creates its own isolated PostgreSQL 16 container with
-temporary storage and no host ports. It applies migrations 0001–0003 and runs
+temporary storage and no host ports. It applies all current migrations and runs
 both SQL suites, then removes its container. Existing databases are not used.
 `TEST_POSTGRES_IMAGE` can select another PostgreSQL 16 image if necessary.
 

@@ -50,11 +50,18 @@ def test_api_uses_restricted_database_role(system):
     assert role == ("freshlens_api_local", False, False)
 
 
-def test_tenant_catalogue_isolation_over_http(client, system):
+def test_shared_catalogue_and_tenant_batch_isolation_over_http(client, system):
+    catalogues = []
     for actor in ("a", "b"):
         response = client.get("/api/v1/products", headers=headers(system, actor))
         assert response.status_code == 200
-        assert {item["id"] for item in response.json()["items"]} == {system["actors"][actor]["product_id"]}
+        product_ids = {item["id"] for item in response.json()["items"]}
+        assert system["actors"][actor]["product_id"] in product_ids
+        catalogues.append(product_ids)
+        response = client.get("/api/v1/batches", headers=headers(system, actor))
+        assert response.status_code == 200
+        assert {item["id"] for item in response.json()["items"]} == {system["actors"][actor]["batch_id"]}
+    assert catalogues[0] == catalogues[1]
 
 
 def test_sale_persists_and_identical_retry_deducts_once(client, db, system):

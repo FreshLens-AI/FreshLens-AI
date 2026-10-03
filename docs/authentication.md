@@ -78,6 +78,9 @@ queries. Keep it server-only if a later administrative workflow requires it.
 
 ## Provision accounts
 
+For the shop owner and staff journey, see
+[the tenant and vendor signup guide](tenant-and-vendor-signup-flow.md).
+
 An applicant submits organization and owner details through the public web
 form. This creates only a protected `tenant_applications` row. A platform admin
 reviews the queue; approval atomically creates the tenant mapping, assigns the

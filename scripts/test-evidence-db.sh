@@ -28,9 +28,7 @@ echo "Isolated database: $image (temporary storage, no host ports)"
 docker exec "$container" psql -X -U freshlens -d freshlens -c 'select version();'
 for sql_file in \
   infra/db/local/0000_supabase_compat.sql \
-  infra/db/migrations/0001_auth_tenancy.sql \
-  infra/db/migrations/0002_business_tables.sql \
-  infra/db/migrations/0003_scan_identity.sql \
+  infra/db/migrations/*.sql \
   infra/db/local/0020_runtime_login.sql \
   infra/db/tests/rls_isolation.sql; do
   echo "Running: $sql_file"
