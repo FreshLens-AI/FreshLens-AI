@@ -11,6 +11,12 @@ import { AppState } from 'react-native';
 
 import { parseVendorClaims, type VendorIdentity } from '../lib/auth/claims';
 import {
+  mapPasswordResetError,
+  mapSignInError,
+  passwordResetSuccessMessage,
+  vendorNotProvisionedMessage,
+} from '../lib/auth/sign-in-errors';
+import {
   onSessionExpired,
   SESSION_EXPIRED_MESSAGE,
 } from '../lib/auth/session-events';
@@ -23,7 +29,9 @@ interface AuthContextValue {
   identity: VendorIdentity | null;
   message: string | null;
   signIn: (email: string, password: string) => Promise<boolean>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  clearMessage: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -32,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [identity, setIdentity] = useState<VendorIdentity | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const clearMessage = useCallback(() => setMessage(null), []);
 
   const inspectSession = useCallback(async () => {
     const supabase = getSupabaseClient();
@@ -61,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       setIdentity(null);
       setStatus('unauthenticated');
-      setMessage('This account is not provisioned for the vendor mobile app.');
+      setMessage(vendorNotProvisionedMessage());
       return null;
     }
 
@@ -111,17 +121,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password,
         }));
       } catch {
-        setMessage('Unable to reach authentication. Check your connection and try again.');
+        setMessage(mapSignInError({ message: 'Failed to fetch' }));
         return false;
       }
       if (error) {
-        setMessage('Incorrect email or password. Please try again.');
+        setMessage(mapSignInError(error));
         return false;
       }
       return Boolean(await inspectSession());
     },
     [inspectSession],
   );
+
+  const requestPasswordReset = useCallback(async (email: string) => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized.includes('@')) {
+      setMessage('Enter your vendor email first, then request a reset.');
+      return false;
+    }
+
+    setMessage(null);
+    const supabase = getSupabaseClient();
+    let error;
+    try {
+      ({ error } = await supabase.auth.resetPasswordForEmail(normalized));
+    } catch {
+      setMessage(mapPasswordResetError({ message: 'Failed to fetch' }));
+      return false;
+    }
+
+    if (error) {
+      setMessage(mapPasswordResetError(error));
+      return false;
+    }
+
+    setMessage(passwordResetSuccessMessage());
+    return true;
+  }, []);
 
   const signOut = useCallback(async () => {
     const supabase = getSupabaseClient();
@@ -135,8 +171,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, identity, message, signIn, signOut }),
-    [identity, message, signIn, signOut, status],
+    () => ({
+      status,
+      identity,
+      message,
+      signIn,
+      requestPasswordReset,
+      signOut,
+      clearMessage,
+    }),
+    [
+      clearMessage,
+      identity,
+      message,
+      requestPasswordReset,
+      signIn,
+      signOut,
+      status,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -68,6 +68,11 @@ Accounts are owner-provisioned for V1. In **Authentication → Users**, use
 Do not use an email invitation yet: neither client implements an invite callback
 or password-setup route. Do not enable public signup to work around that gap.
 
+Workspace-style onboarding (create a store, invite staff, join by invite) is
+deferred until after the progress eval. It is not public self-signup: a verified
+owner still creates the workspace, and membership is an explicit invite. Until
+that lands, keep owner provisioning.
+
 Platform admin:
 
 ```sql

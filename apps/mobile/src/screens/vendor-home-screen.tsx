@@ -12,6 +12,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useAuth } from '../auth/auth-provider';
+import { VendorOnboardingCard } from '../components/vendor-onboarding-card';
 import { listAlerts, listProducts, listScans } from '../lib/api';
 import type { VendorStackParamList } from '../navigation/vendor-navigator';
 
@@ -86,6 +87,15 @@ export function VendorHomeScreen({ navigation }: Props) {
           />
         }
       >
+        {identity?.userId ? (
+          <VendorOnboardingCard
+            userId={identity.userId}
+            onNavigateScan={() => navigation.navigate('Scan')}
+            onNavigateSale={() => navigation.navigate('Sale')}
+            onNavigateAlerts={() => navigation.navigate('Alerts')}
+          />
+        ) : null}
+
         {/* Welcome Card */}
         <View style={styles.heroCard}>
           <View style={styles.heroBadgeRow}>
