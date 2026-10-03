@@ -1,0 +1,13 @@
+---
+description: Coordinate with Claude Code (and other agents) sharing this checkout — claims, handoff file, safe staging
+alwaysApply: true
+---
+
+# FreshLens — Agent Sync
+
+Claude Code works in this same checkout. Follow [`.agents/skills/agent-sync/SKILL.md`](../../.agents/skills/agent-sync/SKILL.md):
+
+1. Run `scripts/agent-status.sh` at the start of a session.
+2. Do not edit, stage or revert uncommitted files you did not change.
+3. Record your area under **Claims** in `.agents/HANDOFF.md` (local, gitignored) and move it to **Done** when finished.
+4. Stage by explicit path — never `git add -A` / `git add .`. Never commit to `main`.
